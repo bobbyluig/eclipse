@@ -29,7 +29,7 @@ class Servo:
 
     # Convert degrees to PWM.
     def deg_to_pwm(self, deg):
-        return self.min_pwm + self.k_deg2pwm * (deg - self.min_deg)
+        return round(self.min_pwm + self.k_deg2pwm * (deg - self.min_deg))
 
     # Convert PWM to degrees.
     def pwm_to_deg(self, pwm):
@@ -53,9 +53,19 @@ class Maestro:
         # Data buffer.
         self.data = bytearray()
 
+    # Flush data buffer and clear.
+    def flush(self):
+        if len(self.data) > 0:
+            self.usb.write(self.data)
+            self.data.clear()
+
     # Closing the USB port.
     def close(self):
         self.usb.close()
+
+    ##########################################
+    # Begin implementation of static methods.
+    ##########################################
 
     # Endian formatting for Pololu commands.
     @staticmethod
@@ -109,7 +119,7 @@ class Maestro:
         count = len(servos)
 
         # Data header.
-        data = bytearray((0x9f, count))
+        data = bytearray((0x9F, count))
 
         # Iterate through all servos, appending to data as needed.
         for servo in servos:
@@ -216,3 +226,36 @@ class Maestro:
         else:
             return True
 
+    ###################################################
+    # Begin implementation of complex helper functions.
+    ###################################################
+
+    # Move all servos to their respective targets such that they arrive together.
+    # This will reset all accelerations to 0 and flush buffer.
+    # The time is how long the turn should take in milliseconds.
+    # Update determines whether or not to update servo positions. Slow operation.
+    def end_together(self, *servos, time=1000, update=False):
+        # Flush buffer.
+        self.flush()
+
+        # Compute and set the velocity for every servo.
+        for servo in servos:
+            # Update servo positions as needed.
+            if update:
+                self.get_position(servo)
+
+            # Set acceleration to zero.
+            self.set_acceleration(servo, 0)
+
+            # Compute velocity as a change in 0.25us PWM / 10ms.
+            delta = abs(servo.target - servo.deg) * servo.k_deg2pwm * 4
+            vel = int(round(delta / (time / 10)))
+
+            # Set velocity.
+            self.set_speed(servo, vel)
+
+        # Flush buffer to execute settings.
+        self.flush()
+
+        # Move all servos to their respective targets.
+        self.set_multiple_targets(servos)
