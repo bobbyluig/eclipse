@@ -2,7 +2,7 @@ from asyncio import coroutine
 import asyncio, cv2, base64
 from autobahn.asyncio.wamp import ApplicationSession
 import numpy as np
-from autoreconnect import ApplicationRunner
+from shared.cerebral.autoreconnect import ApplicationRunner
 
 __author__ = 'Lujing Cen'
 

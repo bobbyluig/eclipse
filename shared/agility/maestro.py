@@ -1,6 +1,6 @@
 #!/usr/bin/env python3.5
 
-import serial, os, struct
+import serial, os, struct, logging
 
 __author__ = 'Lujing Cen'
 __copyright__ = 'Copyright (c) 2015-2016 Eclipse Technologies'
@@ -48,7 +48,10 @@ class Maestro:
             self.ttl_port = '/dev/ttyACM' + str(ttl_port)
 
         # Start a connection using pyserial.
-        self.usb = serial.Serial(self.command_port, timeout=timeout)
+        try:
+            self.usb = serial.Serial(self.command_port, timeout=timeout)
+        except:
+            logging.critical('Unable to connect to servo controller.')
 
         # Data buffer.
         self.data = bytearray()

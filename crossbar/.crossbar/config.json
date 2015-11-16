@@ -1,46 +1,113 @@
 {
-   "controller": {
-   },
-   "workers": [
-      {
-         "type": "router",
-         "realms": [
+  "controller":{},
+  "workers":[
+    {
+      "type":"router",
+      "realms":[
+        {
+          "name":"lycanthrope",
+          "roles":[
             {
-               "name": "lycanthrope",
-               "roles": [
-                  {
-                     "name": "anonymous",
-                     "permissions": [
-                        {
-                           "uri": "*",
-                           "publish": true,
-                           "subscribe": true,
-                           "call": true,
-                           "register": true
-                        }
-                     ]
-                  }
-               ]
-            }
-         ],
-         "transports": [
+              "name":"anonymous",
+              "permissions":[
+                {
+                  "uri":"public.*",
+                  "subscribe":true
+                }
+              ]
+            },
             {
-               "type": "web",
-               "endpoint": {
-                  "type": "tcp",
-                  "port": 8080
-               },
-               "paths": {
-                  "/": {
-                     "type": "static",
-                     "directory": ".."
-                  },
-                  "ws": {
-                     "type": "websocket"
-                  }
-               }
+              "name":"DOG-1E5",
+              "permissions":[
+                {
+                  "uri":"*",
+                  "publish":true,
+                  "subscribe":true,
+                  "call":true,
+                  "register":true
+                }
+              ]
+            },
+            {
+              "name":"DOG-4S1",
+              "permissions":[
+                {
+                  "uri":"*",
+                  "publish":true,
+                  "subscribe":true,
+                  "call":true,
+                  "register":true
+                }
+              ]
+            },
+            {
+              "name":"Alpha",
+              "permissions":[
+                {
+                  "uri":"*",
+                  "publish":true,
+                  "subscribe":true,
+                  "call":true,
+                  "register":true
+                }
+              ]
+            },
+            {
+              "name":"Zeus",
+              "permissions":[
+                {
+                  "uri":"*",
+                  "publish":true,
+                  "subscribe":true,
+                  "call":true,
+                  "register":true
+                }
+              ]
             }
-         ]
-      }
-   ]
+          ]
+        }
+      ],
+      "transports":[
+        {
+          "type":"web",
+          "endpoint":{
+            "type":"tcp",
+            "port":8080
+          },
+          "paths":{
+            "/":{
+              "type":"static",
+              "directory":".."
+            },
+            "ws":{
+              "type":"websocket",
+              "auth":{
+                "wampcra":{
+                  "type":"static",
+                  "users":{
+                    "DOG-1E5":{
+                      "secret":"de2432k,/s-=/8Eu",
+                      "role":"DOG-1E5"
+                    },
+                    "DOG-4S1":{
+                      "secret":"A@Q+xfQ[9<<5,+YG",
+                      "role":"DOG-4S1"
+                    },
+                    "Alpha":{
+                      "secret":"YCd:<Tfw73ga}AL3",
+                      "role":"Alpha"
+                    },
+                    "Zeus":{
+                      "secret":"+Ew~77XrvW-c<6sZ",
+                      "role":"Zeus"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
 }

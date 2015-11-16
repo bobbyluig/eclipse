@@ -7,11 +7,17 @@ from autobahn.asyncio.websocket import WampWebSocketClientFactory
 
 import asyncio
 import txaio
+import logging
+
+__author__ = 'Lujing Cen'
+__copyright__ = 'Copyright (c) 2015-2016 Eclipse Technologies'
 
 txaio.use_asyncio()
 
+
 class ExceededRetryCount(Exception):
     pass
+
 
 class IReconnectStrategy(object):
     def get_retry_interval(self):
@@ -25,14 +31,6 @@ class IReconnectStrategy(object):
 
     def retry(self):
         raise NotImplementedError('retry')
-
-
-class NoRetryStrategy(IReconnectStrategy):
-    def reset_retry_interval(self):
-        pass
-
-    def retry(self):
-        return False
 
 
 class BackoffStrategy(IReconnectStrategy):
@@ -55,6 +53,23 @@ class BackoffStrategy(IReconnectStrategy):
         return self._retry_interval <= self._max_interval
 
 
+class PersistentStrategy(IReconnectStrategy):
+    def __init__(self, interval=3):
+        self.interval = interval
+
+    def get_retry_interval(self):
+        return self.interval
+
+    def reset_retry_interval(self):
+        pass
+
+    def increase_retry_interval(self):
+        pass
+
+    def retry(self):
+        return True
+
+
 class ApplicationRunner(object):
     """
     This class is a slightly modified version of autobahn.asyncio.wamp.ApplicationRunner
@@ -63,7 +78,7 @@ class ApplicationRunner(object):
 
     def __init__(self, url, realm, extra=None, serializers=None,
                  debug=False, debug_wamp=False, debug_app=False,
-                 ssl=None, loop=None, retry_strategy=BackoffStrategy()):
+                 ssl=None, loop=None, retry_strategy=PersistentStrategy()):
         """
         :param url: The WebSocket URL of the WAMP router to connect to (e.g. `ws://somehost.com:8090/somepath`)
         :type url: unicode
@@ -86,29 +101,28 @@ class ApplicationRunner(object):
            kwarg.
         :type ssl: :class:`ssl.SSLContext` or bool
         """
-        self._url = url
-        self._realm = realm
-        self._extra = extra or dict()
-        self._debug = debug
-        self._debug_wamp = debug_wamp
-        self._debug_app = debug_app
-        self._serializers = serializers
-        self._loop = loop or asyncio.get_event_loop()
-        self._retry_strategy = retry_strategy
-        self._closing = False
+        self.url = url
+        self.realm = realm
+        self.extra = extra or dict()
+        self.debug = debug
+        self.debug_wamp = debug_wamp
+        self.debug_app = debug_app
+        self.serializers = serializers
+        self.loop = loop or asyncio.get_event_loop()
+        self.retry_strategy = retry_strategy
+        self.closing = False
 
-        self._isSecure, self._host, self._port, _, _, _ = parseWsUrl(url)
+        self.isSecure, self.host, self.port, _, _, _ = parseWsUrl(url)
 
         if ssl is None:
-            self._ssl = self._isSecure
+            self.ssl = self.isSecure
         else:
-            if ssl and not self._isSecure:
+            if ssl and not self.isSecure:
                 raise RuntimeError(
                     'ssl argument value passed to %s conflicts with the "ws:" '
                     'prefix of the url argument. Did you mean to use "wss:"?' %
                     self.__class__.__name__)
-            self._ssl = ssl
-
+            self.ssl = ssl
 
     def run(self, make):
         """
@@ -118,8 +132,8 @@ class ApplicationRunner(object):
         :type make: callable
         """
 
-        def _create_app_session():
-            cfg = ComponentConfig(self._realm, self._extra)
+        def create():
+            cfg = ComponentConfig(self.realm, self.extra)
             try:
                 session = make(cfg)
             except Exception as e:
@@ -127,60 +141,56 @@ class ApplicationRunner(object):
                 asyncio.get_event_loop().stop()
                 raise e
             else:
-                session.debug_app = self._debug_app
+                session.debug_app = self.debug_app
                 return session
 
-        self._transport_factory = WampWebSocketClientFactory(_create_app_session, url=self._url, serializers=self._serializers,
-                                                       debug=self._debug, debug_wamp=self._debug_wamp)
+        self.transport_factory = WampWebSocketClientFactory(create, url=self.url, serializers=self.serializers,
+                                                       debug=self.debug, debug_wamp=self.debug_wamp)
 
         txaio.use_asyncio()
-        txaio.config.loop = self._loop
+        txaio.config.loop = self.loop
 
-        asyncio.async(self._connect(), loop=self._loop)
-        # self._loop.add_signal_handler(signal.SIGTERM, self.stop)
+        asyncio.ensure_future(self.connect(), loop=self.loop)
+        # self.loop.add_signal_handler(signal.SIGTERM, self.stop)
 
         try:
-            self._loop.run_forever()
+            self.loop.run_forever()
         except KeyboardInterrupt:
             # wait until we send Goodbye if user hit ctrl-c
             # (done outside this except so SIGTERM gets the same handling)
             pass
 
-        self._closing = True
+        self.closing = True
 
-        if self._active_protocol and self._active_protocol._session:
-            self._loop.run_until_complete(self._active_protocol._session.leave())
-        self._loop.close()
+        if self.active_protocol and self.active_protocol.session:
+            self.loop.run_until_complete(self.active_protocol.session.leave())
+        self.loop.close()
 
-    @asyncio.coroutine
-    def _connect(self):
-        self._active_protocol = None
-        self._retry_strategy.reset_retry_interval()
+    async def connect(self):
+        self.active_protocol = None
+        self.retry_strategy.reset_retry_interval()
         while True:
             try:
-                _, protocol = yield from self._loop.create_connection(self._transport_factory, self._host, self._port, ssl=self._ssl)
-                protocol.is_closed.add_done_callback(self._reconnect)
-                self._active_protocol = protocol
+                _, protocol = await self.loop.create_connection(self.transport_factory, self.host, self.port, ssl=self.ssl)
+                protocol.is_closed.add_done_callback(self.reconnect)
+                self.active_protocol = protocol
                 return
             except OSError:
                 # print('Connection failed')
-                if self._retry_strategy.retry():
-                    retry_interval = self._retry_strategy.get_retry_interval()
-                    # print('Retry in {} seconds'.format(retry_interval))
-                    yield from asyncio.sleep(retry_interval)
+                if self.retry_strategy.retry():
+                    retry_interval = self.retry_strategy.get_retry_interval()
+                    logging.debug('Retrying in %s seconds.' % retry_interval)
+                    await asyncio.sleep(retry_interval)
                 else:
-                    # print('Exceeded retry count')
-                    self._loop.stop()
+                    logging.warning('Exceeded retry count. Stopping event loop.')
+                    self.loop.stop()
                     raise ExceededRetryCount()
 
-                self._retry_strategy.increase_retry_interval()
+                self.retry_strategy.increase_retry_interval()
 
-    def _reconnect(self, f):
-        # Reconnect
-        # print('Connection lost')
-        if not self._closing:
-            # print('Reconnecting')
-            asyncio.async(self._connect(), loop=self._loop)
+    def reconnect(self, f):
+        if not self.closing:
+            asyncio.ensure_future(self.connect(), loop=self.loop)
 
     def stop(self, *args):
-        self._loop.stop()
+        self.loop.stop()
