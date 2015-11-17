@@ -162,7 +162,7 @@ class ApplicationRunner(object):
 
         self.closing = True
 
-        if self.active_protocol and self.active_protocol._session:
+        if self.active_protocol:
             self.loop.run_until_complete(self.active_protocol._session.leave())
         self.loop.close()
 
