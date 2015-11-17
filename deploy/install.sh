@@ -28,7 +28,7 @@ read password
 #####################
 
 # Get current hostname.
-hostn = $(cat /etc/hostname)
+hostn=$(cat /etc/hostname)
 
 # Change hostname. Tengo sed.
 sed -i "s/$hostn/$newhost/g" /etc/hosts
@@ -53,7 +53,7 @@ apt-get -y update && apt-get -y upgrade
 apt-get -y install apt-utils
 
 # Get required software.
-apt-get -y install p7zip-full nano wireless-tools wpasupplicant
+apt-get -y install p7zip-full nano wireless-tools wpasupplicant usbutils
 
 #########################
 # Python 3 and libraries.
@@ -131,21 +131,16 @@ apt-get -y install python
 
 # Configure, make, and install.
 cd llvm-3.6.2.src
-mkdir build
-cd build
-cmake -DBUILD_SHARED_LIBS=ON -DLLVM_TARGETS_TO_BUILD="ARM" ..
-make -j4 && make install
+./configure
+make ENABLE_OPTIMIZED=1 DISABLE_ASSERTIONS=1 -j4
+make ENABLE_OPTIMIZED=1 DISABLE_ASSERTIONS=1 install
 
 # Cleanup
 cd ~
 rm -rf llvm-3.6.2.src
 
 # Get llvmlite. Remove static linking.
-git clone https://github.com/numba/llvmlite.git
-cd llvmlite
-# sed -i "s/-static-libstdc++ //g" ffi/Makefile.linux
-python3 setup.py build
-python3 setup.py install
+pip3 install llvmlite
 
 # Update libraries.
 ldconfig
