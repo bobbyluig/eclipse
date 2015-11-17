@@ -34,6 +34,7 @@ sed -i "s/$hostn/$newhost/g" /etc/hostname
 apt-get -y install git
 cd ~
 git clone https://bobbyluig@github.com/bobbyluig/Eclipse.git
+chmod +x -R Eclipse
 
 ###############################
 # Update and get prerequisites.
