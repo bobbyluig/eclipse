@@ -34,14 +34,6 @@ hostn=$(cat /etc/hostname)
 sed -i "s/$hostn/$newhost/g" /etc/hosts
 sed -i "s/$hostn/$newhost/g" /etc/hostname
 
-###################
-# Clone repository.
-###################
-
-apt-get -y install git
-cd ~
-git clone https://bobbyluig:$password@github.com/bobbyluig/Eclipse.git
-
 ###############################
 # Update and get prerequisites.
 ###############################ss
@@ -54,6 +46,14 @@ apt-get -y install apt-utils
 
 # Get required software.
 apt-get -y install p7zip-full nano wireless-tools wpasupplicant usbutils
+
+###################
+# Clone repository.
+###################
+
+apt-get -y install git
+cd ~
+git clone https://bobbyluig:$password@github.com/bobbyluig/Eclipse.git
 
 #########################
 # Python 3 and libraries.
