@@ -17,9 +17,12 @@ var connection = new autobahn.Connection({
     onchallenge: onchallenge
 });
 
+var ws = null;
+
 connection.onopen = function(session, details) {
     console.log('Connected session with ID: ' + session.id);
-    session.call('com.agility', [1, 60]);
+    ws = session;
+    ws.call('com.agility', [1, 60]);
 }
 
 connection.open();

@@ -11,6 +11,18 @@
 # ODROID Debian: http://forum.odroid.com/viewtopic.php?f=114&t=8084
 ###########################################################################
 
+#############
+# User input.
+#############
+
+# Request user for new hostname.
+echo "Enter robot hostname: "
+read newhost
+
+# Request GitHub password.
+echo "Enter GitHub password: "
+read password
+
 #####################
 # Configure hostname.
 #####################
@@ -18,14 +30,9 @@
 # Get current hostname.
 hostn = $(cat /etc/hostname)
 
-# Request user for new hostname.
-echo "Enter robot hostname: "
-read newhost
-
 # Change hostname. Tengo sed.
 sed -i "s/$hostn/$newhost/g" /etc/hosts
 sed -i "s/$hostn/$newhost/g" /etc/hostname
-
 
 ###################
 # Clone repository.
@@ -33,8 +40,7 @@ sed -i "s/$hostn/$newhost/g" /etc/hostname
 
 apt-get -y install git
 cd ~
-git clone https://bobbyluig@github.com/bobbyluig/Eclipse.git
-chmod +x -R Eclipse
+git clone https://bobbyluig:$password@github.com/bobbyluig/Eclipse.git
 
 ###############################
 # Update and get prerequisites.
@@ -47,7 +53,7 @@ apt-get -y update && apt-get -y upgrade
 apt-get -y install apt-utils
 
 # Get required software.
-apt-get -y install p7zip-full nano
+apt-get -y install p7zip-full nano wireless-tools wpasupplicant
 
 #########################
 # Python 3 and libraries.
