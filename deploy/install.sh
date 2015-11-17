@@ -26,6 +26,15 @@ read newhost
 sed -i "s/$hostn/$newhost/g" /etc/hosts
 sed -i "s/$hostn/$newhost/g" /etc/hostname
 
+
+###################
+# Clone repository.
+###################
+
+apt-get -y install git
+cd ~
+git clone https://bobbyluig@github.com/bobbyluig/Eclipse.git
+
 ###############################
 # Update and get prerequisites.
 ###############################ss
@@ -65,7 +74,7 @@ pip3 install pyaudio
 ####################
 
 # Get required libraries.
-apt-get -y install git cmake pkg-config
+apt-get -y install cmake pkg-config
 apt-get -y install libjpeg-dev libtiff5-dev libjasper-dev libpng12-dev
 apt-get -y install libavcodec-dev libavformat-dev libswscale-dev libv4l-dev
 apt-get -y install libatlas-base-dev gfortran

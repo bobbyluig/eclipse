@@ -61,5 +61,6 @@ class Cerebral(ApplicationSession):
         logging.warning('Connection lost!')
 
 if __name__ == '__main__':
-    runner = ApplicationRunner(url='ws://localhost:8080/ws', realm='lycanthrope')
+    ip = '192.168.0.7'
+    runner = ApplicationRunner(url='ws://%s:8080/ws' % ip, realm='lycanthrope')
     runner.run(Cerebral)
