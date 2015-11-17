@@ -57,7 +57,7 @@ class Cerebral(ApplicationSession):
         logging.info('Joined "%s" realm.' % self.config.realm)
         await self.register(move_servo, 'com.agility')
 
-    async def onDisconnect(self):
+    def onDisconnect(self):
         logging.warning('Connection lost!')
 
 if __name__ == '__main__':
