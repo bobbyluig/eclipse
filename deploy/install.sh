@@ -45,7 +45,7 @@ apt-get -y update && apt-get -y upgrade
 apt-get -y install apt-utils
 
 # Get required software.
-apt-get -y install p7zip-full nano wireless-tools wpasupplicant usbutils
+apt-get -y install p7zip-full nano wireless-tools wpasupplicant usbutils wget
 
 ###################
 # Clone repository.
@@ -67,7 +67,7 @@ tar zxvf Python-3.5.0.tgz
 cd Python-3.5.0
 ./configure
 make -j4 && make install
-cd ..
+cd ~
 rm -rf Python-3.5.0
 rm -f Python-3.5.0.tgz
 
