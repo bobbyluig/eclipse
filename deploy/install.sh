@@ -72,7 +72,7 @@ rm -rf Python-3.5.0
 rm -f Python-3.5.0.tgz
 
 # Get Python libraries.
-pip3 install numpy pyserial autobahn[accelerate,serialization]
+pip3 install numpy pyserial autobahn[accelerate]
 apt-get -y install apt-get install libportaudio0 libportaudio2 libportaudiocpp0 portaudio19-dev
 pip3 install pyaudio
 
