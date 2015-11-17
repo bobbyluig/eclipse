@@ -81,6 +81,10 @@
             },
             "ws":{
               "type":"websocket",
+              "options":{
+                "auto_ping_timeout":3000,
+                "auto_ping_interval":5000
+              },
               "auth":{
                 "wampcra":{
                   "type":"static",

@@ -162,8 +162,8 @@ class ApplicationRunner(object):
 
         self.closing = True
 
-        if self.active_protocol and self.active_protocol.session:
-            self.loop.run_until_complete(self.active_protocol.session.leave())
+        if self.active_protocol and self.active_protocol._session:
+            self.loop.run_until_complete(self.active_protocol._session.leave())
         self.loop.close()
 
     async def connect(self):
