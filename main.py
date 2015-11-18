@@ -1,6 +1,6 @@
 #!/usr/bin/env python3.5
 
-import asyncio, logging
+import asyncio, logging, time
 
 from autobahn.asyncio.wamp import ApplicationSession
 from autobahn.wamp import auth
@@ -24,7 +24,7 @@ def move_servo(channel, degrees):
     servo = memory.servos[channel]
     servo.target = degrees
     memory.maestro.set_target(servo)
-    # memory.maestro.flush()
+    memory.maestro.flush()
     logging.info('Executed move_servo(%s, %s).' % (channel, degrees))
 
     return True
@@ -61,6 +61,7 @@ class Cerebral(ApplicationSession):
         logging.warning('Connection lost!')
 
 if __name__ == '__main__':
-    ip = '192.168.0.7'
+    ip = '127.0.0.1'
     runner = ApplicationRunner(url='ws://%s:8080/ws' % ip, realm='lycanthrope')
     runner.run(Cerebral)
+

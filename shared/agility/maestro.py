@@ -27,29 +27,28 @@ class Servo:
         self.k_deg2pwm = (self.max_pwm - self.min_pwm) / (self.max_deg - self.min_deg)
         self.k_pwm2deg = (self.max_deg - self.min_deg) / (self.max_pwm - self.min_pwm)
 
-    # Convert degrees to PWM.
+    # Convert degrees to quarter us PWM.
     def deg_to_pwm(self, deg):
-        return round(self.min_pwm + self.k_deg2pwm * (deg - self.min_deg))
+        return round((self.min_pwm + self.k_deg2pwm * (deg - self.min_deg)) * 4)
 
-    # Convert PWM to degrees.
+    # Convert quarter us PWM to degrees.
     def pwm_to_deg(self, pwm):
-        return self.min_deg + self.k_pwm2deg * (pwm - self.min_pwm)
+        return self.min_deg + self.k_pwm2deg * (pwm / 4 - self.min_pwm)
 
 
 class Maestro:
-    def __init__(self, command_port=0, ttl_port=1, baud=9600, timeout=0):
+    def __init__(self, port=None, timeout=0):
         # Determine the operating system and port strings.
         # Command port is used for USB Dual Port mode.
         if os.name == 'nt':
-            self.command_port = 'COM' + str(command_port)
-            self.ttl_port = 'COM' + str(ttl_port)
+            self.port = port or 3
         else:
-            self.command_port = '/dev/ttyACM' + str(command_port)
-            self.ttl_port = '/dev/ttyACM' + str(ttl_port)
+            self.port = '/dev/ttyACM' + str(port or 0)
 
         # Start a connection using pyserial.
         try:
-            self.usb = serial.Serial(self.command_port, timeout=timeout)
+            self.usb = serial.Serial(self.port)
+            logging.debug('Using command port "%s".' % self.usb.port)
         except:
             logging.critical('Unable to connect to servo controller.')
 
@@ -84,6 +83,9 @@ class Maestro:
         # Normalize and convert target to PWM.
         target = servo.deg_to_pwm(servo.target)
 
+        # Logging.
+        logging.debug('Setting servo %s\'s position to PWM %s.' % (servo.channel, target))
+
         # Use endian format suitable for Maestro.
         lsb, msb = self.endianize(target)
 
@@ -95,6 +97,9 @@ class Maestro:
 
     # Set servo speed.
     def set_speed(self, servo, speed):
+        # Logging.
+        logging.debug('Setting servo %s\'s speed to PWM %s.' % (servo.channel, speed))
+
         # Use endian format suitable for Maestro.
         lsb, msb = self.endianize(speed)
 
@@ -106,6 +111,9 @@ class Maestro:
 
     # Set servo acceleration.
     def set_acceleration(self, servo, accel):
+        # Logging.
+        logging.debug('Setting servo %s\'s acceleration to PWM %s.' % (servo.channel, accel))
+
         # Use endian format suitable for Maestro.
         lsb, msb = self.endianize(accel)
 
@@ -144,7 +152,7 @@ class Maestro:
     # Get the position of one servo. (An update operation on the object).
     def get_position(self, servo):
         # Send command.
-        self.usb.write(chr(0x90) + chr(servo.channel))
+        self.usb.write((0x90, servo.channel))
 
         # Receive 2 bytes of data and unpack
         reply = self.usb.read(size=2)
@@ -156,18 +164,18 @@ class Maestro:
     # Get if any servos are moving.
     def get_moving_state(self):
         # Send command.
-        self.usb.write(chr(0x93))
+        self.usb.write((0x93,))
 
         # Check and return.
-        if self.usb.read() == chr(0):
-            return False
-        else:
+        if self.usb.read() == b'\x01':
             return True
+        else:
+            return False
 
     # Get errors.
     def get_errors(self):
         # Send command.
-        self.usb.write(chr(0xA1))
+        self.usb.write((0xA1,))
 
         # Process and return.
         reply = self.usb.read(size=2)
@@ -187,7 +195,7 @@ class Maestro:
         lsb2, msb2 = self.endianize(period)
 
         # Compose.
-        data = chr(0x8A) + chr(lsb1) + chr(msb1) + chr(lsb2) + chr(msb2)
+        data = (0x8A, lsb1, msb1, lsb2, msb2)
 
         # Write.
         self.usb.write(data)
@@ -261,4 +269,4 @@ class Maestro:
         self.flush()
 
         # Move all servos to their respective targets.
-        self.set_multiple_targets(servos)
+        self.set_multiple_targets(*servos)
