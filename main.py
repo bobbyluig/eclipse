@@ -64,4 +64,3 @@ if __name__ == '__main__':
     ip = '127.0.0.1'
     runner = ApplicationRunner(url='ws://%s:8080/ws' % ip, realm='lycanthrope')
     runner.run(Cerebral)
-

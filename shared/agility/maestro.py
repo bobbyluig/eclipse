@@ -7,12 +7,13 @@ __copyright__ = 'Copyright (c) 2015-2016 Eclipse Technologies'
 
 
 class Servo:
-    def __init__(self, channel, min_deg, max_deg, min_pwm, max_pwm, direction=1):
-        self.channel = channel
-        self.min_deg = min_deg
-        self.max_deg = max_deg
-        self.min_pwm = min_pwm
-        self.max_pwm = max_pwm
+    def __init__(self, channel, min_deg, max_deg, min_pwm, max_pwm, max_vel, direction=1):
+        self.channel = channel # 0 to 17
+        self.min_deg = min_deg # -360 to 360 as (degrees)
+        self.max_deg = max_deg # -360 to 360 as (degrees)
+        self.min_pwm = min_pwm * 4 # 0 to 4000 as (us pwm)
+        self.max_pwm = max_pwm * 4 # 0 to 4000 as (us pwm)
+        self.max_vel = max_vel # 0 to 1000, as (ms / 60deg)
         self.direction = direction
 
         # Dynamic current data.
@@ -24,16 +25,18 @@ class Servo:
         self.target = self.deg
 
         # Compute constants.
-        self.k_deg2pwm = (self.max_pwm - self.min_pwm) / (self.max_deg - self.min_deg)
-        self.k_pwm2deg = (self.max_deg - self.min_deg) / (self.max_pwm - self.min_pwm)
+        self.k_deg2mae = (self.max_pwm - self.min_pwm) / (self.max_deg - self.min_deg)
+        self.k_mae2deg = (self.max_deg - self.min_deg) / (self.max_pwm - self.min_pwm)
+        self.k_vel2mae = (60 * self.k_deg2mae) / self.max_vel * 10
+        self.k_mae2vel = self.max_vel / ((60 * self.k_deg2mae) * 10)
 
-    # Convert degrees to quarter us PWM.
-    def deg_to_pwm(self, deg):
-        return round((self.min_pwm + self.k_deg2pwm * (deg - self.min_deg)) * 4)
+    # Convert degrees to quarter us `.
+    def deg_to_maestro(self, deg):
+        return round(self.min_pwm + self.k_deg2mae * (deg - self.min_deg))
 
     # Convert quarter us PWM to degrees.
-    def pwm_to_deg(self, pwm):
-        return self.min_deg + self.k_pwm2deg * (pwm / 4 - self.min_pwm)
+    def maestro_to_deg(self, pwm):
+        return self.min_deg + self.k_mae2deg * (pwm - self.min_pwm)
 
 
 class Maestro:
@@ -81,10 +84,10 @@ class Maestro:
     # Move a servo to the target defined by its object representation.
     def set_target(self, servo):
         # Normalize and convert target to PWM.
-        target = servo.deg_to_pwm(servo.target)
+        target = servo.deg_to_maestro(servo.target)
 
         # Logging.
-        logging.debug('Setting servo %s\'s position to PWM %s.' % (servo.channel, target))
+        logging.debug('Setting servo %s\'s position to %s.' % (servo.channel, target))
 
         # Use endian format suitable for Maestro.
         lsb, msb = self.endianize(target)
@@ -98,7 +101,7 @@ class Maestro:
     # Set servo speed.
     def set_speed(self, servo, speed):
         # Logging.
-        logging.debug('Setting servo %s\'s speed to PWM %s.' % (servo.channel, speed))
+        logging.debug('Setting servo %s\'s speed to %s.' % (servo.channel, speed))
 
         # Use endian format suitable for Maestro.
         lsb, msb = self.endianize(speed)
@@ -112,7 +115,7 @@ class Maestro:
     # Set servo acceleration.
     def set_acceleration(self, servo, accel):
         # Logging.
-        logging.debug('Setting servo %s\'s acceleration to PWM %s.' % (servo.channel, accel))
+        logging.debug('Setting servo %s\'s acceleration to %s.' % (servo.channel, accel))
 
         # Use endian format suitable for Maestro.
         lsb, msb = self.endianize(accel)
@@ -134,7 +137,7 @@ class Maestro:
 
         # Iterate through all servos, appending to data as needed.
         for servo in servos:
-            target = servo.deg_to_pwm(servo.target)
+            target = servo.deg_to_maestro(servo.target)
             lsb, msb = self.endianize(target)
             data.extend((servo.channel, lsb, msb))
 
@@ -159,7 +162,7 @@ class Maestro:
         pwm = struct.unpack('<H', reply)[0]
 
         # Set servo data.
-        servo.deg = servo.pwm_to_deg(pwm)
+        servo.deg = servo.maestro_to_deg(pwm)
 
     # Get if any servos are moving.
     def get_moving_state(self):
@@ -259,7 +262,7 @@ class Maestro:
             self.set_acceleration(servo, 0)
 
             # Compute velocity as a change in 0.25us PWM / 10ms.
-            delta = abs(servo.target - servo.deg) * servo.k_deg2pwm * 4
+            delta = abs(servo.target - servo.deg) * servo.k_deg2mae
             vel = int(round(delta / (time / 10)))
 
             # Set velocity.
