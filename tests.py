@@ -1,18 +1,19 @@
-from shared.cerebral.hippocampus import Memory
+from shared.agility.maestro import *
 import time
 
-memory = Memory()
-
 if __name__ == '__main__':
-    servo = memory.servos[0]
-    memory.maestro.set_speed(servo, int(round(servo.k_vel2mae * 1)))
-    servo.target = 90
-    memory.maestro.set_target(servo)
-    memory.maestro.flush()
+    maestro = Maestro()
 
-    while memory.maestro.get_moving_state():
-        time.sleep(0.01)
+    s1 = Servo(0, 0, 270, 500, 2500, 160)
+    s2 = Servo(1, 0, 270, 500, 2500, 160)
 
-    servo.target = 0
-    memory.maestro.set_target(servo)
-    memory.maestro.flush()
+    def run():
+        maestro.set_speed(s1, 200)
+        maestro.set_speed(s2, 400)
+        maestro.flush()
+
+    import timeit
+
+    t = timeit.Timer(lambda: run())
+    print(t.timeit(number=1000))
+

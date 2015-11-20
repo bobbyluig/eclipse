@@ -8,10 +8,13 @@ __copyright__ = 'Copyright (c) 2015-2016 Eclipse Technologies'
 # Servo Definitions
 ####################
 
-hip1 = Servo(0, 0, 90, 1100, 2000, 180)
-hip2 = Servo(1, 0, 270, 500, 2500, 30)
-knee = Servo(2, 0, 270, 500, 2500, 30)
-servos = [hip1, hip2, knee]
+s1 = Servo(0, 0, 270, 500, 2500, 160)
+s2 = Servo(1, 0, 270, 500, 2500, 160)
+s3 = Servo(2, 0, 270, 500, 2500, 160)
+s4 = Servo(3, 0, 270, 500, 2500, 160)
+s5 = Servo(4, 0, 270, 500, 2500, 160)
+
+servos = [s1, s2, s3, s4, s5]
 
 ################################
 # Maestro Controller Definition

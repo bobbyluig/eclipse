@@ -45,7 +45,7 @@ apt-get -y update && apt-get -y upgrade
 apt-get -y install apt-utils
 
 # Get required software.
-apt-get -y install p7zip-full nano wireless-tools wpasupplicant usbutils wget
+apt-get -y install p7zip-full nano wireless-tools wpasupplicant usbutils wget connman
 
 ###################
 # Clone repository.
@@ -114,37 +114,4 @@ ldconfig
 # Cleanup.
 cd ~
 rm -rf opencv-3.0.0 opencv_contrib
-
-#######################
-# Install LLVM + Numba.
-#######################
-
-# Get LLVM and dependencies.
-cd ~
-apt-get -y install libedit-dev libffi-dev
-wget http://llvm.org/releases/3.6.2/llvm-3.6.2.src.tar.xz
-tar xvfJ llvm-3.6.2.src.tar.xz
-rm -f llvm-3.6.2.src.tar.xz
-
-# Get Python 2.7.
-apt-get -y install python
-
-# Configure, make, and install.
-cd llvm-3.6.2.src
-./configure
-make ENABLE_OPTIMIZED=1 DISABLE_ASSERTIONS=1 -j4
-make ENABLE_OPTIMIZED=1 DISABLE_ASSERTIONS=1 install
-
-# Cleanup
-cd ~
-rm -rf llvm-3.6.2.src
-
-# Get llvmlite. Remove static linking.
-pip3 install llvmlite
-
-# Update libraries.
-ldconfig
-
-# Get Numba.
-pip3 install numba
 
