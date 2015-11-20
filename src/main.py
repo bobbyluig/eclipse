@@ -1,14 +1,14 @@
 #!/usr/bin/env python3.5
 
 import asyncio, logging, time
+logging.basicConfig(format='%(asctime)s | %(levelname)s | %(message)s', datefmt='%m/%d/%Y %H:%M:%S', level=logging.DEBUG)
 
 from autobahn.asyncio.wamp import ApplicationSession
 from autobahn.wamp import auth
-from shared.cerebral.autoreconnect import ApplicationRunner
-from shared.cerebral.hippocampus import Memory
+from cerebral.autoreconnect import ApplicationRunner
+from cerebral.hippocampus import Memory
 
-__author__ = 'Lujing Cen'
-__copyright__ = 'Copyright (c) 2015-2016 Eclipse Technologies'
+
 
 #############################
 # Define shared memory class.

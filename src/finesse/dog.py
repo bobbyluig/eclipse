@@ -1,10 +1,5 @@
-#!/usr/bin/env python3.5
-
 import numpy as np
 from math import *
-
-__author__ = 'Lujing Cen'
-__copyright__ = 'Copyright (c) 2015-2016 Eclipse Technologies'
 
 
 def forward(lengths, angles):

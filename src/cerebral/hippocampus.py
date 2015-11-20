@@ -1,8 +1,5 @@
-from shared.agility.maestro import *
+from agility.maestro import *
 import logging
-
-__author__ = 'Lujing Cen'
-__copyright__ = 'Copyright (c) 2015-2016 Eclipse Technologies'
 
 ####################
 # Servo Definitions

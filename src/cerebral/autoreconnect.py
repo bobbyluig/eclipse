@@ -1,18 +1,14 @@
 import signal
-
 from autobahn.wamp import protocol
 from autobahn.wamp.types import ComponentConfig
 from autobahn.websocket.protocol import parseWsUrl
 from autobahn.asyncio.websocket import WampWebSocketClientFactory
-
 import asyncio
 import txaio
 import logging
 
-__author__ = 'Lujing Cen'
-__copyright__ = 'Copyright (c) 2015-2016 Eclipse Technologies'
-
 txaio.use_asyncio()
+logger = logging.getLogger(__name__)
 
 
 class ExceededRetryCount(Exception):
@@ -179,10 +175,10 @@ class ApplicationRunner(object):
                 # print('Connection failed')
                 if self.retry_strategy.retry():
                     retry_interval = self.retry_strategy.get_retry_interval()
-                    logging.debug('Retrying in %s seconds.' % retry_interval)
+                    logger.debug('Retrying in %s seconds.' % retry_interval)
                     await asyncio.sleep(retry_interval)
                 else:
-                    logging.warning('Exceeded retry count. Stopping event loop.')
+                    logger.warning('Exceeded retry count. Stopping event loop.')
                     self.loop.stop()
                     raise ExceededRetryCount()
 

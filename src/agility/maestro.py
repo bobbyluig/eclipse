@@ -1,9 +1,6 @@
-#!/usr/bin/env python3.5
-
 import serial, os, struct, logging
 
-__author__ = 'Lujing Cen'
-__copyright__ = 'Copyright (c) 2015-2016 Eclipse Technologies'
+logger = logging.getLogger(__name__)
 
 
 class Servo:
@@ -51,9 +48,9 @@ class Maestro:
         # Start a connection using pyserial.
         try:
             self.usb = serial.Serial(self.port)
-            logging.debug('Using command port "%s".' % self.usb.port)
+            logger.debug('Using command port "%s".' % self.usb.port)
         except:
-            logging.critical('Unable to connect to servo controller.')
+            logger.critical('Unable to connect to servo controller.')
 
         # Data buffer.
         self.data = bytearray()
@@ -86,8 +83,8 @@ class Maestro:
         # Normalize and convert target to PWM.
         target = servo.deg_to_maestro(servo.target)
 
-        # Logging.
-        logging.debug('Setting servo %s\'s position to %s.' % (servo.channel, target))
+        # logger.
+        logger.debug('Setting servo %s\'s position to %s.' % (servo.channel, target))
 
         # Use endian format suitable for Maestro.
         lsb, msb = self.endianize(target)
@@ -100,8 +97,8 @@ class Maestro:
 
     # Set servo speed.
     def set_speed(self, servo, speed):
-        # Logging.
-        logging.debug('Setting servo %s\'s speed to %s.' % (servo.channel, speed))
+        # logger.
+        logger.debug('Setting servo %s\'s speed to %s.' % (servo.channel, speed))
 
         # Use endian format suitable for Maestro.
         lsb, msb = self.endianize(speed)
@@ -114,8 +111,8 @@ class Maestro:
 
     # Set servo acceleration.
     def set_acceleration(self, servo, accel):
-        # Logging.
-        logging.debug('Setting servo %s\'s acceleration to %s.' % (servo.channel, accel))
+        # logger.
+        logger.debug('Setting servo %s\'s acceleration to %s.' % (servo.channel, accel))
 
         # Use endian format suitable for Maestro.
         lsb, msb = self.endianize(accel)
