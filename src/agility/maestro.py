@@ -1,6 +1,6 @@
 import serial, os, struct, logging
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('universe')
 
 
 class Servo:

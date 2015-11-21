@@ -8,7 +8,7 @@ import txaio
 import logging
 
 txaio.use_asyncio()
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('universe')
 
 
 class ExceededRetryCount(Exception):

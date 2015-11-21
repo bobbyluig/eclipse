@@ -1,5 +1,4 @@
 from agility.maestro import *
-import logging
 
 ####################
 # Servo Definitions
@@ -13,12 +12,6 @@ s5 = Servo(4, 0, 270, 500, 2500, 160)
 
 servos = [s1, s2, s3, s4, s5]
 
-################################
-# Maestro Controller Definition
-################################
-
-maestro = Maestro()
-
 ###################
 # Class definition.
 ###################
@@ -27,7 +20,7 @@ class Memory:
     def __init__(self):
         # Create variables.
         self.servos = servos
-        self.maestro = maestro
+        self.maestro = Maestro()
         self.whoami = 'DOG-1E5'
         self.password = 'de2432k,/s-=/8Eu'
 
