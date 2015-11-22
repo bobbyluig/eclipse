@@ -1,4 +1,4 @@
-from agility.pololu.Enumeration import Opcode
+from agility.pololu.enumeration import Opcode
 
 
 class BytecodeInstruction:

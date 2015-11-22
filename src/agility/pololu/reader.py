@@ -1,14 +1,63 @@
 import re
 
-from agility.pololu.BytecodeProgram import BytecodeProgram
-from agility.pololu.Enumeration import Opcode, Mode, Keyword, BlockType
+from agility.pololu.program import BytecodeProgram
+from agility.pololu.enumeration import Opcode, Mode, Keyword, BlockType
 
-from agility.pololu.BytecodeInstruction import BytecodeInstruction
+from agility.pololu.instruction import BytecodeInstruction
 
 
 class BytecodeReader:
     def __init__(self):
         self.mode = None
+
+    def writeListing(self, program, filename):
+        streamWriter = open(filename, 'w')
+
+        index1 = 0
+        num1 = 0
+        bytecodeInstruction = None
+
+        if len(program) != 0:
+            bytecodeInstruction = program[index1]
+
+        for line in range(1, program.getSourceLineCount() + 1):
+            num2 = 0
+            streamWriter.write('%04X: ' % num1)
+
+            while bytecodeInstruction != None and bytecodeInstruction.lineNumber == line:
+                for num3 in bytecodeInstruction.toByteList():
+                    streamWriter.write('%02X' % num3)
+                    num1 += 1
+                    num2 += 2
+                index1 += 1
+                bytecodeInstruction = program[index1] if index1 < len(program) else None
+
+            for index2 in range(20 - num2):
+                streamWriter.write(' ')
+
+            streamWriter.write(' -- ')
+            streamWriter.write('%s\n' % program.getSourceLine(line))
+
+        streamWriter.write('\n')
+        streamWriter.write('Subroutines:\n')
+        streamWriter.write('Hex Decimal Address Name\n')
+
+        strArray = [None] * 128
+
+        for key, num3 in program.subroutineAddresses.items():
+            if program.subroutineCommands[key] != 54:
+                num2 = program.subroutineCommands[key] - 128
+                strArray[int(num2)] = '%02X  %03d     %04X    %s' % (num2, num2, num3, key)
+
+        for data in strArray:
+            if data is not None:
+                streamWriter.write('%s\n' % data)
+
+        for key, num2 in program.subroutineAddresses.items():
+            if program.subroutineCommands[key] == 54:
+                streamWriter.write('--  ---     %0x4X    %s\n' % (num2, key))
+
+        streamWriter.close()
 
     def read(self, program, isMiniMaestro):
         bytecode_program = BytecodeProgram()

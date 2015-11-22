@@ -1,6 +1,6 @@
 import usb, logging, time
-from agility.pololu.BytecodeReader import BytecodeReader
-from agility.pololu.Enumeration import uscRequest, uscParameter, Opcode
+from agility.pololu.reader import BytecodeReader
+from agility.pololu.enumeration import uscRequest, uscParameter, Opcode
 
 logger = logging.getLogger('universe')
 
@@ -76,3 +76,22 @@ class Usc:
         firmwareVersionMinor = (buffer[12] & 0xF) + (buffer[12] >> 4 & 0xF) * 10
         firmwareVersionMajor = (buffer[13] & 0xF) + (buffer[13] >> 4 & 0xF) * 10
         self.firmwareVersionString = '%s.%s' % (firmwareVersionMajor, firmwareVersionMinor)
+
+    # Custom function to load script.
+    def loadProgram(self, program):
+        self.setScriptDone(1)
+        self.eraseScript()
+
+        byteList = program.getByteList()
+
+        if len(byteList) > 8192:
+            raise Exception('Script is too long for device (%s bytes).' % len(byteList))
+
+        if len(byteList) < 8192:
+            byteList.append(Opcode.QUIT)
+
+        # Set up subroutines.
+        self.setSubroutines(program.subroutineAddresses, program.subroutineCommands)
+
+        # Load script.
+        self.writeScipt(byteList)

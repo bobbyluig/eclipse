@@ -1,6 +1,6 @@
-from agility.pololu.Enumeration import Opcode
+from agility.pololu.enumeration import Opcode
 
-from agility.pololu.BytecodeInstruction import BytecodeInstruction
+from agility.pololu.instruction import BytecodeInstruction
 
 
 class BytecodeProgram:
