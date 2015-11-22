@@ -1,4 +1,4 @@
-from agility.enumeration import Opcode
+from agility.pololu.Enumeration import Opcode
 
 
 class BytecodeInstruction:
@@ -19,16 +19,6 @@ class BytecodeInstruction:
         self.labelName = kwargs.get('labelName')
         self.isSubroutine = kwargs.get('isSubroutine')
         self.isCall = kwargs.get('isCall')
-
-    def BytecodeInstruction(self, op, *args, lineNumber, columnNumber):
-        self.opcode = op
-        self.filename  = args[0]
-
-        if len(args) == 2:
-            self.literalArguments.append(args[1])
-
-        self.lineNumber = lineNumber
-        self.columnNumber = columnNumber
 
     def addLiteralArgument(self, value, isMiniMaestro):
         self.literalArguments.append(value)
@@ -59,11 +49,11 @@ class BytecodeInstruction:
             list.extend((self.literalArguments[0],))
         elif self.opcode == Opcode.LITERAL_N:
             list.extend((len(self.literalArguments) * 2,))
-            for num in range(len(self.literalArguments)):
+            for num in self.literalArguments:
                 list.extend((num % 256, num // 256))
         elif self.opcode == Opcode.LITERAL8_N:
             list.extend((len(self.literalArguments,)))
-            for num in range(len(self.literalArguments)):
+            for num in self.literalArguments:
                 list.extend((num,))
 
         return list

@@ -50,7 +50,7 @@ class Maestro:
             self.usb = serial.Serial(self.port)
             logger.debug('Using command port "%s".' % self.usb.port)
         except:
-            logger.critical('Unable to connect to servo controller.')
+            raise Exception('Unable to connect to servo controller at %s.' % self.port)
 
         # Data buffer.
         self.data = bytearray()
@@ -212,16 +212,16 @@ class Maestro:
     # Stop script.
     def stop_script(self):
         # Send command.
-        self.usb.write(chr(0xA4))
+        self.usb.write((0xA4,))
 
     # Restart script.
     def restart(self, subroutine, parameter=None):
         # Construct command depending on parameter.
         if parameter is None:
-            data = chr(0xA7) + chr(subroutine)
+            data = (0xA7, subroutine)
         else:
             lsb, msb = self.endianize(parameter)
-            data = chr(0xA8) + chr(lsb) + chr(msb)
+            data = (0xA8, lsb, msb)
 
         # Send data.
         self.usb.write(data)
@@ -229,7 +229,7 @@ class Maestro:
     # Get script status.
     def get_script_status(self):
         # Send command.
-        self.usb.write(chr(0xAE))
+        self.usb.write((0xAE,))
 
         # Check and return.
         if self.usb.read() == chr(0):

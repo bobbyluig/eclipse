@@ -45,7 +45,7 @@ apt-get -y update && apt-get -y upgrade
 apt-get -y install apt-utils
 
 # Get required software.
-apt-get -y install p7zip-full nano wireless-tools wpasupplicant usbutils wget connman
+apt-get -y install p7zip-full nano wireless-tools wpasupplicant usbutils wget connman libusb-dev
 
 ###################
 # Clone repository.
@@ -72,7 +72,7 @@ rm -rf Python-3.5.0
 rm -f Python-3.5.0.tgz
 
 # Get Python libraries.
-pip3 install numpy pyserial autobahn[accelerate]
+pip3 install numpy pyserial autobahn[accelerate] pyusb
 apt-get -y install libportaudio0 libportaudio2 libportaudiocpp0 portaudio19-dev
 pip3 install pyaudio
 

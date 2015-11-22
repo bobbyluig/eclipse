@@ -1,5 +1,6 @@
-from agility.enumeration import Opcode
-from agility.BytecodeInstruction import BytecodeInstruction
+from agility.pololu.Enumeration import Opcode
+
+from agility.pololu.BytecodeInstruction import BytecodeInstruction
 
 
 class BytecodeProgram:
@@ -11,7 +12,7 @@ class BytecodeProgram:
         self.subroutineAddresses = {}
         self.subroutineCommands = {}
         self.CRC7_TABLE = tuple(BytecodeProgram.oneByteCRC(i) for i in range(256))
-        self.maxBlock = None
+        self.maxBlock = 0
         
     def __getitem__(self, item):
         return self.instructionList[item]
@@ -19,7 +20,7 @@ class BytecodeProgram:
     def __len__(self):
         return len(self.instructionList)
 
-    def get_blockIsOpen(self):
+    def blockIsOpen(self):
         return len(self.openBlocks) > 0
 
     def getSourceLine(self, line):
