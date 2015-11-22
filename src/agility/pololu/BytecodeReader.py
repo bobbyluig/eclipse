@@ -69,7 +69,7 @@ class BytecodeReader:
     @staticmethod
     def looksLikeLiteral(s):
         if not re.match(r"^-?[0-9.]+$", s):
-            return bool(re.match("^0[xX][0-9a-fA-F.]+$", s))
+            return bool(re.match(r"^0[xX][0-9a-fA-F.]+$", s))
         return True
 
     def parseString(self, s, bytecode_program, filename, line_number, column_number, isMiniMaestro):
