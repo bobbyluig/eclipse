@@ -77,7 +77,7 @@ class BytecodeProgram:
 
     def closeBlock(self, filename, line_number, column_number):
         self.addInstruction(BytecodeInstruction.newLabel('block_end_%s' % self.openBlocks.pop(), filename, line_number, column_number))
-        num = self.openBlockTypes.pop(); # FIX! WHY IS IT HERE...
+        num = self.openBlockTypes.pop()
 
     def completeJumps(self):
         dictionary = {}
