@@ -5,6 +5,44 @@ from agility.pololu.enumeration import uscRequest, uscParameter, Opcode
 logger = logging.getLogger('universe')
 
 
+class Range:
+    def __init__(self, bytes, minimumValue, maximumValue):
+        self.bytes = bytes
+        self.minimumValue = minimumValue
+        self.maximumValue = maximumValue
+
+    def signed(self):
+        return self.minimumValue < 0
+
+    @staticmethod
+    def u32():
+        return Range(4, 0, 0x7FFFFFFF)
+
+    @staticmethod
+    def u16():
+        return Range(2, 0, 0xFFFF)
+
+    @staticmethod
+    def u12():
+        return Range(2, 0, 0x0FFF)
+
+    @staticmethod
+    def u10():
+        return Range(2, 0, 0x03FF)
+
+    @staticmethod
+    def u8():
+        return Range(1, 0, 0xFF)
+
+    @staticmethod
+    def u7():
+        return Range(1, 0, 0x7F)
+
+    @staticmethod
+    def boolean():
+        return Range(1, 0, 1)
+
+
 class Usc:
     def __init__(self):
         self.dev = usb.core.find(idVendor=0x1ffb)
@@ -76,6 +114,10 @@ class Usc:
         firmwareVersionMinor = (buffer[12] & 0xF) + (buffer[12] >> 4 & 0xF) * 10
         firmwareVersionMajor = (buffer[13] & 0xF) + (buffer[13] >> 4 & 0xF) * 10
         self.firmwareVersionString = '%s.%s' % (firmwareVersionMajor, firmwareVersionMinor)
+
+    def getRawParameter(self, parameter):
+        range = Range.u7()
+        return self.dev.ctrl_transfer(0xC0, uscRequest.REQUEST_GET_PARAMETER, 0, parameter, range.bytes)
 
     # Custom function to load script.
     def loadProgram(self, program):
