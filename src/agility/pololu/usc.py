@@ -1,13 +1,14 @@
 import usb, logging, time
 from agility.pololu.reader import BytecodeReader
+from agility.pololu.settings import UscSettings
 from agility.pololu.enumeration import uscRequest, uscParameter, Opcode
 
 logger = logging.getLogger('universe')
 
 
 class Range:
-    def __init__(self, bytes, minimumValue, maximumValue):
-        self.bytes = bytes
+    def __init__(self, numBytes, minimumValue, maximumValue):
+        self.bytes = numBytes
         self.minimumValue = minimumValue
         self.maximumValue = maximumValue
 
@@ -45,12 +46,18 @@ class Range:
 
 class Usc:
     def __init__(self):
-        self.dev = usb.core.find(idVendor=0x1ffb)
-        self.subroutineOffsetBlocks = 512
-        self.firmwareVersionString = None
+        self.vendorID = 0x1ffb
+        self.productIDArray = [0x0089, 0x008a, 0x008b, 0x008c]
+        self.dev = usb.core.find(idVendor=self.vendorID)
 
         if self.dev is None:
             raise Exception('Unable to connect to Mini Maestro.')
+
+        self.isMiniMaestro = self.dev.idProduct != self.productIDArray[0]
+        self.subroutineOffsetBlocks = 512 if self.isMiniMaestro else 64
+        self.maxScriptLength = 8192 if self.isMiniMaestro else 1024
+        self.firmwareVersionString = self.getFirmwareVersion()
+        self.settings = UscSettings()
 
     def setSubroutines(self, subroutineAddresses, subroutineCommands):
         subroutineData = bytearray((0xFF,) * 256)
@@ -70,9 +77,10 @@ class Usc:
             for j in range(16):
                 block_bytes[j] = subroutineData[block * 16 + j]
 
-            self.dev.ctrl_transfer(0x40, uscRequest.REQUEST_WRITE_SCRIPT, 0, block + self.subroutineOffsetBlocks, block_bytes)
+            self.dev.ctrl_transfer(0x40, uscRequest.REQUEST_WRITE_SCRIPT, 0, block + self.subroutineOffsetBlocks,
+                                   block_bytes)
 
-    def writeScipt(self, bytecode):
+    def writeScript(self, bytecode):
         for block in range((len(bytecode) + 15) // 16):
             block_bytes = bytearray((0x00,) * 16)
 
@@ -92,7 +100,7 @@ class Usc:
 
     # Places a parameter on the stack to be consumed by the subroutine.
     def restartScriptAtSubroutineWithParameter(self, subroutine, parameter):
-        self.dev.ctrl_transfer(0x40, uscRequest.REQUEST_ERASE_SCRIPT_WITH_PARAMETER, 0, 0)
+        self.dev.ctrl_transfer(0x40, uscRequest.REQUEST_ERASE_SCRIPT_WITH_PARAMETER, parameter, subroutine)
 
     def restartScript(self):
         self.dev.ctrl_transfer(0x40, uscRequest.REQUEST_RESTART_SCRIPT, 0, 0)
@@ -113,11 +121,81 @@ class Usc:
         buffer = self.dev.ctrl_transfer(0x80, 6, 0x0100, 0x0000, 0x0012)
         firmwareVersionMinor = (buffer[12] & 0xF) + (buffer[12] >> 4 & 0xF) * 10
         firmwareVersionMajor = (buffer[13] & 0xF) + (buffer[13] >> 4 & 0xF) * 10
-        self.firmwareVersionString = '%s.%s' % (firmwareVersionMajor, firmwareVersionMinor)
+        return '%s.%s' % (firmwareVersionMajor, firmwareVersionMinor)
 
     def getRawParameter(self, parameter):
-        range = Range.u7()
-        return self.dev.ctrl_transfer(0xC0, uscRequest.REQUEST_GET_PARAMETER, 0, parameter, range.bytes)
+        parameterRange = Usc.getRange(parameter)
+        return self.dev.ctrl_transfer(0xC0, uscRequest.REQUEST_GET_PARAMETER, 0, parameter, parameterRange.bytes)
+
+    @staticmethod
+    def requireArgumentRange(argumentValue, minimum, maximum, argumentName):
+        if argumentValue < minimum or argumentValue > maximum:
+            raise Exception('The %s must be between %s and %s but the value given was %s.'
+                            % (argumentName, minimum, maximum, argumentValue))
+
+    def setRawParameter(self, parameter, value):
+        parameterRange = Usc.getRange(parameter)
+        Usc.requireArgumentRange(value, parameterRange.minimumValue, parameterRange.maximumValue, parameter)
+        self.setRawParameterNoChecks(parameter, value, parameterRange.bytes)
+
+    def setRawParameterNoChecks(self, parameter, value, numBytes):
+        index = (numBytes << 8) + parameter
+        self.dev.ctrl_transfer(0x40, uscRequest.REQUEST_SET_PARAMETER, value, index)
+
+    @staticmethod
+    def getRange(parameterId):
+        if parameterId in [uscParameter.PARAMETER_INITIALIZED,
+                           uscParameter.PARAMETER_SERVOS_AVAILABLE,
+                           uscParameter.PARAMETER_SERVO_PERIOD,
+                           uscParameter.PARAMETER_MINI_MAESTRO_SERVO_PERIOD_L,
+                           uscParameter.PARAMETER_SERVO_MULTIPLIER,
+                           uscParameter.PARAMETER_CHANNEL_MODES_0_3,
+                           uscParameter.PARAMETER_CHANNEL_MODES_4_7,
+                           uscParameter.PARAMETER_CHANNEL_MODES_8_11,
+                           uscParameter.PARAMETER_CHANNEL_MODES_12_15,
+                           uscParameter.PARAMETER_CHANNEL_MODES_16_19,
+                           uscParameter.PARAMETER_CHANNEL_MODES_20_23,
+                           uscParameter.PARAMETER_ENABLE_PULLUPS]:
+            return Range.u8()
+        elif parameterId in [uscParameter.PARAMETER_MINI_MAESTRO_SERVO_PERIOD_HU,
+                             uscParameter.PARAMETER_SERIAL_TIMEOUT,
+                             uscParameter.PARAMETER_SERIAL_FIXED_BAUD_RATE,
+                             uscParameter.PARAMETER_SCRIPT_CRC]:
+            return Range.u16()
+        elif parameterId in [uscParameter.PARAMETER_SERIAL_NEVER_SUSPEND,
+                             uscParameter.PARAMETER_SERIAL_ENABLE_CRC,
+                             uscParameter.PARAMETER_SCRIPT_DONE]:
+            return Range.boolean()
+        elif parameterId == uscParameter.PARAMETER_SERIAL_DEVICE_NUMBER:
+            return Range.u7()
+        elif parameterId == uscParameter.PARAMETER_SERIAL_MODE:
+            return Range(1, 0, 3)
+        elif parameterId == uscParameter.PARAMETER_SERIAL_BAUD_DETECT_TYPE:
+            return Range(1, 0, 1)
+        elif parameterId == uscParameter.PARAMETER_SERIAL_MINI_SSC_OFFSET:
+            return Range(1, 0, 254)
+        else:
+            servoParameter = (int(parameterId) - int(uscParameter.PARAMETER_SERVO0_HOME) % 9) \
+                             + int(uscParameter.PARAMETER_SERVO0_HOME)
+            if servoParameter in [int(uscParameter.PARAMETER_SERVO0_SPEED),
+                                  int(uscParameter.PARAMETER_SERVO0_MAX),
+                                  int(uscParameter.PARAMETER_SERVO0_MIN),
+                                  int(uscParameter.PARAMETER_SERVO0_ACCELERATION)]:
+                return Range.u8()
+            elif servoParameter in [int(uscParameter.PARAMETER_SERVO0_HOME),
+                                  int(uscParameter.PARAMETER_SERVO0_NEUTRAL)]:
+                return Range(2, 0, 32440)
+            elif servoParameter == int(uscParameter.PARAMETER_SERVO0_RANGE):
+                return Range(1, 1, 50)
+            else:
+                raise Exception('Invalid parameterId %s, can not determine the range of this parameter.' % int(parameterId))
+
+    def restoreDefaultConfiguration(self):
+        self.setRawParameterNoChecks(uscParameter.PARAMETER_INITIALIZED, 0xFF, 1)
+        self.reinitialize(1500)
+
+    def getUscSettings(self):
+        return
 
     # Custom function to load script.
     def loadProgram(self, program):
@@ -136,4 +214,4 @@ class Usc:
         self.setSubroutines(program.subroutineAddresses, program.subroutineCommands)
 
         # Load script.
-        self.writeScipt(byteList)
+        self.writeScript(byteList)

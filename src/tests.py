@@ -11,8 +11,9 @@ if __name__ == '__main__':
 
     controller = Usc()
 
-    print(controller.getRawParameter(uscParameter.PARAMETER_SERIAL_DEVICE_NUMBER))
+    print(controller.getRawParameter(uscParameter.PARAMETER_SCRIPT_CRC))
 
+    '''
     reader = BytecodeReader()
 
     start = time.time()
@@ -28,3 +29,4 @@ if __name__ == '__main__':
     controller.setScriptDone(0)
 
     print(time.time() - start)
+    '''
