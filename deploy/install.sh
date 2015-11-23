@@ -47,6 +47,13 @@ apt-get -y install apt-utils
 # Get required software.
 apt-get -y install p7zip-full nano wireless-tools wpasupplicant usbutils wget connman libusb-dev
 
+######################
+# Arduino development.
+######################
+
+apt-get -y install arduino-core picocom python python-pip python-dev
+pip install ino
+
 ###################
 # Clone repository.
 ###################
