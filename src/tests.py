@@ -13,8 +13,9 @@ if __name__ == '__main__':
 
     print(controller.getRawParameter(uscParameter.PARAMETER_SERIAL_DEVICE_NUMBER))
 
-    '''
     reader = BytecodeReader()
+
+    start = time.time()
 
     f = open('agility/forth/%s' % infile)
     data = f.read()
@@ -25,4 +26,5 @@ if __name__ == '__main__':
 
     controller.loadProgram(program)
     controller.setScriptDone(0)
-    '''
+
+    print(time.time() - start)
