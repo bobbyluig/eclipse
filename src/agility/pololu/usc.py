@@ -1,7 +1,7 @@
-import usb, logging, time
+import usb, logging, time, struct
 from agility.pololu.reader import BytecodeReader
-from agility.pololu.settings import UscSettings
-from agility.pololu.enumeration import uscRequest, uscParameter, Opcode
+from agility.pololu.settings import UscSettings, ChannelSetting
+from agility.pololu.enumeration import uscRequest, uscParameter, Opcode, ChannelMode, HomeMode
 
 logger = logging.getLogger('universe')
 
@@ -14,10 +14,6 @@ class Range:
 
     def signed(self):
         return self.minimumValue < 0
-
-    @staticmethod
-    def u32():
-        return Range(4, 0, 0x7FFFFFFF)
 
     @staticmethod
     def u16():
@@ -48,16 +44,80 @@ class Usc:
     def __init__(self):
         self.vendorID = 0x1ffb
         self.productIDArray = [0x0089, 0x008a, 0x008b, 0x008c]
+        self.INSTRUCTION_FREQUENCY = 12000000
+        self.servoParameterBytes = 9
+
         self.dev = usb.core.find(idVendor=self.vendorID)
 
         if self.dev is None:
             raise Exception('Unable to connect to Mini Maestro.')
 
-        self.isMiniMaestro = self.dev.idProduct != self.productIDArray[0]
+        self.productID = self.dev.idProduct
+
+        if self.productID == self.productIDArray[0]:
+            self.servoCount = 6
+        elif self.productID == self.productIDArray[1]:
+            self.servoCount = 12
+        elif self.productID == self.productIDArray[2]:
+            self.servoCount = 18
+        elif self.productID == self.productIDArray[3]:
+            self.servoCount = 24
+        else:
+            raise Exception('Unknown product ID %02x.' % self.productID)
+
+        self.serialNumber = self.dev.serial_number
+        self.isMiniMaestro = self.servoCount != 6
         self.subroutineOffsetBlocks = 512 if self.isMiniMaestro else 64
         self.maxScriptLength = 8192 if self.isMiniMaestro else 1024
         self.firmwareVersionString = self.getFirmwareVersion()
-        self.settings = UscSettings()
+
+    def close(self):
+        self.dev.close()
+
+    def specifyServo(self, p, servo):
+        return p + servo * self.servoParameterBytes
+
+    @staticmethod
+    def exponentialSpeedToNormalSpeed(exponentialSpeed):
+        mantissa = exponentialSpeed >> 3
+        exponent = exponentialSpeed & 7
+        return mantissa * (1 << exponent)
+
+    @staticmethod
+    def normalSpeedToExponentialSpeed(normalSpeed):
+        mantissa = normalSpeed
+        exponent = 0
+
+        while True:
+            if mantissa < 32:
+                return exponent + (mantissa << 3)
+
+            if exponent == 7:
+                return 0xFF
+
+            exponent += 1
+            mantissa >>= 1
+
+    @staticmethod
+    def channelToPort(channel):
+        if channel <= 3:
+            return channel
+        elif channel < 6:
+            return channel + 2
+        else:
+            raise Exception('Invalid channel number %s.' % channel)
+
+    def convertSpbrgToBps(self, spbrg):
+        if spbrg == 0:
+            return 0
+        else:
+            return int((self.INSTRUCTION_FREQUENCY + (spbrg + 1) / 2) / (spbrg + 1))
+
+    def convertBpsToSpbrg(self, bps):
+        if bps == 0:
+            return 0
+        else:
+            return int((self.INSTRUCTION_FREQUENCY - bps / 2) / bps)
 
     def setSubroutines(self, subroutineAddresses, subroutineCommands):
         subroutineData = bytearray((0xFF,) * 256)
@@ -125,7 +185,12 @@ class Usc:
 
     def getRawParameter(self, parameter):
         parameterRange = Usc.getRange(parameter)
-        return self.dev.ctrl_transfer(0xC0, uscRequest.REQUEST_GET_PARAMETER, 0, parameter, parameterRange.bytes)
+        array = self.dev.ctrl_transfer(0xC0, uscRequest.REQUEST_GET_PARAMETER, 0, parameter, parameterRange.bytes)
+
+        if parameterRange.bytes == 1:
+            return int(struct.unpack('<B', array)[0])
+        else:
+            return int(struct.unpack('<H', array)[0])
 
     @staticmethod
     def requireArgumentRange(argumentValue, minimum, maximum, argumentName):
@@ -183,19 +248,93 @@ class Usc:
                                   int(uscParameter.PARAMETER_SERVO0_ACCELERATION)]:
                 return Range.u8()
             elif servoParameter in [int(uscParameter.PARAMETER_SERVO0_HOME),
-                                  int(uscParameter.PARAMETER_SERVO0_NEUTRAL)]:
+                                    int(uscParameter.PARAMETER_SERVO0_NEUTRAL)]:
                 return Range(2, 0, 32440)
             elif servoParameter == int(uscParameter.PARAMETER_SERVO0_RANGE):
                 return Range(1, 1, 50)
             else:
-                raise Exception('Invalid parameterId %s, can not determine the range of this parameter.' % int(parameterId))
+                raise Exception('Invalid parameterId %s, can not determine the range of this parameter.'
+                                % int(parameterId))
 
     def restoreDefaultConfiguration(self):
         self.setRawParameterNoChecks(uscParameter.PARAMETER_INITIALIZED, 0xFF, 1)
         self.reinitialize(1500)
 
     def getUscSettings(self):
-        return
+        settings = UscSettings()
+
+        settings.serialMode = self.getRawParameter(uscParameter.PARAMETER_SERIAL_MODE)
+        settings.fixedBaudRate = self.convertSpbrgToBps(
+            self.getRawParameter(uscParameter.PARAMETER_SERIAL_FIXED_BAUD_RATE))
+        settings.enableCrc = self.getRawParameter(uscParameter.PARAMETER_SERIAL_ENABLE_CRC) != 0
+        settings.neverSuspend = self.getRawParameter(uscParameter.PARAMETER_SERIAL_NEVER_SUSPEND) != 0
+        settings.serialDeviceNumber = self.getRawParameter(uscParameter.PARAMETER_SERIAL_DEVICE_NUMBER)
+        settings.miniSscOffset = self.getRawParameter(uscParameter.PARAMETER_SERIAL_MINI_SSC_OFFSET)
+        settings.serialTimeout = self.getRawParameter(uscParameter.PARAMETER_SERIAL_TIMEOUT)
+        settings.scriptDone = self.getRawParameter(uscParameter.PARAMETER_SCRIPT_DONE) != 0
+
+        if not self.isMiniMaestro:
+            settings.servosAvailable = self.getRawParameter(uscParameter.PARAMETER_SERVOS_AVAILABLE)
+            settings.servoPeriod = self.getRawParameter(uscParameter.PARAMETER_SERVO_PERIOD)
+        else:
+            tmp = self.getRawParameter(uscParameter.PARAMETER_MINI_MAESTRO_SERVO_PERIOD_HU) << 8
+            tmp |= self.getRawParameter(uscParameter.PARAMETER_MINI_MAESTRO_SERVO_PERIOD_L)
+            settings.miniMaestroServoPeriod = tmp
+
+            settings.servoMultiplier = self.getRawParameter(uscParameter.PARAMETER_SERVO_MULTIPLIER) + 1
+
+        if self.servoCount > 18:
+            settings.enablePullups = self.getRawParameter(uscParameter.PARAMETER_ENABLE_PULLUPS) != 0
+
+        ioMask = 0
+        outputMask = 0
+        channelModeBytes = []
+
+        if not self.isMiniMaestro:
+            ioMask = self.getRawParameter(uscParameter.PARAMETER_IO_MASK_C)
+            outputMask = self.getRawParameter(uscParameter.PARAMETER_OUTPUT_MASK_C)
+        else:
+            for i in range(6):
+                channelModeBytes.append(self.getRawParameter(uscParameter.PARAMETER_CHANNEL_MODES_0_3 + i))
+
+        for i in range(self.servoCount):
+            setting = ChannelSetting()
+
+            if not self.isMiniMaestro:
+                bitmask = 1 << Usc.channelToPort(i)
+                if (ioMask & bitmask) == 0:
+                    setting.mode = ChannelMode.Servo
+                elif (outputMask & bitmask) == 0:
+                    setting.mode = ChannelMode.Input
+                else:
+                    setting.mode = ChannelMode.Output
+            else:
+                setting.mode = (channelModeBytes[i >> 2] >> ((i & 3) << 1)) & 3
+
+            home = self.getRawParameter(self.specifyServo(uscParameter.PARAMETER_SERVO0_HOME, i))
+
+            if home == 0:
+                setting.homeMode = HomeMode.Off
+                setting.home = 0
+            elif home == 1:
+                setting.homeMode = HomeMode.Ignore
+                setting.home = 0
+            else:
+                setting.homeMode = HomeMode.Goto
+                setting.home = home
+
+            setting.minimum = 64 * self.getRawParameter(self.specifyServo(uscParameter.PARAMETER_SERVO0_MIN, i))
+            setting.maximum = 64 * self.getRawParameter(self.specifyServo(uscParameter.PARAMETER_SERVO0_MAX, i))
+            setting.neutral = self.getRawParameter(self.specifyServo(uscParameter.PARAMETER_SERVO0_NEUTRAL, i))
+            setting.range = 127 * self.getRawParameter(self.specifyServo(uscParameter.PARAMETER_SERVO0_RANGE, i))
+            setting.speed = self.exponentialSpeedToNormalSpeed(
+                self.getRawParameter(self.specifyServo(uscParameter.PARAMETER_SERVO0_SPEED, i)))
+            setting.acceleration = self.getRawParameter(
+                self.specifyServo(uscParameter.PARAMETER_SERVO0_ACCELERATION, i))
+
+            settings.channelSettings.append(setting)
+
+        return settings
 
     # Custom function to load script.
     def loadProgram(self, program):
@@ -204,10 +343,10 @@ class Usc:
 
         byteList = program.getByteList()
 
-        if len(byteList) > 8192:
+        if len(byteList) > self.maxScriptLength:
             raise Exception('Script is too long for device (%s bytes).' % len(byteList))
 
-        if len(byteList) < 8192:
+        if len(byteList) < self.maxScriptLength:
             byteList.append(Opcode.QUIT)
 
         # Set up subroutines.

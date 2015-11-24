@@ -141,7 +141,7 @@ class BytecodeReader:
 
                 literal = (num % 65535)
                 bytecode_program.addLiteral(literal, filename, line_number, column_number, isMiniMaestro)
-                return 
+                return
         except Exception as ex:
             raise Exception('Error parsing %s: %s' % (s, ex))
 

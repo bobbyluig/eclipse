@@ -11,7 +11,7 @@ if __name__ == '__main__':
 
     controller = Usc()
 
-    print(controller.getRawParameter(uscParameter.PARAMETER_SCRIPT_CRC))
+    print(controller.getRawParameter(uscParameter.PARAMETER_SERIAL_FIXED_BAUD_RATE))
 
     '''
     reader = BytecodeReader()

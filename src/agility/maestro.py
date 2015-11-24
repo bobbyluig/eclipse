@@ -1,4 +1,5 @@
-import serial, os, struct, logging
+import serial, os, struct, logging, re
+from serial.tools import list_ports
 
 logger = logging.getLogger('universe')
 
@@ -40,9 +41,33 @@ class Maestro:
     def __init__(self, port=None, timeout=0):
         # Determine the operating system and port strings.
         # Command port is used for USB Dual Port mode.
+        # Can automatically determine from a scan.
+        ports = list(list_ports.grep(r'(?i)1ffb:008b'))
+
         if os.name == 'nt':
-            self.port = port or 3
+            if port is not None:
+                self.port = port
+            else:
+                if len(ports) == 2:
+                    if 'Command' in ports[0][1]:
+                        self.port = port[0][0]
+                    else:
+                        self.port = port[1][0]
+                else:
+                    raise Exception('Unable to determine the Command port automatically. Please specify.')
         else:
+            if port is not None:
+                self.port = port
+            else:
+                if len(ports) == 2:
+                    # Assuming nothing was messed with, the command port is the lower port.
+                    if int(re.search(r'(\d+)$', ports[1][0]).group(0)) > int(re.search(r'(\d+)$', ports[0][0]).group(0)):
+                        self.port = port[0][0]
+                    else:
+                        self.port = port[1][0]
+                else:
+                    raise Exception('Unable to determine the Command port automatically. Please specify.')
+
             self.port = '/dev/ttyACM' + str(port or 0)
 
         # Start a connection using pyserial.

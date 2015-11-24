@@ -178,3 +178,41 @@ class uscParameter(IntEnum):
     PARAMETER_SERVO5_RANGE = 81  # 1 byte range
     PARAMETER_SERVO5_SPEED = 82  # 1 byte (5 mantissa3 exponent) us per 10ms
     PARAMETER_SERVO5_ACCELERATION = 83  # 1 byte (speed changes that much every 10ms
+
+
+class uscSerialMode(IntEnum):
+    SERIAL_MODE_USB_DUAL_PORT = 0
+    SERIAL_MODE_USB_CHAINED = 1
+    SERIAL_MODE_UART_DETECT_BAUD_RATE = 2
+    SERIAL_MODE_UART_FIXED_BAUD_RATE = 3
+
+
+class uscError(IntEnum):
+    ERROR_SERIAL_SIGNAL = 0
+    ERROR_SERIAL_OVERRUN = 1
+    ERROR_SERIAL_BUFFER_FULL = 2
+    ERROR_SERIAL_CRC = 3
+    ERROR_SERIAL_PROTOCOL = 4
+    ERROR_SERIAL_TIMEOUT = 5
+    ERROR_SCRIPT_STACK = 6
+    ERROR_SCRIPT_CALL_STACK = 7
+    ERROR_SCRIPT_PROGRAM_COUNTER = 8
+
+
+class performanceFlag(IntEnum):
+    PERROR_ADVANCED_UPDATE = 0
+    PERROR_BASIC_UPDATE = 1
+    PERROR_PERIOD = 2
+
+
+class ChannelMode(IntEnum):
+    Servo = 0
+    ServoMultiplied = 1
+    Output = 2
+    Input = 3
+
+
+class HomeMode(IntEnum):
+    Off = 0
+    Ignore = 1
+    Goto = 2
