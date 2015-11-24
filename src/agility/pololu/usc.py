@@ -240,7 +240,7 @@ class Usc:
         elif parameterId == uscParameter.PARAMETER_SERIAL_MINI_SSC_OFFSET:
             return Range(1, 0, 254)
         else:
-            servoParameter = (int(parameterId) - int(uscParameter.PARAMETER_SERVO0_HOME) % 9) \
+            servoParameter = ((int(parameterId) - int(uscParameter.PARAMETER_SERVO0_HOME)) % 9) \
                              + int(uscParameter.PARAMETER_SERVO0_HOME)
             if servoParameter in [int(uscParameter.PARAMETER_SERVO0_SPEED),
                                   int(uscParameter.PARAMETER_SERVO0_MAX),
@@ -336,11 +336,122 @@ class Usc:
 
         return settings
 
-    # Custom function to load script.
-    def loadProgram(self, program):
-        self.setScriptDone(1)
-        self.eraseScript()
+    def setUscSettings(self, settings, newScript):
+        self.setRawParameter(uscParameter.PARAMETER_SERIAL_MODE, settings.serialMode)
+        self.setRawParameter(uscParameter.PARAMETER_SERIAL_FIXED_BAUD_RATE,
+                             self.convertBpsToSpbrg(settings.fixedBaudRate))
+        self.setRawParameter(uscParameter.PARAMETER_SERIAL_ENABLE_CRC, int(settings.enableCrc))
+        self.setRawParameter(uscParameter.PARAMETER_SERIAL_NEVER_SUSPEND, int(settings.neverSuspend))
+        self.setRawParameter(uscParameter.PARAMETER_SERIAL_DEVICE_NUMBER, settings.serialDeviceNumber)
+        self.setRawParameter(uscParameter.PARAMETER_SERIAL_MINI_SSC_OFFSET, settings.miniSscOffset)
+        self.setRawParameter(uscParameter.PARAMETER_SERIAL_TIMEOUT, settings.serialTimeout)
+        self.setRawParameter(uscParameter.PARAMETER_SCRIPT_DONE, int(settings.scriptDone))
 
+        if not self.isMiniMaestro:
+            self.setRawParameter(uscParameter.PARAMETER_SERVOS_AVAILABLE, settings.servosAvailable)
+            self.setRawParameter(uscParameter.PARAMETER_SERVO_PERIOD, settings.servoPeriod)
+        else:
+            self.setRawParameter(
+                uscParameter.PARAMETER_MINI_MAESTRO_SERVO_PERIOD_L, settings.miniMaestroServoPeriod & 0xFF)
+            self.setRawParameter(
+                uscParameter.PARAMETER_MINI_MAESTRO_SERVO_PERIOD_HU, settings.miniMaestroServoPeriod >> 8)
+
+            if settings.servoMultiplier < 1:
+                multiplier = 0
+            elif settings.servoMultiplier > 256:
+                multiplier = 255
+            else:
+                multiplier = settings.servoMultiplier - 1
+
+            self.setRawParameter(uscParameter.PARAMETER_SERVO_MULTIPLIER, multiplier)
+
+        if self.servoCount > 18:
+            self.setRawParameter(uscParameter.PARAMETER_ENABLE_PULLUPS, int(settings.enablePullups))
+
+        ioMask = 0
+        outputMask = 0
+        channelModeBytes = bytearray((0,) * 6)
+
+        for i in range(self.servoCount):
+            setting = settings.channelSettings[i]
+
+            if not self.isMiniMaestro:
+                if setting.mode == ChannelMode.Input or setting.mode == ChannelMode.Output:
+                    ioMask |= 1 << self.channelToPort(i)
+
+                if setting.mode == ChannelMode.Output:
+                    outputMask |= 1 << self.channelToPort(i)
+            else:
+                channelModeBytes[i >> 2] |= setting.mode << ((i & 3) << 1)
+
+            correctedHomeMode = setting.homeMode
+
+            if setting.mode == ChannelMode.Input:
+                correctedHomeMode = HomeMode.Ignore
+
+            if correctedHomeMode == HomeMode.Off:
+                home = 0
+            elif correctedHomeMode == HomeMode.Ignore:
+                home = 1
+            else:
+                home = setting.home
+
+            self.setRawParameter(self.specifyServo(uscParameter.PARAMETER_SERVO0_HOME, i), home)
+            self.setRawParameter(self.specifyServo(uscParameter.PARAMETER_SERVO0_MIN, i), int(setting.minimum / 64))
+            self.setRawParameter(self.specifyServo(uscParameter.PARAMETER_SERVO0_MAX, i), int(setting.maximum / 64))
+            self.setRawParameter(self.specifyServo(uscParameter.PARAMETER_SERVO0_NEUTRAL, i), setting.neutral)
+            self.setRawParameter(self.specifyServo(uscParameter.PARAMETER_SERVO0_RANGE, i), int(setting.range / 127))
+            self.setRawParameter(self.specifyServo(uscParameter.PARAMETER_SERVO0_SPEED, i),
+                                 self.normalSpeedToExponentialSpeed(setting.speed))
+            self.setRawParameter(self.specifyServo(uscParameter.PARAMETER_SERVO0_ACCELERATION, i), setting.acceleration)
+
+        if newScript:
+            self.loadProgram(settings.bytecodeProgram, CRC=True)
+
+    def fixSettings(self, settings):
+        warnings = []
+
+        if settings.servoCount > self.servoCount:
+            warnings.append('The settings loaded include settings for %s channels, '
+                            'but this device has only %s channels. The extra channel settings will be ignored.'
+                            % (settings.servoCount, self.servoCount))
+            del settings.channelSettings[self.servoCount:]
+
+        if settings.servoCount < self.servoCount:
+            warnings.append('The settings loaded include settings for only %s channels, '
+                            'but this device has %s channels. '
+                            'The other channels will be initialized with default settings.'
+                            % (settings.servoCount, self.servoCount))
+            while settings.servoCount < self.servoCount:
+                cs = ChannelSetting()
+                if not self.isMiniMaestro and settings.servosAvailable <= settings.servoCount:
+                    cs.mode = ChannelMode.Input
+                settings.channelSettings.append(cs)
+
+        for cs in settings.channelSettings:
+            if cs.mode == ChannelMode.Input:
+                cs.homeMode = HomeMode.Ignore
+                cs.minimum = 0
+                cs.maximum = 1024
+                cs.speed = 0
+                cs.acceleration = 0
+                cs.neutral = 1024
+                cs.range = 1905
+            elif cs.mode == ChannelMode.Output:
+                cs.minimum = 3986
+                cs.maximum = 8000
+                cs.speed = 0
+                cs.acceleration = 0
+                cs.neutral = 6000
+                cs.range = 1905
+
+        if settings.serialDeviceNumber >= 128:
+            settings.serialDeviceNumber = 12
+            warnings.append('The serial device number must be less than 128. It will be changed to 12.')
+
+    # Custom function to load script.
+    def loadProgram(self, program, CRC=False):
+        self.setScriptDone(1)
         byteList = program.getByteList()
 
         if len(byteList) > self.maxScriptLength:
@@ -349,8 +460,9 @@ class Usc:
         if len(byteList) < self.maxScriptLength:
             byteList.append(Opcode.QUIT)
 
-        # Set up subroutines.
+        self.eraseScript()
         self.setSubroutines(program.subroutineAddresses, program.subroutineCommands)
-
-        # Load script.
         self.writeScript(byteList)
+
+        if CRC:
+            self.setRawParameter(uscParameter.PARAMETER_SCRIPT_CRC, program.getCRC())

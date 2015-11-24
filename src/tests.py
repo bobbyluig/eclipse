@@ -3,6 +3,7 @@ from agility.pololu.usc import Usc
 from agility.pololu.reader import BytecodeReader
 from agility.pololu.enumeration import uscParameter
 import time
+from pprint import pprint
 
 if __name__ == '__main__':
 
@@ -11,7 +12,8 @@ if __name__ == '__main__':
 
     controller = Usc()
 
-    print(controller.getRawParameter(uscParameter.PARAMETER_SERIAL_FIXED_BAUD_RATE))
+    settings = controller.getUscSettings()
+    pprint(vars(settings), depth=1)
 
     '''
     reader = BytecodeReader()
