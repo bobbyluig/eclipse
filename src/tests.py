@@ -3,7 +3,7 @@ from agility.pololu.reader import BytecodeReader
 from tools.timer import time_me
 
 
-@time_me
+@time_me(2)
 def script_test():
     infile = 'in.4th'
     outfile = 'out.txt'
@@ -22,7 +22,7 @@ def script_test():
     controller.setScriptDone(1)
 
 
-@time_me
+@time_me(2)
 def settings_test():
     controller = Usc()
 
