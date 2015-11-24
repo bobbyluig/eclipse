@@ -52,7 +52,7 @@ class BytecodeInstruction:
             for num in self.literalArguments:
                 list.extend((num % 256, num // 256))
         elif self.opcode == Opcode.LITERAL8_N:
-            list.extend((len(self.literalArguments,)))
+            list.extend((len(self.literalArguments),))
             for num in self.literalArguments:
                 list.extend((num,))
 

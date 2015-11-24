@@ -483,3 +483,5 @@ class Usc:
 
         if CRC:
             self.setRawParameter(uscParameter.PARAMETER_SCRIPT_CRC, program.getCRC())
+
+        self.reinitialize(100)

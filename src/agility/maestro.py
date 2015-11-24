@@ -50,9 +50,9 @@ class Maestro:
             else:
                 if len(ports) == 2:
                     if 'Command' in ports[0][1]:
-                        self.port = port[0][0]
+                        self.port = ports[0][0]
                     else:
-                        self.port = port[1][0]
+                        self.port = ports[1][0]
                 else:
                     raise Exception('Unable to determine the Command port automatically. Please specify.')
         else:
@@ -62,13 +62,11 @@ class Maestro:
                 if len(ports) == 2:
                     # Assuming nothing was messed with, the command port is the lower port.
                     if int(re.search(r'(\d+)$', ports[1][0]).group(0)) > int(re.search(r'(\d+)$', ports[0][0]).group(0)):
-                        self.port = port[0][0]
+                        self.port = ports[0][0]
                     else:
-                        self.port = port[1][0]
+                        self.port = ports[1][0]
                 else:
                     raise Exception('Unable to determine the Command port automatically. Please specify.')
-
-            self.port = '/dev/ttyACM' + str(port or 0)
 
         # Start a connection using pyserial.
         try:

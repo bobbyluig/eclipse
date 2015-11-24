@@ -1,22 +1,20 @@
-0000:                      -- # Move servo 0 to five different positions, in a loop.
+0000:                      -- # Moves servo in a sine wave between 1 and 2 ms.
 0000:                      -- begin
-0000: 01A00F               --     4000
-0003: 80                   --     frame
-0004: 018813               --     5000
-0007: 80                   --     frame
-0008: 017017               --     6000
-000B: 80                   --     frame
-000C: 01581B               --     7000
-000F: 80                   --     frame
-0010: 01401F               --     8000
-0013: 80                   --     frame
-0014: 060000               -- repeat
-0017:                      --  
-0017:                      -- sub frame
-0017: 02002A               --     0 servo
-001A: 01F40108             --     500 delay
-001E: 05                   --     return
+0000: 041F3C4044474A4D4F50504F4E4C4946423E3A36322F2C2A292828292B2E313438 --     60 64 68 71 74 77 79 80 80 79 78 76 73 70 66 62
+0021:                      --     58 54 50 47 44 42 41 40 40 41 43 46 49 52 56
+0021: 80                   --     all_frames
+0022: 060000               -- repeat
+0025:                      -- 
+0025:                      -- sub all_frames
+0025:                      --     begin
+0025: 0A                   --         depth
+0026: 073500               --     while
+0029: 02641E               --         100 times
+002C: 02002A               --         0 servo
+002F: 026408               --         100 delay
+0032: 062500               --     repeat
+0035: 05                   --     return
 
 Subroutines:
 Hex Decimal Address Name
-00  000     0017    FRAME
+00  000     0025    ALL_FRAMES
