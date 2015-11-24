@@ -1,4 +1,4 @@
-import usb, logging, time, struct
+import usb, logging, time, struct, pickle
 from agility.pololu.reader import BytecodeReader
 from agility.pololu.settings import UscSettings, ChannelSetting
 from agility.pololu.enumeration import uscRequest, uscParameter, Opcode, ChannelMode, HomeMode
@@ -451,6 +451,20 @@ class Usc:
         if settings.serialDeviceNumber >= 128:
             settings.serialDeviceNumber = 12
             warnings.append('The serial device number must be less than 128. It will be changed to 12.')
+
+    @staticmethod
+    def saveSettings(settings, file):
+        f = open(file, 'wb')
+        pickle.dump(settings, f, protocol=pickle.HIGHEST_PROTOCOL)
+        f.close()
+
+    @staticmethod
+    def loadSettings(file):
+        f = open(file, 'rb')
+        settings = pickle.load(f)
+        f.close()
+
+        return settings
 
     # Custom function to load script.
     def loadProgram(self, program, CRC=False):

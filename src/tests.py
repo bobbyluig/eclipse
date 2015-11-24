@@ -1,30 +1,15 @@
-from agility.maestro import *
 from agility.pololu.usc import Usc
 from agility.pololu.reader import BytecodeReader
-from agility.pololu.enumeration import uscParameter
-import time, pickle
-from pprint import pprint
+from tools.timer import time_me
 
-if __name__ == '__main__':
 
+@time_me
+def script_test():
     infile = 'in.4th'
     outfile = 'out.txt'
 
     controller = Usc()
-
-    settings = controller.getUscSettings()
-    settings.serialMode = 0
-    controller.setUscSettings(settings, False)
-    settings = controller.getUscSettings()
-    pprint(vars(settings), depth=1)
-
-    pickled = pickle.dumps(settings)
-    print(pickled)
-
-    '''
     reader = BytecodeReader()
-
-    start = time.time()
 
     f = open('agility/forth/%s' % infile)
     data = f.read()
@@ -34,7 +19,19 @@ if __name__ == '__main__':
     reader.writeListing(program, 'agility/forth/%s' % outfile)
 
     controller.loadProgram(program)
-    controller.setScriptDone(0)
+    controller.setScriptDone(1)
 
-    print(time.time() - start)
-    '''
+
+@time_me
+def settings_test():
+    controller = Usc()
+
+    settings = controller.getUscSettings()
+    controller.saveSettings(settings, 'agility/pololu/settings.dat')
+    settings = controller.loadSettings('agility/pololu/settings.dat')
+    controller.fixSettings(settings)
+    controller.setUscSettings(settings, False)
+
+if __name__ == '__main__':
+    script_test()
+    settings_test()
