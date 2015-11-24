@@ -22,14 +22,14 @@ class UscSettings:
         self.script = None
         self.bytecodeProgram = None
 
+    def __len__(self):
+        return len(self.channelSettings)
+
     def setAndCompileScript(self, script):
         self.script = None
         reader = BytecodeReader()
-        self.bytecodeProgram = reader.read(script, self.servoCount != 6)
+        self.bytecodeProgram = reader.read(script, len(self) != 6)
         self.script = script
-
-    def servoCount(self):
-        return len(self.channelSettings)
 
 
 class ChannelSetting:

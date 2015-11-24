@@ -10,7 +10,8 @@ class BytecodeReader:
     def __init__(self):
         self.mode = None
 
-    def writeListing(self, program, filename):
+    @staticmethod
+    def writeListing(program, filename):
         streamWriter = open(filename, 'w')
 
         index1 = 0
@@ -24,7 +25,7 @@ class BytecodeReader:
             num2 = 0
             streamWriter.write('%04X: ' % num1)
 
-            while bytecodeInstruction != None and bytecodeInstruction.lineNumber == line:
+            while bytecodeInstruction is not None and bytecodeInstruction.lineNumber == line:
                 for num3 in bytecodeInstruction.toByteList():
                     streamWriter.write('%02X' % num3)
                     num1 += 1
@@ -101,7 +102,8 @@ class BytecodeReader:
         return bytecode_program
 
     def parseGoto(self, s, bytecode_program, filename, line_number, column_number):
-        bytecode_program.addInstruction(BytecodeInstruction.newJumpToLabel('USER_' + s, filename, line_number, column_number))
+        bytecode_program.addInstruction(BytecodeInstruction.newJumpToLabel(
+            'USER_' + s, filename, line_number, column_number))
         self.mode = Mode.NORMAL
 
     def parseSubroutine(self, s, bytecode_program, filename, line_number, column_number):
@@ -152,50 +154,63 @@ class BytecodeReader:
         else:
             match = re.match(r"(.*):$", s)
             if match:
-                bytecode_program.addInstruction(BytecodeInstruction.newLabel('USER_%s' % match.group(1), filename, line_number, column_number))
+                bytecode_program.addInstruction(BytecodeInstruction.newLabel(
+                    'USER_%s' % match.group(1), filename, line_number, column_number))
             elif s == 'BEGIN':
                 bytecode_program.openBlock(BlockType.BEGIN, filename, line_number, column_number)
             elif s == 'WHILE':
                 if bytecode_program.getCurrentBlockType() != BlockType.BEGIN:
                     raise Exception('WHILE must be inside a BEGIN...REPEAT block')
-                bytecode_program.addInstruction(BytecodeInstruction.newConditionalJumpToLabel(bytecode_program.getCurrentBlockEndLabel(), filename, line_number, column_number))
+                bytecode_program.addInstruction(BytecodeInstruction.newConditionalJumpToLabel(
+                    bytecode_program.getCurrentBlockEndLabel(), filename, line_number, column_number))
             elif s == 'REPEAT':
                 try:
                     if bytecode_program.getCurrentBlockType() != BlockType.BEGIN:
                         raise Exception('REPEAT must end a BEGIN...REPEAT block')
-                    bytecode_program.addInstruction(BytecodeInstruction.newJumpToLabel(bytecode_program.getCurrentBlockStartLabel(), filename, line_number, column_number))
+                    bytecode_program.addInstruction(BytecodeInstruction.newJumpToLabel(
+                        bytecode_program.getCurrentBlockStartLabel(), filename, line_number, column_number))
                     bytecode_program.closeBlock(filename, line_number, column_number)
                 except:
-                    raise Exception('%s:%s:%s: Found REPEAT without a corresponding BEGIN.' % (filename, line_number, column_number))
+                    raise Exception('%s:%s:%s: Found REPEAT without a corresponding BEGIN.'
+                                    % (filename, line_number, column_number))
             elif s == 'IF':
                 bytecode_program.openBlock(BlockType.IF, filename, line_number, column_number)
-                bytecode_program.addInstruction(BytecodeInstruction.newConditionalJumpToLabel(bytecode_program.getCurrentBlockEndLabel(), filename, line_number, column_number))
+                bytecode_program.addInstruction(BytecodeInstruction.newConditionalJumpToLabel(
+                    bytecode_program.getCurrentBlockEndLabel(), filename, line_number, column_number))
             elif s == 'ENDIF':
                 try:
-                    if bytecode_program.getCurrentBlockType() != BlockType.IF and bytecode_program.getCurrentBlockType() != BlockType.ELSE:
+                    if bytecode_program.getCurrentBlockType() != BlockType.IF and \
+                                    bytecode_program.getCurrentBlockType() != BlockType.ELSE:
                         raise Exception('ENDIF must end an IF...ENDIF or an IF...ELSE...ENDIF block.')
                     bytecode_program.closeBlock(filename, line_number, column_number)
                 except:
-                    raise Exception('%s:%s:%s: Found ENDIF without a corresponding IF.' % (filename, line_number, column_number))
+                    raise Exception('%s:%s:%s: Found ENDIF without a corresponding IF.'
+                                    % (filename, line_number, column_number))
             elif s == 'ELSE':
                 try:
                     if bytecode_program.getCurrentBlockType() != BlockType.IF:
                         raise Exception('ELSE must be part of an IF...ELSE...ENDIF block.')
-                    bytecode_program.addInstruction(BytecodeInstruction.newJumpToLabel(bytecode_program.getNextBlockEndLabel(), filename, line_number, column_number))
+                    bytecode_program.addInstruction(BytecodeInstruction.newJumpToLabel(
+                        bytecode_program.getNextBlockEndLabel(), filename, line_number, column_number))
                     bytecode_program.closeBlock(filename, line_number, column_number)
                     bytecode_program.openBlock(BlockType.ELSE, filename, line_number, column_number)
                 except:
-                    raise Exception('%s:%s:%s: Found ELSE without a corresponding IF.' % (filename, line_number, column_number))
+                    raise Exception('%s:%s:%s: Found ELSE without a corresponding IF.'
+                                    % (filename, line_number, column_number))
             else:
                 try:
                     op = Opcode[s]
-                    if op == Opcode.LITERAL or op == Opcode.LITERAL8 or op == Opcode.LITERAL_N or op == Opcode.LITERAL8_N:
-                        raise Exception('%s:%s:%s: Literal commands may not be used directly in a program. Integers should be entered directly.' % (filename, line_number, column_number))
+                    if op in [Opcode.LITERAL, Opcode.LITERAL8, Opcode.LITERAL_N, Opcode.LITERAL8_N]:
+                        raise Exception('%s:%s:%s: Literal commands may not be used directly in a program. '
+                                        'Integers should be entered directly.' % (filename, line_number, column_number))
                     elif op == Opcode.JUMP or op == Opcode.JUMP_Z:
-                        raise Exception('%s:%s:%s: Jumps may not be used directly in a program.' % (filename, line_number, column_number))
+                        raise Exception('%s:%s:%s: Jumps may not be used directly in a program.'
+                                        % (filename, line_number, column_number))
                     else:
                         if not isMiniMaestro and op >= 50:
-                            raise Exception('%s:%s:%s: is only available on the Mini Maestro 12, 18, and 24.' % (filename, line_number, column_number))
+                            raise Exception('%s:%s:%s: is only available on the Mini Maestro 12, 18, and 24.'
+                                            % (filename, line_number, column_number))
                         bytecode_program.addInstruction(BytecodeInstruction(op, filename, line_number, column_number))
                 except KeyError:
-                    bytecode_program.addInstruction(BytecodeInstruction.newCall(s, filename, line_number, column_number))
+                    bytecode_program.addInstruction(
+                        BytecodeInstruction.newCall(s, filename, line_number, column_number))

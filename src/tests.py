@@ -2,7 +2,7 @@ from agility.maestro import *
 from agility.pololu.usc import Usc
 from agility.pololu.reader import BytecodeReader
 from agility.pololu.enumeration import uscParameter
-import time
+import time, pickle
 from pprint import pprint
 
 if __name__ == '__main__':
@@ -13,7 +13,13 @@ if __name__ == '__main__':
     controller = Usc()
 
     settings = controller.getUscSettings()
+    settings.serialMode = 0
+    controller.setUscSettings(settings, False)
+    settings = controller.getUscSettings()
     pprint(vars(settings), depth=1)
+
+    pickled = pickle.dumps(settings)
+    print(pickled)
 
     '''
     reader = BytecodeReader()

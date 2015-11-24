@@ -260,6 +260,9 @@ class Usc:
         self.setRawParameterNoChecks(uscParameter.PARAMETER_INITIALIZED, 0xFF, 1)
         self.reinitialize(1500)
 
+    def setPWM(self, dutyCycle, period):
+        self.dev.ctrl_transfer(0x40, uscRequest.REQUEST_SET_PWM, dutyCycle, period)
+
     def getUscSettings(self):
         settings = UscSettings()
 
@@ -411,20 +414,20 @@ class Usc:
     def fixSettings(self, settings):
         warnings = []
 
-        if settings.servoCount > self.servoCount:
+        if len(settings) > self.servoCount:
             warnings.append('The settings loaded include settings for %s channels, '
                             'but this device has only %s channels. The extra channel settings will be ignored.'
-                            % (settings.servoCount, self.servoCount))
+                            % (len(settings), self.servoCount))
             del settings.channelSettings[self.servoCount:]
 
-        if settings.servoCount < self.servoCount:
+        if len(settings) < self.servoCount:
             warnings.append('The settings loaded include settings for only %s channels, '
                             'but this device has %s channels. '
                             'The other channels will be initialized with default settings.'
-                            % (settings.servoCount, self.servoCount))
-            while settings.servoCount < self.servoCount:
+                            % (len(settings), self.servoCount))
+            while len(settings) < self.servoCount:
                 cs = ChannelSetting()
-                if not self.isMiniMaestro and settings.servosAvailable <= settings.servoCount:
+                if not self.isMiniMaestro and settings.servosAvailable <= len(settings):
                     cs.mode = ChannelMode.Input
                 settings.channelSettings.append(cs)
 

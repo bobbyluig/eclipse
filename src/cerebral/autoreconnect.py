@@ -1,5 +1,3 @@
-import signal
-from autobahn.wamp import protocol
 from autobahn.wamp.types import ComponentConfig
 from autobahn.websocket.protocol import parseWsUrl
 from autobahn.asyncio.websocket import WampWebSocketClientFactory
@@ -107,6 +105,8 @@ class ApplicationRunner(object):
         self.loop = loop or asyncio.get_event_loop()
         self.retry_strategy = retry_strategy
         self.closing = False
+        self.transport_factory = None
+        self.active_protocol = None
 
         self.isSecure, self.host, self.port, _, _, _ = parseWsUrl(url)
 
@@ -141,7 +141,7 @@ class ApplicationRunner(object):
                 return session
 
         self.transport_factory = WampWebSocketClientFactory(create, url=self.url, serializers=self.serializers,
-                                                       debug=self.debug, debug_wamp=self.debug_wamp)
+                                                            debug=self.debug, debug_wamp=self.debug_wamp)
 
         txaio.use_asyncio()
         txaio.config.loop = self.loop
@@ -167,7 +167,8 @@ class ApplicationRunner(object):
         self.retry_strategy.reset_retry_interval()
         while True:
             try:
-                _, protocol = await self.loop.create_connection(self.transport_factory, self.host, self.port, ssl=self.ssl)
+                _, protocol = await self.loop.create_connection(
+                    self.transport_factory, self.host, self.port, ssl=self.ssl)
                 protocol.is_closed.add_done_callback(self.reconnect)
                 self.active_protocol = protocol
                 return
@@ -184,9 +185,9 @@ class ApplicationRunner(object):
 
                 self.retry_strategy.increase_retry_interval()
 
-    def reconnect(self, f):
+    def reconnect(self):
         if not self.closing:
             asyncio.ensure_future(self.connect(), loop=self.loop)
 
-    def stop(self, *args):
+    def stop(self):
         self.loop.stop()
