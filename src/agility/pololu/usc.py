@@ -1,5 +1,5 @@
-import usb, logging, time, struct, pickle
-from agility.pololu.reader import BytecodeReader
+import usb, logging, time, pickle
+from agility.pololu.structure import *
 from agility.pololu.settings import UscSettings, ChannelSetting
 from agility.pololu.enumeration import uscRequest, uscParameter, Opcode, ChannelMode, HomeMode
 
@@ -41,12 +41,16 @@ class Range:
 
 
 class Usc:
-    def __init__(self):
-        self.vendorID = 0x1ffb
-        self.productIDArray = [0x0089, 0x008a, 0x008b, 0x008c]
-        self.INSTRUCTION_FREQUENCY = 12000000
-        self.servoParameterBytes = 9
+    vendorID = 0x1ffb
+    productIDArray = [0x0089, 0x008a, 0x008b, 0x008c]
+    INSTRUCTION_FREQUENCY = 12000000
+    servoParameterBytes = 9
+    MicroMaestroStackSize = 32
+    MicroMaestroCallStackSize = 10
+    MiniMaestroStackSize = 126
+    MiniMaestroCallStackSize = 126
 
+    def __init__(self):
         self.dev = usb.core.find(idVendor=self.vendorID)
 
         if self.dev is None:
@@ -452,6 +456,74 @@ class Usc:
             settings.serialDeviceNumber = 12
             warnings.append('The serial device number must be less than 128. It will be changed to 12.')
 
+    def getVariables(self, out):
+        if not self.isMiniMaestro:
+            variables, servos = self.getVariableMicroMaestro()
+
+            if out == 'variables':
+                return variables
+            elif out == 'servos':
+                return servos
+            elif out == 'stack':
+                return variables.stack
+            elif out == 'callStack':
+                return variables.callStack
+            else:
+                raise Exception('Unknown type of desired output %s.' % out)
+
+        else:
+            return self.getVariableMiniMaestro(out)
+
+    def getVariableMicroMaestro(self):
+        packed = self.dev.ctrl_transfer(0xC0, uscRequest.REQUEST_GET_VARIABLES, 0, 0,
+                                        MicroMaestroVariables.struct.size + self.servoCount * ServoStatus.struct.size)
+
+        var_packed = packed[0:MicroMaestroVariables.struct.size]
+        servo_packed = packed[MicroMaestroVariables.struct.size:]
+
+        variables = MicroMaestroVariables(var_packed)
+
+        servos = []
+        for i in range(self.servoCount):
+            servos.append(ServoStatus(servo_packed[i*ServoStatus.struct.size:(i+1)*ServoStatus.struct.size]))
+
+        return variables, servos
+
+    def getVariableMiniMaestro(self, out):
+        if out == 'variables':
+            packed = self.dev.ctrl_transfer(0xC0, uscRequest.REQUEST_GET_VARIABLES, 0, 0,
+                                            MiniMaestroVariables.struct.size)
+
+            if len(packed) != MiniMaestroVariables.struct.size:
+                raise Exception('Short read: %s < %s.' % (len(packed), MiniMaestroVariables.struct.size))
+
+            return MiniMaestroVariables(packed)
+
+        elif out == 'servos':
+            packed = self.dev.ctrl_transfer(0xC0, uscRequest.REQUEST_GET_SERVO_SETTINGS, 0, 0,
+                                            self.servoCount * ServoStatus.struct.size)
+
+            if len(packed) != ServoStatus.struct.size * self.servoCount:
+                raise Exception('Short read: %s < %s.' % (len(packed), ServoStatus.struct.size))
+
+            servos = []
+            for i in range(self.servoCount):
+                servos.append(ServoStatus(packed[i*ServoStatus.struct.size:(i+1)*ServoStatus.struct.size]))
+
+            return servos
+
+        elif out == 'stack':
+            packed = self.dev.ctrl_transfer(0xC0, uscRequest.REQUEST_GET_STACK, 0, 0, 2 * self.MiniMaestroStackSize)
+            return packed.tolist()
+
+        elif out == 'callStack':
+            packed = self.dev.ctrl_transfer(0xC0, uscRequest.REQUEST_GET_CALL_STACK, 0, 0,
+                                            2 * self.MiniMaestroCallStackSize)
+            return packed.tolist()
+
+        else:
+            raise Exception('Unknown type of desired output %s.' % out)
+
     @staticmethod
     def saveSettings(settings, file):
         f = open(file, 'wb')
@@ -466,7 +538,7 @@ class Usc:
 
         return settings
 
-    # Custom function to load script.
+    # Custom function to load script. Can be called externally.
     def loadProgram(self, program, CRC=False):
         self.setScriptDone(1)
         byteList = program.getByteList()

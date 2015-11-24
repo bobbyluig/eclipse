@@ -8,12 +8,14 @@
 0025:                      -- sub all_frames
 0025:                      --     begin
 0025: 0A                   --         depth
-0026: 073500               --     while
+0026: 073900               --     while
 0029: 02641E               --         100 times
-002C: 02002A               --         0 servo
-002F: 026408               --         100 delay
-0032: 062500               --     repeat
-0035: 05                   --     return
+002C: 0C                   --         dup
+002D: 02002A               --         0 servo
+0030: 02052A               --         5 servo
+0033: 026408               --         100 delay
+0036: 062500               --     repeat
+0039: 05                   --     return
 
 Subroutines:
 Hex Decimal Address Name

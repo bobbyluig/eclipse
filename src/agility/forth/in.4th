@@ -10,7 +10,9 @@ sub all_frames
         depth
     while
         100 times
+        dup
         0 servo
+        5 servo
         100 delay
     repeat
     return
