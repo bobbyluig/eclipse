@@ -85,7 +85,9 @@ class Apollo:
         except ValueError:
             n = None
 
-        if error:
+        if n is None:
+            return n
+        elif error:
             exact = Apollo.step_to_freq(n)
             diff = 1200 * math.log(freq/exact, 2)
             return n, diff
