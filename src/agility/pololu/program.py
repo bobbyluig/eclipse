@@ -41,15 +41,16 @@ class BytecodeProgram:
         self.instructionList[-1].addLiteralArgument(literal, isMiniMaestro)
 
     def getByteList(self):
-        list = bytearray()
+        byteList = bytearray()
 
         for bytecodeInstruction in self.instructionList:
-            list.extend(bytecodeInstruction.toByteList())
+            byteList.extend(bytecodeInstruction.toByteList())
 
-        return list
+        return byteList
 
     def openBlock(self, blocktype, filename, line_number, column_number):
-        self.addInstruction(BytecodeInstruction.newLabel('block_start_%s' % self.maxBlock, filename, line_number, column_number))
+        self.addInstruction(BytecodeInstruction.newLabel('block_start_%s' % self.maxBlock,
+                                                         filename, line_number, column_number))
         self.openBlocks.append(self.maxBlock)
         self.openBlockTypes.append(blocktype)
         self.maxBlock += 1
@@ -76,8 +77,9 @@ class BytecodeProgram:
         return self.instructionList[self.findLabelIndex(name)]
 
     def closeBlock(self, filename, line_number, column_number):
-        self.addInstruction(BytecodeInstruction.newLabel('block_end_%s' % self.openBlocks.pop(), filename, line_number, column_number))
-        num = self.openBlockTypes.pop()
+        self.addInstruction(BytecodeInstruction.newLabel('block_end_%s' % self.openBlocks.pop(), filename,
+                                                         line_number, column_number))
+        self.openBlockTypes.pop()
 
     def completeJumps(self):
         dictionary = {}
@@ -94,7 +96,7 @@ class BytecodeProgram:
             try:
                 if bytecodeInstruction.isJumpToLabel:
                     bytecodeInstruction.addLiteralArgument(dictionary[bytecodeInstruction.labelName], False)
-            except KeyError as ex:
+            except KeyError:
                 bytecodeInstruction.error('The label %s was not found.' % bytecodeInstruction.labelName)
 
     def completeCalls(self, isMiniMaestro):
@@ -103,7 +105,8 @@ class BytecodeProgram:
         for bytecodeInstruction in self.instructionList:
             if bytecodeInstruction.isSubroutine:
                 if bytecodeInstruction.labelName in self.subroutineCommands:
-                    bytecodeInstruction.error('The subroutine %s has already been defined.' % bytecodeInstruction.labelName)
+                    bytecodeInstruction.error('The subroutine %s has already been defined.'
+                                              % bytecodeInstruction.labelName)
                 self.subroutineCommands[bytecodeInstruction.labelName] = num1 if num1 < 256 else 54
                 num1 += 1
                 if num1 > 255 and not isMiniMaestro:
@@ -113,7 +116,7 @@ class BytecodeProgram:
             try:
                 if bytecodeInstruction.isCall:
                     bytecodeInstruction.setOpcode(self.subroutineCommands[bytecodeInstruction.labelName])
-            except KeyError as ex:
+            except KeyError:
                 bytecodeInstruction.error("Did not understand '%s'." % bytecodeInstruction.labelName)
 
         num2 = 0
@@ -135,8 +138,8 @@ class BytecodeProgram:
         num = 0
 
         for bytecodeInstruction in self.instructionList:
-            list = bytecodeInstruction.toByteList()
-            if num >= program_counter and len(list) != 0:
+            byteList = bytecodeInstruction.toByteList()
+            if num >= program_counter and len(byteList) != 0:
                 return bytecodeInstruction
 
         return None
