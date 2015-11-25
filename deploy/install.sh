@@ -80,8 +80,8 @@ rm -f Python-3.5.0.tgz
 
 # Get Python libraries.
 pip3 install numpy pyserial autobahn[accelerate] pyusb
-apt-get -y install libportaudio0 libportaudio2 libportaudiocpp0 portaudio19-dev
-pip3 install pyaudio
+apt-get -y install libportaudio0 libportaudio2 libportaudiocpp0 portaudio19-dev libav-tools
+pip3 install pyaudio pydub
 
 ####################
 # Install OpenCV 3.

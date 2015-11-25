@@ -3,13 +3,30 @@ from agility.pololu.reader import BytecodeReader
 from tools.timer import time_me
 from agility.maestro import Maestro
 from pprint import pprint
+from lykos.apollo import Apollo
 
-usc = Usc()
-maestro = Maestro()
+try:
+    usc = Usc()
+except:
+    pass
+
+try:
+    maestro = Maestro()
+except:
+    pass
+
+try:
+    apollo = Apollo(-2)
+except:
+    pass
 
 
 def get_errors():
     maestro.get_errors()
+
+
+def audio_capture():
+    apollo.blocking_detect(lambda: print('Detected!'))
 
 
 @time_me(100)
@@ -52,4 +69,5 @@ def settings_test():
 if __name__ == '__main__':
     # script_test()
     # settings_test()
-    get_variables()
+    # get_variables()
+    audio_capture()
