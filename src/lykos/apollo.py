@@ -24,7 +24,7 @@ class Apollo:
     def stop(self):
         self.stream.stop_stream()
 
-    def blocking_detect(self, callback, timeout=30):
+    def blockingDetect(self, callback, timeout=30):
         start = time.time()
 
         while time.time() - start < timeout:
@@ -34,8 +34,8 @@ class Apollo:
                 data = np.fromstring(data, np.int16)
                 frames.append(data)
 
-            frequency = self.fuzzy_detect(frames)
-            steps = self.freq_to_step(frequency)
+            frequency = self.fuzzyDetect(frames)
+            steps = self.frequencyToStep(frequency)
             self.howls.append(steps)
 
             if self.howls.count(self.target) > 2:
@@ -50,11 +50,11 @@ class Apollo:
             data = np.fromstring(data, np.int16)
             frames.append(data)
 
-        frequency = self.fuzzy_detect(frames)
-        return self.target == self.freq_to_step(frequency)
+        frequency = self.fuzzyDetect(frames)
+        return self.target == self.frequencyToStep(frequency)
 
     @staticmethod
-    def fuzzy_detect(data):
+    def fuzzyDetect(data):
         # frequency (Hz) = abs(fft_frequency_coefficient * sampling_rate)
         # Finds the frequency with the greatest magnitude via fft.
 
@@ -76,7 +76,7 @@ class Apollo:
         return freq_in_hertz
 
     @staticmethod
-    def freq_to_step(freq, error=False):
+    def frequencyToStep(freq, error=False):
         # n = log(f_n / f_0, a) where a = 2^(1/12)
 
         try:
@@ -88,14 +88,14 @@ class Apollo:
         if n is None:
             return n
         elif error:
-            exact = Apollo.step_to_freq(n)
+            exact = Apollo.stepToFrequency(n)
             diff = 1200 * math.log(freq/exact, 2)
             return n, diff
         else:
             return n
 
     @staticmethod
-    def step_to_freq(steps, slack=0):
+    def stepToFrequency(steps, slack=0):
         # f_n = f_0 * (a)^n where a = 2^(1/12)
 
         if slack == 0:

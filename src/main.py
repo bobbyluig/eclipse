@@ -29,7 +29,7 @@ memory = Memory()
 # Servo control test.
 #####################
 
-def move_servo(channel, degrees):
+def moveServo(channel, degrees):
     servo = memory.servos[channel]
     servo.target = degrees
     memory.maestro.set_target(servo)
@@ -64,7 +64,7 @@ class Cerebral(ApplicationSession):
 
     async def onJoin(self, details):
         logging.info('Joined "%s" realm.' % self.config.realm)
-        await self.register(move_servo, 'com.agility')
+        await self.register(moveServo, 'com.agility')
 
     def onDisconnect(self):
         logging.warning('Connection lost!')

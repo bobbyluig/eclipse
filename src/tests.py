@@ -1,6 +1,6 @@
 from agility.pololu.usc import Usc
 from agility.pololu.reader import BytecodeReader
-from tools.timer import time_me
+from tools.timer import timeIt
 from agility.maestro import Maestro
 from pprint import pprint
 from lykos.apollo import Apollo
@@ -21,16 +21,16 @@ except:
     pass
 
 
-def get_errors():
+def getErrors():
     maestro.get_errors()
 
 
-def audio_capture():
-    apollo.blocking_detect(lambda: print('Detected!'))
+def audioCapture():
+    apollo.blockingDetect(lambda: print('Detected!'))
 
 
-@time_me(100)
-def get_variables():
+@timeIt(100)
+def getVariables():
 
     variables = usc.getVariables('variables')
     servos = usc.getVariables('servos')
@@ -38,8 +38,8 @@ def get_variables():
     callStack = usc.getVariables('callStack')
 
 
-@time_me(1)
-def script_test():
+@timeIt(1)
+def scriptTest():
     infile = 'in.4th'
     outfile = 'out.txt'
 
@@ -57,8 +57,8 @@ def script_test():
     usc.setScriptDone(0)
 
 
-@time_me(1)
-def settings_test():
+@timeIt(1)
+def settingsTest():
     settings = usc.getUscSettings()
     usc.saveSettings(settings, 'agility/pololu/settings.dat')
     settings = usc.loadSettings('agility/pololu/settings.dat')
