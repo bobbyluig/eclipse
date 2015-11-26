@@ -70,4 +70,4 @@ if __name__ == '__main__':
     # script_test()
     # settings_test()
     # get_variables()
-    audio_capture()
+    audioCapture()
