@@ -2,6 +2,10 @@
 
 This repository contains all code used by Eclipse (Red Team) in the 2016 CARPA Initiative Challenge - The Lycanthrope Project.
 
+## Style
+
+In most cases, all code styling abides by [PEP 8](https://www.python.org/dev/peps/pep-0008/). All objects should use *CamelCase* and all functions should used *mixedCase*. The use of *mixedCase* is due to the nature of OpenCV and Pololu libraries where such is the prevailing style. Variables, especially those of a class, should also used *mixedCase* as such is the prevailing style (this does not abide by PEP 8).
+
 ## Development
 
 After cloning the package, all the prerequisites for the project must be installed. This project has not been tested in Mac but should work find due to the versatility of Python.
