@@ -48,6 +48,12 @@ class Theia:
             count = len(areas)
             logger.info('Requested %s blobs. Only found %s blobs.' % (count, len(areas)))
 
+        if count == 0:
+            return None
+        elif count == 1:
+            index = np.argmax(areas)
+            return [cv2.boundingRect(contours[index])]
+
         # Find the n largest areas.
         if order:
             indices = areas.argsort()[-count:][::-1]
