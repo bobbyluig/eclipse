@@ -1,7 +1,9 @@
 import cv2
-import time
+import time, logging
 import numpy as np
 from theia.eye import Eye
+
+logger = logging.getLogger('universe')
 
 
 class Theia:
@@ -29,6 +31,34 @@ class Theia:
         mask = subtractor.apply(frame)
 
         return mask
+
+    ####################################
+    # Get n blobs with the largest area.
+    # This is a helper function.
+    # Use only with binary images.
+    ####################################
+
+    @staticmethod
+    def boundBlobs(image, count, order=False):
+        _, contours, hierarchy = cv2.findContours(image, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+
+        areas = np.array([cv2.contourArea(cnt) for cnt in contours])
+
+        if len(areas) < count:
+            count = len(areas)
+            logger.info('Requested %s blobs. Only found %s blobs.' % (count, len(areas)))
+
+        # Find the n largest areas.
+        if order:
+            indices = areas.argsort()[-count:][::-1]
+        else:
+            indices = np.argpartition(areas, -count)[-count:]
+
+        # Create ROIs for each contour.
+        contours = contours[indices]
+        roi = [cv2.boundingRect(cnt) for cnt in contours]
+
+        return roi
 
     ###################################################################
     # Dense optical flow using Farneback.
