@@ -7,6 +7,7 @@ logger = logging.getLogger('universe')
 
 class Eye:
     def __init__(self, source):
+        self.optogram = None
         self.frame = None
         self.cap = cv2.VideoCapture(source)
 
@@ -22,6 +23,8 @@ class Eye:
         self.cap.release()
 
     def updateFrame(self):
+        if self.frame is not None:
+            self.optogram = self.frame.copy()
         _, self.frame = self.cap.read()
 
     def getGrayFrame(self):
@@ -30,8 +33,8 @@ class Eye:
 
     def getColorFrame(self):
         self.updateFrame()
-        return self.frame
+        return self.frame.copy()
 
     def getBothFrames(self):
         self.updateFrame()
-        return self.frame, cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
+        return self.frame.copy(), cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
