@@ -2,6 +2,7 @@ import cv2
 import time, logging
 import numpy as np
 from theia.eye import Eye
+from theia.cmt import CMT
 
 logger = logging.getLogger('universe')
 
@@ -135,3 +136,28 @@ class Theia:
         bgr = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
 
         return bgr
+
+eye = Eye('vtest.avi')
+frame = eye.getGrayFrame()
+cv2.imwrite('frame.jpg', frame)
+cmt = CMT(eye.getGrayFrame(), (501, 155), (501+30, 155+80))
+
+while True:
+    im_draw, im_gray = eye.getBothFrames()
+    start = time.time()
+    cmt.process_frame(im_gray)
+    print(time.time() - start)
+
+    if cmt.has_result:
+        cv2.line(im_draw, cmt.tl, cmt.tr, (255, 0, 0), 4)
+        cv2.line(im_draw, cmt.tr, cmt.br, (255, 0, 0), 4)
+        cv2.line(im_draw, cmt.br, cmt.bl, (255, 0, 0), 4)
+        cv2.line(im_draw, cmt.bl, cmt.tl, (255, 0, 0), 4)
+
+    cv2.imshow('tracked', im_draw)
+
+    k = cv2.waitKey(1)
+    if k == 27:
+        break
+
+cv2.destroyAllWindows()
