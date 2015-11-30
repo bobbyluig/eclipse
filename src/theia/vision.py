@@ -1,6 +1,7 @@
 import cv2
 import time, logging
 import numpy as np
+from dlib import rectangle, correlation_tracker
 from theia.eye import Eye
 from theia.cmt import CMT
 
@@ -136,28 +137,109 @@ class Theia:
         bgr = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
 
         return bgr
+    
+def get_rect(im, title='get_rect'):
+    mouse_params = {'tl': None, 'br': None, 'current_pos': None,
+        'released_once': False}
 
-eye = Eye('vtest.avi')
-frame = eye.getGrayFrame()
-cv2.imwrite('frame.jpg', frame)
-cmt = CMT(eye.getGrayFrame(), (501, 155), (501+30, 155+80))
+    cv2.namedWindow(title)
+    cv2.moveWindow(title, 100, 100)
 
-while True:
-    im_draw, im_gray = eye.getBothFrames()
-    start = time.time()
-    cmt.process_frame(im_gray)
-    print(time.time() - start)
+    def onMouse(event, x, y, flags, param):
 
-    if cmt.has_result:
-        cv2.line(im_draw, cmt.tl, cmt.tr, (255, 0, 0), 4)
-        cv2.line(im_draw, cmt.tr, cmt.br, (255, 0, 0), 4)
-        cv2.line(im_draw, cmt.br, cmt.bl, (255, 0, 0), 4)
-        cv2.line(im_draw, cmt.bl, cmt.tl, (255, 0, 0), 4)
+        param['current_pos'] = (x, y)
 
-    cv2.imshow('tracked', im_draw)
+        if param['tl'] is not None and not (flags & cv2.EVENT_FLAG_LBUTTON):
+            param['released_once'] = True
 
-    k = cv2.waitKey(1)
-    if k == 27:
-        break
+        if flags & cv2.EVENT_FLAG_LBUTTON:
+            if param['tl'] is None:
+                param['tl'] = param['current_pos']
+            elif param['released_once']:
+                param['br'] = param['current_pos']
 
-cv2.destroyAllWindows()
+    cv2.setMouseCallback(title, onMouse, mouse_params)
+    cv2.imshow(title, im)
+
+    while mouse_params['br'] is None:
+        im_draw = np.copy(im)
+
+        if mouse_params['tl'] is not None:
+            cv2.rectangle(im_draw, mouse_params['tl'], mouse_params['current_pos'], (255, 0, 0))
+
+        cv2.imshow(title, im_draw)
+        _ = cv2.waitKey(10)
+
+    cv2.destroyWindow(title)
+
+    tl = (min(mouse_params['tl'][0], mouse_params['br'][0]),
+        min(mouse_params['tl'][1], mouse_params['br'][1]))
+    br = (max(mouse_params['tl'][0], mouse_params['br'][0]),
+        max(mouse_params['tl'][1], mouse_params['br'][1]))
+
+    return tl, br
+
+
+def correlation_test():
+    eye = Eye(0)
+    tracker = correlation_tracker()
+
+    while True:
+        frame = eye.getColorFrame()
+        cv2.imshow('preview', frame)
+        k = cv2.waitKey(int(1000 / 60))
+        if not k == -1:
+            break
+
+    frame = eye.getColorFrame()
+    tl, br = get_rect(frame)
+    tracker.start_track(frame, rectangle(*tl, *br))
+
+    while True:
+        frame = eye.getColorFrame()
+        start = time.time()
+        tracker.update(frame)
+        print(time.time() - start)
+        pos = tracker.get_position()
+        frame = cv2.rectangle(frame, (int(pos.left()), int(pos.top())), (int(pos.right()), int(pos.bottom())), (0, 255, 0), 3)
+        cv2.imshow('frame', frame)
+        k = cv2.waitKey(int(1000 / 60))
+        if not k == -1:
+            break
+
+
+def cmt_test():
+    eye = Eye(0)
+
+    while True:
+        frame = eye.getColorFrame()
+        cv2.imshow('preview', frame)
+        k = cv2.waitKey(int(1000 / 60))
+        if not k == -1:
+            break
+
+    color, gray = eye.getBothFrames()
+    tl, br = get_rect(color)
+
+    cmt = CMT(gray, tl, br)
+
+    while True:
+        im_draw, im_gray = eye.getBothFrames()
+        start = time.time()
+        cmt.process_frame(im_gray)
+        print(time.time() - start)
+
+        if cmt.has_result:
+            cv2.line(im_draw, cmt.tl, cmt.tr, (255, 0, 0), 4)
+            cv2.line(im_draw, cmt.tr, cmt.br, (255, 0, 0), 4)
+            cv2.line(im_draw, cmt.br, cmt.bl, (255, 0, 0), 4)
+            cv2.line(im_draw, cmt.bl, cmt.tl, (255, 0, 0), 4)
+
+        cv2.imshow('tracked', im_draw)
+
+        k = cv2.waitKey(int(1000 / 60))
+        if not k == -1:
+            break
+
+
+correlation_test()
