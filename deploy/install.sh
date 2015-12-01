@@ -122,3 +122,24 @@ ldconfig
 cd ~
 rm -rf opencv-3.0.0 opencv_contrib
 
+###############
+# Install dlib.
+###############
+
+apt-get -y install libboost-all-dev
+
+cd ~
+git clone https://github.com/davisking/dlib.git
+cd dlib/tools/python
+
+mkdir build
+cd build
+cmake -DPYTHON3=1 -DUSE_SSE4_INSTRUCTIONS=0 -DUSE_SSE2_INSTRUCTIONS=0 \
+    -DPYTHON_LIBRARY=/usr/local/lib/python3.5/config-3.5m/libpython3.5m.a \
+    -DPYTHON_INCLUDE_DIR=/usr/local/include/python3.5m ..
+cmake --build . --config release --target install
+
+cp ~/dlib/python_examples/dlib.so /usr/local/lib/python3.5/site-packages
+
+cd ~
+rm -rf dlib
