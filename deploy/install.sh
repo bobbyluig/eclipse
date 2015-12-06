@@ -47,13 +47,6 @@ apt-get -y install apt-utils
 # Get required software.
 apt-get -y install p7zip-full nano wireless-tools wpasupplicant usbutils wget connman libusb-dev
 
-######################
-# Arduino development.
-######################
-
-apt-get -y install arduino-core picocom python python-pip python-dev
-pip install ino
-
 ###################
 # Clone repository.
 ###################
@@ -72,7 +65,7 @@ apt-get -y install build-essential libssl-dev
 wget https://www.python.org/ftp/python/3.5.0/Python-3.5.0.tgz
 tar zxvf Python-3.5.0.tgz
 cd Python-3.5.0
-./configure
+./configure --enable-shared
 make -j4 && make install
 cd ~
 rm -rf Python-3.5.0
@@ -111,9 +104,12 @@ mkdir build
 cd build
 cmake -D CMAKE_BUILD_TYPE=RELEASE \
 	-D CMAKE_INSTALL_PREFIX=/usr/local \
+	-D PYTHON3_LIBRARY=/usr/local/lib/libpython3.5m.so \
     -D INSTALL_C_EXAMPLES=OFF \
 	-D INSTALL_PYTHON_EXAMPLES=OFF \
-	-D OPENCV_EXTRA_MODULES_PATH=~/opencv_contrib/modules \
+    -D OPENCV_EXTRA_MODULES_PATH=~/opencv_contrib/modules \
+	-D BUILD_PERF_TESTS=OFF \
+	-D BUILD_TESTS=OFF \
 	-D BUILD_EXAMPLES=OFF ..
 make -j4 && make install
 ldconfig
@@ -135,7 +131,7 @@ cd dlib/tools/python
 mkdir build
 cd build
 cmake -DPYTHON3=1 -DUSE_SSE4_INSTRUCTIONS=0 -DUSE_SSE2_INSTRUCTIONS=0 \
-    -DPYTHON_LIBRARY=/usr/local/lib/python3.5/config-3.5m/libpython3.5m.a \
+    -DPYTHON_LIBRARY=/usr/local/lib/python3.5/config-3.5m/libpython3.5m.so \
     -DPYTHON_INCLUDE_DIR=/usr/local/include/python3.5m ..
 cmake --build . --config release --target install
 
@@ -143,3 +139,10 @@ cp ~/dlib/python_examples/dlib.so /usr/local/lib/python3.5/site-packages
 
 cd ~
 rm -rf dlib
+
+######################
+# Arduino development.
+######################
+
+apt-get -y install arduino-core picocom python python-pip python-dev
+pip install ino

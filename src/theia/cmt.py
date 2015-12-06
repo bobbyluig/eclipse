@@ -118,7 +118,7 @@ class CMT(object):
     def __init__(self, im_gray0, tl, br):
 
         # Initialize detector, descriptor, and matcher.
-        self.detector = cv2.ORB_create(nfeatures=100)
+        self.detector = cv2.ORB_create()
         self.descriptor = self.detector
         self.matcher = cv2.BFMatcher(cv2.NORM_HAMMING)
 
@@ -330,7 +330,6 @@ class CMT(object):
         if not any(isnan(center)):
             selected_matches_all = self.matcher.knnMatch(features, self.selected_features,
                                                          len(self.selected_features))
-
 
         # For each keypoint and its descriptor
         if len(keypoints_cv) > 0:

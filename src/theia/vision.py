@@ -8,6 +8,9 @@ from theia.cmt import CMT
 logger = logging.getLogger('universe')
 
 
+
+
+
 class Theia:
     def __init__(self):
         self.cry = True
@@ -180,14 +183,15 @@ def get_rect(im, title='get_rect'):
     return tl, br
 
 
-def correlation_test():
-    eye = Eye(0)
-    tracker = correlation_tracker()
+def correlation_test(camera):
+    eye = Eye(camera)
+    eye.cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+    tracker = correlation_tracker(2**6, 32, 23, 0.001, 0.025, 0.001, 0.025)
 
     while True:
         frame = eye.getColorFrame()
         cv2.imshow('preview', frame)
-        k = cv2.waitKey(int(1000 / 60))
+        k = cv2.waitKey(1)
         if not k == -1:
             break
 
@@ -203,13 +207,57 @@ def correlation_test():
         pos = tracker.get_position()
         frame = cv2.rectangle(frame, (int(pos.left()), int(pos.top())), (int(pos.right()), int(pos.bottom())), (0, 255, 0), 3)
         cv2.imshow('frame', frame)
-        k = cv2.waitKey(int(1000 / 60))
+        k = cv2.waitKey(1)
         if not k == -1:
             break
 
 
-def cmt_test():
-    eye = Eye(0)
+def full_test(camera):
+    eye = Eye(camera)
+    subtractor = cv2.createBackgroundSubtractorMOG2(detectShadows=False)
+    tracker = correlation_tracker(2**6, 32, 23, 0.001, 0.025, 0.001, 0.025)
+    ksize = (5, 5)
+
+    while True:
+        frame = eye.getColorFrame()
+        cv2.imshow('Full Tracking Test', frame)
+        k = cv2.waitKey(1)
+        if not k == -1:
+            break
+
+    count = 50
+
+    for i in range(count):
+        frame = eye.getColorFrame()
+
+        display = frame.copy()
+        cv2.putText(display, '%s' % (count - i), (30, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2, cv2.LINE_AA)
+        cv2.imshow('Full Tracking Test', display)
+        cv2.waitKey(1)
+
+        frame = cv2.GaussianBlur(frame, ksize, 0)
+        subtractor.apply(frame)
+
+    frame = eye.getColorFrame()
+    frame = cv2.GaussianBlur(frame, ksize, 0)
+    mask = subtractor.apply(frame)
+
+    blob = Theia.boundBlobs(mask, 1)[0]
+    tracker.start_track(frame, rectangle(blob[0], blob[1], blob[0]+blob[2], blob[1]+blob[3]))
+
+    while True:
+        frame = eye.getColorFrame()
+        tracker.update(frame)
+        pos = tracker.get_position()
+        frame = cv2.rectangle(frame, (int(pos.left()), int(pos.top())), (int(pos.right()), int(pos.bottom())), (0, 255, 0), 3)
+        cv2.imshow('Full Tracking Test', frame)
+        k = cv2.waitKey(1)
+        if not k == -1:
+            break
+
+
+def cmt_test(camera):
+    eye = Eye(camera)
 
     while True:
         frame = eye.getColorFrame()
@@ -242,4 +290,5 @@ def cmt_test():
             break
 
 
-correlation_test()
+camera = 'C:/Users/bobbyluig/Desktop/tracking/tennis3.mp4'
+full_test(camera)
