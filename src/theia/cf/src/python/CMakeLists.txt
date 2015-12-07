@@ -1,3 +1,7 @@
+project(CfTracking)
+
+cmake_minimum_required(VERSION 2.8.7)
+
 # Find specified Python version
 # Arguments:
 #   preferred_version (value): Version to check for first
