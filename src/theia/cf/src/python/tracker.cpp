@@ -527,7 +527,7 @@ namespace cf_tracking
 
 using namespace cf_tracking;
 
-static nullptr init_ar()
+static void init_ar()
 {
 	Py_Initialize();
 	import_array();
