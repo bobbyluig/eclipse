@@ -601,6 +601,15 @@ FORCE_INLINE __m128 _mm_mul_ps(__m128 a, __m128 b)
 	return vmulq_f32(a, b);
 }
 
+// Divide by multiplying!
+FORCE_INLINE __m128 _mm_div_ps(__m128 a, __m128 b)
+{
+	__m128 q_inv0 = vrecpeq_f32(b);
+	__m128 q_step0 = vrecpsq_f32(q_inv0, b);
+	__m128 q_inv1 = vmulq_f32(q_step0, q_inv0);
+	return vmulq_f32(a, q_inv1);
+}
+
 // This version does additional iterations to improve accuracy.  Between 1 and 4 recommended.
 // Computes the approximations of reciprocals of the four single-precision, floating-point values of a. https://msdn.microsoft.com/en-us/library/vstudio/796k1tty(v=vs.100).aspx
 FORCE_INLINE __m128 recipq_newton(__m128 in, int n)
