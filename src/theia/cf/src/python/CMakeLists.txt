@@ -281,7 +281,8 @@ endif()
 INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
 
 if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "arm") 
-	add_definitions(-mfloat-abi=softfp -mfpu=neon)
+	set(ARM_CXX_FLAGS "-mfloat-abi=softfp -mfpu=neon")		
+	set(CMAKE_CXX_FLAGS ${ARM_CXX_FLAGS})
 	message(STATUS "Using NEON intrinsics.")
 endif()
 
