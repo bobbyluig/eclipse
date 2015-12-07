@@ -276,6 +276,9 @@ find_python(3.4 "${MIN_VER_PYTHON3}" PYTHON3_LIBRARY PYTHON3_INCLUDE_DIR
 if (NOT WIN32)
     set(BOOST_LIBRARYDIR ${BOOST_LIBRARYDIR} $ENV{BOOST_LIBRARYDIR}  
             /usr/lib/x86_64-linux-gnu/)
+			
+	# Assume NEON intrinsics.
+	set(CMAKE_BUILD_FLAGS "-mfloat-abi=softfp -mfpu=neon")
 endif()
 			
 INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
@@ -309,7 +312,7 @@ if(WIN32)
 endif(WIN32)
 
 if(CMAKE_COMPILER_IS_GNUCC)
-    ADD_DEFINITIONS ( -std=c++11 )
+    ADD_DEFINITIONS (-std=c++11)
 endif(CMAKE_COMPILER_IS_GNUCC)
 
 set(OpenCV_STATIC OFF)

@@ -39,7 +39,12 @@ either expressed or implied, of the FreeBSD Project.
 *******************************************************************************/
 #ifndef _SSE_HPP_
 #define _SSE_HPP_
+
+#if defined(__ARM_ARCH_7A__)
+#include <SSE2NEON.h>
+#else
 #include <emmintrin.h> // SSE2:<e*.h>, SSE3:<p*.h>, SSE4:<s*.h>
+#endif
 
 #define RETf inline __m128
 #define RETi inline __m128i
