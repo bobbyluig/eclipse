@@ -8,9 +8,6 @@ from theia.cmt import CMT
 logger = logging.getLogger('universe')
 
 
-
-
-
 class Theia:
     def __init__(self):
         self.cry = True
