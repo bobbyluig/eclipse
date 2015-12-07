@@ -278,7 +278,9 @@ if (NOT WIN32)
             /usr/lib/x86_64-linux-gnu/)
 			
 	# Assume NEON intrinsics.
-	set(CMAKE_BUILD_FLAGS "-mfloat-abi=softfp -mfpu=neon")
+	set(ARM_CXX_FLAGS "-mfloat-abi=softfp -mfpu=neon")
+	set(CMAKE_CXX_FLAGS ${ARM_CXX_FLAGS})   
+	message(STATUS "Using NEON intrinsics.")
 endif()
 			
 INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
