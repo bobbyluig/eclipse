@@ -281,7 +281,8 @@ endif()
 INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
 
 if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "arm") 
-	add_definitions(-mfloat-abi=softfp -mfpu=neon) 
+	add_definitions(-mfloat-abi=softfp -mfpu=neon)
+	message(STATUS "Using NEON intrinsics.")
 endif()
 
 if (PYTHON3_INCLUDE_PATH)
