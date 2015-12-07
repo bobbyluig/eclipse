@@ -1,7 +1,7 @@
 import cv2
 import time, logging
 import numpy as np
-from dlib import rectangle, correlation_tracker
+from DSST import DsstParameters, DsstTracker
 from theia.eye import Eye
 from theia.cmt import CMT
 
@@ -186,7 +186,9 @@ def get_rect(im, title='get_rect'):
 def correlation_test(camera):
     eye = Eye(camera)
     eye.cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
-    tracker = correlation_tracker(2**6, 32, 23, 0.001, 0.025, 0.001, 0.025)
+
+    params = DsstParameters()
+    tracker = DsstTracker(params)
 
     while True:
         frame = eye.getColorFrame()
@@ -197,15 +199,13 @@ def correlation_test(camera):
 
     frame = eye.getColorFrame()
     tl, br = get_rect(frame)
-    tracker.start_track(frame, rectangle(*tl, *br))
+    tracker.reinit(frame, (tl[0], tl[1], br[0]-tl[0], br[1]-tl[1]))
 
     while True:
         frame = eye.getColorFrame()
-        start = time.time()
-        tracker.update(frame)
-        print(time.time() - start)
-        pos = tracker.get_position()
-        frame = cv2.rectangle(frame, (int(pos.left()), int(pos.top())), (int(pos.right()), int(pos.bottom())), (0, 255, 0), 3)
+        print(tracker.update(frame))
+        pos = tracker.getPosition()
+        frame = cv2.rectangle(frame, (int(pos[0]), int(pos[1])), (int(pos[0] + pos[2]), int(pos[1] + pos[3])), (0, 255, 0), 3)
         cv2.imshow('frame', frame)
         k = cv2.waitKey(1)
         if not k == -1:
@@ -290,5 +290,5 @@ def cmt_test(camera):
             break
 
 
-camera = 'C:/Users/bobbyluig/Desktop/tracking/tennis3.mp4'
-full_test(camera)
+camera = 0
+correlation_test(camera)
