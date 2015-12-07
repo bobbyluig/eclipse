@@ -276,14 +276,13 @@ find_python(3.4 "${MIN_VER_PYTHON3}" PYTHON3_LIBRARY PYTHON3_INCLUDE_DIR
 if (NOT WIN32)
     set(BOOST_LIBRARYDIR ${BOOST_LIBRARYDIR} $ENV{BOOST_LIBRARYDIR}  
             /usr/lib/x86_64-linux-gnu/)
-			
-	# Assume NEON intrinsics.
-	set(ARM_CXX_FLAGS "-mfloat-abi=softfp -mfpu=neon")
-	set(CMAKE_CXX_FLAGS ${ARM_CXX_FLAGS})   
-	message(STATUS "Using NEON intrinsics.")
 endif()
 			
 INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
+
+if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "arm") 
+	add_definitions (-mfloat-abi=softfp -mfpu=neon) 
+endif()
 
 if (PYTHON3_INCLUDE_PATH)
 	INCLUDE_DIRECTORIES(${PYTHON3_INCLUDE_PATH})
