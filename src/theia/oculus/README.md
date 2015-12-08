@@ -4,7 +4,7 @@ OpenCV is slightly behind on implementation of newer long and short-term tracker
 
 ## Installation
 
-Currently, there is no Python installer. Build and install using the following steps:
+Currently, there is no Python installer. You will first need all of the prerequisites of the main project. Build and install using the following steps:
 
 1. `cd oculus`
 2. `mkdir build`
