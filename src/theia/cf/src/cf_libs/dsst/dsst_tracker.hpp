@@ -1,3 +1,6 @@
+#ifndef DSST_TRACKER_HPP_
+#define DSST_TRACKER_HPP_
+
 #include <boost/python.hpp>
 
 #include <opencv2/imgproc/imgproc.hpp>
@@ -42,12 +45,15 @@ namespace cf_tracking
 		bool originalVersion = false;
 		int resizeType = cv::INTER_LINEAR;
 		bool useFhogTranspose = false;
+		double minArea = static_cast<double>(10);
+		double maxAreaFactor = static_cast<double>(0.8);
+		bool useCcs = true;
 	};
 
 	class DsstTracker
 	{
 	public:
-		typedef float T; // set precision here double or float
+		typedef double T; // set precision here double or float
 		static const int CV_TYPE = cv::DataType<T>::type;
 		typedef cv::Size_<T> Size;
 		typedef cv::Point_<T> Point;
@@ -56,7 +62,6 @@ namespace cf_tracking
 		typedef DsstFeatureChannels<T> DFC;
 		typedef mat_consts::constants<T> consts;
 		typedef boost::python::tuple Tuple;
-		typedef boost::python::list List;
 
 		DsstTracker(DsstParameters paras)
 			: _isInitialized(false),
@@ -69,13 +74,12 @@ namespace cf_tracking
 			_TEMPLATE_SIZE(paras.templateSize),
 			_PSR_THRESHOLD(static_cast<T>(paras.psrThreshold)),
 			_PSR_PEAK_DEL(paras.psrPeakDel),
-			_MIN_AREA(10),
-			_MAX_AREA_FACTOR(0.8),
-			_ID("DSSTcpp"),
+			_MIN_AREA(static_cast<T>(paras.minArea)),
+			_MAX_AREA_FACTOR(static_cast<T>(paras.maxAreaFactor)),
 			_ENABLE_TRACKING_LOSS_DETECTION(paras.enableTrackingLossDetection),
 			_ORIGINAL_VERSION(paras.originalVersion),
 			_RESIZE_TYPE(paras.resizeType),
-			_USE_CCS(true)
+			_USE_CCS(paras.useCcs)
 		{
 			if (paras.enableScaleEstimator)
 			{
@@ -136,10 +140,10 @@ namespace cf_tracking
 			if (update_(image, bb) == false)
 				return false;
 
-			position[0] = static_cast<float>(bb.x);
-			position[1] = static_cast<float>(bb.y);
-			position[2] = static_cast<float>(bb.width);
-			position[3] = static_cast<float>(bb.height);
+			position[0] = static_cast<T>(bb.x);
+			position[1] = static_cast<T>(bb.y);
+			position[2] = static_cast<T>(bb.width);
+			position[3] = static_cast<T>(bb.height);
 			return true;
 		}
 
@@ -156,17 +160,22 @@ namespace cf_tracking
 
 			isValid = updateAt_(image, bb);
 
-			position[0] = static_cast<float>(bb.x);
-			position[1] = static_cast<float>(bb.y);
-			position[2] = static_cast<float>(bb.width);
-			position[3] = static_cast<float>(bb.height);
+			position[0] = static_cast<T>(bb.x);
+			position[1] = static_cast<T>(bb.y);
+			position[2] = static_cast<T>(bb.width);
+			position[3] = static_cast<T>(bb.height);
 
 			return isValid;
 		}
 
-		Tuple getPosition()
+		Tuple getBoundingBox()
 		{
 			return boost::python::make_tuple(position[0], position[1], position[2], position[3]);
+		}
+
+		Tuple getCenter()
+		{
+			return boost::python::make_tuple(position[0] + position[2] / 2, position[1] + position[3] / 2);
 		}
 
 	private:
@@ -499,8 +508,8 @@ namespace cf_tracking
 		int _frameIdx = 1;
 		bool _isInitialized;
 
-		const double _MIN_AREA;
-		const double _MAX_AREA_FACTOR;
+		const T _MIN_AREA;
+		const T _MAX_AREA_FACTOR;
 		const T _PADDING;
 		const T _OUTPUT_SIGMA_FACTOR;
 		const T _LAMBDA;
@@ -509,12 +518,13 @@ namespace cf_tracking
 		const int _PSR_PEAK_DEL;
 		const int _CELL_SIZE;
 		const int _TEMPLATE_SIZE;
-		const std::string _ID;
 		const bool _ENABLE_TRACKING_LOSS_DETECTION;
 		const int _RESIZE_TYPE;
 		const bool _ORIGINAL_VERSION;
 		const bool _USE_CCS;
 
-		float position[4];
+		T position[4];
 	};
 }
+
+#endif

@@ -1,74 +1,7 @@
-/*
-// License Agreement (3-clause BSD License)
-// Copyright (c) 2015, Klaus Haag, all rights reserved.
-// Third party copyrights and patents are property of their respective owners.
-//
-// Redistribution and use in source and binary forms, with or without modification,
-// are permitted provided that the following conditions are met:
-//
-// * Redistributions of source code must retain the above copyright notice,
-//   this list of conditions and the following disclaimer.
-//
-// * Redistributions in binary form must reproduce the above copyright notice,
-//   this list of conditions and the following disclaimer in the documentation
-//   and/or other materials provided with the distribution.
-//
-// * Neither the names of the copyright holders nor the names of the contributors
-//   may be used to endorse or promote products derived from this software
-//   without specific prior written permission.
-//
-// This software is provided by the copyright holders and contributors "as is" and
-// any express or implied warranties, including, but not limited to, the implied
-// warranties of merchantability and fitness for a particular purpose are disclaimed.
-// In no event shall copyright holders or contributors be liable for any direct,
-// indirect, incidental, special, exemplary, or consequential damages
-// (including, but not limited to, procurement of substitute goods or services;
-// loss of use, data, or profits; or business interruption) however caused
-// and on any theory of liability, whether in contract, strict liability,
-// or tort (including negligence or otherwise) arising in any way out of
-// the use of this software, even if advised of the possibility of such damage.
-*/
-
-/* This class represents a C++ implementation of the Kernelized
-Correlation Filter tracker (KCF) [1].
-
-It is implemented closely to the Matlab implementation by the original authors:
-http://home.isr.uc.pt/~henriques/circulant/
-However, some implementation details differ and some difference in performance
-has to be expected.
-
-This specific implementation features the scale adaption, sub-pixel
-accuracy for the correlation response evaluation and a more robust
-filter update scheme [2] used by Henriques, et al. in the VOT Challenge 2014.
-
-As default scale adaption, the tracker uses the 1D scale filter
-presented in [3]. The scale filter can be found in scale_estimator.hpp.
-Additionally, target loss detection is implemented according to [4].
-
-Every complex matrix is as default in CCS packed form:
-see : https://software.intel.com/en-us/node/504243
-and http://docs.opencv.org/modules/core/doc/operations_on_arrays.html
-
-References:
-[1] J. Henriques, et al.,
-"High-Speed Tracking with Kernelized Correlation Filters,"
-PAMI, 2015.
-
-[2] M. Danelljan, et al.,
-“Adaptive Color Attributes for Real-Time Visual Tracking,”
-in Proc. CVPR, 2014.
-
-[3] M. Danelljan,
-"Accurate Scale Estimation for Robust Visual Tracking,"
-Proceedings of the British Machine Vision Conference BMVC, 2014.
-
-[4] D. Bolme, et al.,
-“Visual Object Tracking using Adaptive Correlation Filters,”
-in Proc. CVPR, 2010.
-*/
-
 #ifndef KCF_TRACKER_HPP_
 #define KCF_TRACKER_HPP_
+
+#include <boost/python.hpp>
 
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/core/traits.hpp>
@@ -81,10 +14,10 @@ in Proc. CVPR, 2010.
 #include "gradientMex.hpp"
 #include "mat_consts.hpp"
 #include "math_helper.hpp"
-#include "cf_tracker.hpp"
-#include "kcf_debug.hpp"
 #include "scale_estimator.hpp"
 #include "psr.hpp"
+
+using namespace boost::python;
 
 namespace cf_tracking
 {
@@ -116,9 +49,15 @@ namespace cf_tracking
         // testing
         int resizeType = cv::INTER_LINEAR;
         bool useFhogTranspose = false;
+		double minArea = static_cast<double>(10);
+		double maxAreaFactor = static_cast<double>(0.8);
+		int nScalesVot = 3;
+		double VotMinScaleFactor = static_cast<double>(0.01);
+		double VotMaxScaleFactor = static_cast<double>(40);
+		bool useCcs = true;
     };
 
-    class KcfTracker : public CfTracker
+    class KcfTracker
     {
     public:
         static const int NUM_FEATURE_CHANNELS = 31;
@@ -129,8 +68,9 @@ namespace cf_tracking
         typedef mat_consts::constants<T> consts;
         typedef cv::Point_<T> Point;
         typedef cv::Rect_<T> Rect;
+		typedef boost::python::tuple Tuple;
 
-        KcfTracker(KcfParameters paras, KcfDebug<T>* debug = 0)
+        KcfTracker(KcfParameters paras)
             : _isInitialized(false),
             _PADDING(static_cast<T>(paras.padding)),
             _LAMBDA(static_cast<T>(paras.lambda)),
@@ -142,18 +82,18 @@ namespace cf_tracking
             _KERNEL_SIGMA(static_cast<T>(paras.kernelSigma)),
             _CELL_SIZE(paras.cellSize),
             _PIXEL_PADDING(paras.pixelPadding),
-            _N_SCALES_VOT(3),
+            _N_SCALES_VOT(paras.nScalesVot),
             _USE_VOT_SCALE_ESTIMATION(paras.useVotScaleEstimation),
             _ENABLE_TRACKING_LOSS_DETECTION(paras.enableTrackingLossDetection),
             _PSR_THRESHOLD(static_cast<T>(paras.psrThreshold)),
             _PSR_PEAK_DEL(paras.psrPeakDel),
-            _MIN_AREA(10),
-            _MAX_AREA_FACTOR(static_cast<T>(0.8)),
+            _MIN_AREA(static_cast<T>(paras.minArea)),
+            _MAX_AREA_FACTOR(static_cast<T>(paras.maxAreaFactor)),
             _RESIZE_TYPE(paras.resizeType),
-            _ID("KCFcpp"),
-            _USE_CCS(true),
-            _scaleEstimator(0),
-            _debug(debug)
+            _USE_CCS(paras.useCcs),
+			_VOT_MIN_SCALE_FACTOR(paras.VotMinScaleFactor),
+			_VOT_MAX_SCALE_FACTOR(paras.VotMaxScaleFactor),
+            _scaleEstimator(0)
         {
             correlate = &KcfTracker::gaussianCorrelation;
 
@@ -179,14 +119,6 @@ namespace cf_tracking
             else
                 cvFhog = &piotr::cvFhog < T, FFC > ;
 
-            if (_debug != 0)
-            {
-                if (CV_MAJOR_VERSION < 3)
-                {
-                    std::cout << "KcfTracker: Using OpenCV Version: " << CV_MAJOR_VERSION << "." << CV_MINOR_VERSION << std::endl;
-                    std::cout << "For more speed use 3.0 or higher!" << std::endl;
-                }
-            }
         }
 
         virtual ~KcfTracker()
@@ -194,177 +126,67 @@ namespace cf_tracking
             delete _scaleEstimator;
         }
 
-        virtual bool reinit(const cv::Mat& image, cv::Rect_<int>& boundingBox)
-        {
-            Rect bb = Rect(
-                static_cast<T>(boundingBox.x),
-                static_cast<T>(boundingBox.y),
-                static_cast<T>(boundingBox.width),
-                static_cast<T>(boundingBox.height)
-                );
+		bool reinit(const cv::Mat& image, Tuple boundingBox)
+		{
+			Rect bb = Rect(
+				extract<T>(boundingBox[0]),
+				extract<T>(boundingBox[1]),
+				extract<T>(boundingBox[2]),
+				extract<T>(boundingBox[3])
+				);
 
-            return reinit_(image, bb);
-        }
+			return reinit_(image, bb);
+		}
 
-        virtual bool reinit(const cv::Mat& image, cv::Rect_<float>& boundingBox)
-        {
-            Rect bb = Rect(
-                static_cast<T>(boundingBox.x),
-                static_cast<T>(boundingBox.y),
-                static_cast<T>(boundingBox.width),
-                static_cast<T>(boundingBox.height)
-                );
+		bool update(const cv::Mat& image)
+		{
+			Rect bb = Rect(
+				position[0],
+				position[1],
+				position[2],
+				position[3]
+				);
 
-            return reinit_(image, bb);
-        }
+			if (update_(image, bb) == false)
+				return false;
 
-        virtual bool reinit(const cv::Mat& image, cv::Rect_<double>& boundingBox)
-        {
-            Rect bb = Rect(
-                static_cast<T>(boundingBox.x),
-                static_cast<T>(boundingBox.y),
-                static_cast<T>(boundingBox.width),
-                static_cast<T>(boundingBox.height)
-                );
+			position[0] = static_cast<T>(bb.x);
+			position[1] = static_cast<T>(bb.y);
+			position[2] = static_cast<T>(bb.width);
+			position[3] = static_cast<T>(bb.height);
+			return true;
+		}
 
-            return reinit_(image, bb);
-        }
+		bool updateAt(const cv::Mat& image, Tuple boundingBox)
+		{
+			bool isValid = false;
 
-        virtual bool update(const cv::Mat& image, cv::Rect_<int>& boundingBox)
-        {
-            bool isValid = false;
+			Rect bb = Rect(
+				extract<T>(boundingBox[0]),
+				extract<T>(boundingBox[1]),
+				extract<T>(boundingBox[2]),
+				extract<T>(boundingBox[3])
+				);
 
-            Rect bb = Rect(
-                static_cast<T>(boundingBox.x),
-                static_cast<T>(boundingBox.y),
-                static_cast<T>(boundingBox.width),
-                static_cast<T>(boundingBox.height)
-                );
+			isValid = updateAt_(image, bb);
 
-            isValid = update_(image, bb);
+			position[0] = static_cast<T>(bb.x);
+			position[1] = static_cast<T>(bb.y);
+			position[2] = static_cast<T>(bb.width);
+			position[3] = static_cast<T>(bb.height);
 
-            boundingBox.x = static_cast<int>(round(bb.x));
-            boundingBox.y = static_cast<int>(round(bb.y));
-            boundingBox.width = static_cast<int>(round(bb.width));
-            boundingBox.height = static_cast<int>(round(bb.height));
+			return isValid;
+		}
 
-            return isValid;
-        }
+		Tuple getBoundingBox()
+		{
+			return boost::python::make_tuple(position[0], position[1], position[2], position[3]);
+		}
 
-        virtual bool update(const cv::Mat& image, cv::Rect_<float>& boundingBox)
-        {
-            bool isValid = false;
-
-            Rect bb = Rect(
-                static_cast<T>(boundingBox.x),
-                static_cast<T>(boundingBox.y),
-                static_cast<T>(boundingBox.width),
-                static_cast<T>(boundingBox.height)
-                );
-
-            isValid = update_(image, bb);
-
-            boundingBox.x = static_cast<float>(bb.x);
-            boundingBox.y = static_cast<float>(bb.y);
-            boundingBox.width = static_cast<float>(bb.width);
-            boundingBox.height = static_cast<float>(bb.height);
-
-            return isValid;
-        }
-
-        virtual bool update(const cv::Mat& image, cv::Rect_<double>& boundingBox)
-        {
-            bool isValid = false;
-
-            Rect bb = Rect(
-                static_cast<T>(boundingBox.x),
-                static_cast<T>(boundingBox.y),
-                static_cast<T>(boundingBox.width),
-                static_cast<T>(boundingBox.height)
-                );
-
-            isValid = update_(image, bb);
-
-            boundingBox.x = static_cast<double>(bb.x);
-            boundingBox.y = static_cast<double>(bb.y);
-            boundingBox.width = static_cast<double>(bb.width);
-            boundingBox.height = static_cast<double>(bb.height);
-
-            return isValid;
-        }
-
-        virtual bool updateAt(const cv::Mat& image, cv::Rect_<int>& boundingBox)
-        {
-            bool isValid = false;
-
-            Rect bb = Rect(
-                static_cast<T>(boundingBox.x),
-                static_cast<T>(boundingBox.y),
-                static_cast<T>(boundingBox.width),
-                static_cast<T>(boundingBox.height)
-                );
-
-            isValid = updateAt_(image, bb);
-
-            boundingBox.x = static_cast<int>(round(bb.x));
-            boundingBox.y = static_cast<int>(round(bb.y));
-            boundingBox.width = static_cast<int>(round(bb.width));
-            boundingBox.height = static_cast<int>(round(bb.height));
-
-            return isValid;
-        }
-
-        virtual bool updateAt(const cv::Mat& image, cv::Rect_<float>& boundingBox)
-        {
-            bool isValid = false;
-
-            Rect bb = Rect(
-                static_cast<T>(boundingBox.x),
-                static_cast<T>(boundingBox.y),
-                static_cast<T>(boundingBox.width),
-                static_cast<T>(boundingBox.height)
-                );
-
-            isValid = updateAt_(image, bb);
-
-            boundingBox.x = static_cast<float>(bb.x);
-            boundingBox.y = static_cast<float>(bb.y);
-            boundingBox.width = static_cast<float>(bb.width);
-            boundingBox.height = static_cast<float>(bb.height);
-
-            return isValid;
-        }
-
-        virtual bool updateAt(const cv::Mat& image, cv::Rect_<double>& boundingBox)
-        {
-            bool isValid = false;
-
-            Rect bb = Rect(
-                static_cast<T>(boundingBox.x),
-                static_cast<T>(boundingBox.y),
-                static_cast<T>(boundingBox.width),
-                static_cast<T>(boundingBox.height)
-                );
-
-            isValid = updateAt_(image, bb);
-
-            boundingBox.x = static_cast<double>(bb.x);
-            boundingBox.y = static_cast<double>(bb.y);
-            boundingBox.width = static_cast<double>(bb.width);
-            boundingBox.height = static_cast<double>(bb.height);
-
-            return isValid;
-        }
-
-        virtual TrackerDebug* getTrackerDebug()
-        {
-            return _debug;
-        }
-
-        virtual const std::string getId()
-        {
-            return _ID;
-        }
+		Tuple getCenter()
+		{
+			return boost::python::make_tuple(position[0] + position[2] / 2, position[1] + position[3] / 2);
+		}
 
     private:
         bool reinit_(const cv::Mat& image, Rect& boundingBox)
@@ -572,11 +394,6 @@ namespace cf_tracking
             cv::Mat patchResizedFloat;
             patchResized.convertTo(patchResizedFloat, CV_32FC(3));
 
-            if (_debug != 0)
-            {
-                _debug->showPatch(patchResized);
-            }
-
             patchResizedFloat *= 0.003921568627451; // patchResizedFloat /= 255;
 
             features.reset(new FFC());
@@ -658,12 +475,6 @@ namespace cf_tracking
         {
             T peakValue = 0;
             T psrClamped = calcPsr(response, maxResponseIdx, _PSR_PEAK_DEL, peakValue);
-
-            if (_debug)
-            {
-                _debug->showResponse(response, peakValue);
-                _debug->setPsr(psrClamped);
-            }
 
             if (psrClamped < _PSR_THRESHOLD)
                 return false;
@@ -900,8 +711,8 @@ namespace cf_tracking
         bool _isInitialized;
         ScaleEstimator<T>* _scaleEstimator;
 
-        const double _MIN_AREA;
-        const double _MAX_AREA_FACTOR;
+        const T _MIN_AREA;
+        const T _MAX_AREA_FACTOR;
         const T _PADDING;
         const T _LAMBDA;
         const T _OUTPUT_SIGMA_FACTOR;
@@ -916,16 +727,16 @@ namespace cf_tracking
         const int _N_SCALES_VOT;
         const int _PIXEL_PADDING;
         const int _RESIZE_TYPE;
-        const std::string _ID;
         const bool _USE_VOT_SCALE_ESTIMATION;
         const bool _ENABLE_TRACKING_LOSS_DETECTION;
         const bool _USE_CCS;
-        // it should be possible to find more reasonable values for min/max scale; application dependent
-        T _VOT_MIN_SCALE_FACTOR = static_cast<T>(0.01);
-        T _VOT_MAX_SCALE_FACTOR = static_cast<T>(40);
 
-        KcfDebug<T>* _debug;
+        // it should be possible to find more reasonable values for min/max scale; application dependent
+        const T _VOT_MIN_SCALE_FACTOR;
+        const T _VOT_MAX_SCALE_FACTOR;
+
+		T position[4];
     };
 }
 
-#endif /* KCF_TRACKER_H_ */
+#endif
