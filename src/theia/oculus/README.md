@@ -4,7 +4,18 @@ OpenCV is slightly behind on implementation of newer long and short-term tracker
 
 ## Installation
 
-Currently, there is no Python installer. You will first need all of the prerequisites of the main project. Build and install using the following steps:
+Currently, there is no Python installer. You will first need all of the prerequisites of the main project. 
+
+First, configure Boost Python. If you're on Windows, you'll need to compile it yourself. Go to `tools/build` and run `bootstrap.bat`. Then, execute `b2 install`. Add `C:/boost-build-engine/bin` to PATH. Go to the root of the Boost folder and run `b2 -a --with-python address-model=32 toolset=msvc runtime-link=static`. You can choose 64-bit address model if that corresponds to your Python version.
+
+After building, execute the following with the proper directory locations:
+
+1. `setx BOOST_ROOT C:/boost_x_xx_x`
+2. `setx BOOST_LIBRARYDIR C:/boost_x_xx_x/stage/lib`
+
+You will also need to set your OpenCV Enviroment Variable if you have not already done so. Follow the instruction at [OpenCV - Set Enviroment Variable](`http://docs.opencv.org/2.4/doc/tutorials/introduction/windows_install/windows_install.html#windowssetpathandenviromentvariable`) (it's outdated but the procedure is the same. The path is one which contains the binaries).
+
+After resolving prerequisites, build and install using the following steps:
 
 1. `cd oculus`
 2. `mkdir build`
