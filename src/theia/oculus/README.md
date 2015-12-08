@@ -1,6 +1,6 @@
 # Oculus
 
-OpenCV is slightly behind on implementation of newer long and short-term trackers. Oculus is a Python module designed to rectify this problem. Oculus implements two trackers, DSST and KCF. DSST is the winner and [VOT 2014](http://www.votchallenge.net/vot2014/download/vot_2014_paper.pdf) is also the winner in the 2015 OpenCV challenge (with modifications). KCF placed 3rd in VOT 2014 but is more than 3 times faster than DSST when scale is not compensated.
+OpenCV is slightly behind on implementation of newer long and short-term trackers. Oculus is a Python module designed to rectify this problem. Oculus implements two trackers, DSST and KCF. DSST is the winner of [VOT 2014](http://www.votchallenge.net/vot2014/download/vot_2014_paper.pdf) and is also the winner in the 2015 OpenCV challenge (with modifications). KCF placed 3rd in VOT 2014 but is more than 3 times faster than DSST when scale is static.
 
 ## Installation
 
