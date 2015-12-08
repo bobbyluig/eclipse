@@ -19,7 +19,7 @@ static void* init_ar()
 	return NULL;
 }
 
-BOOST_PYTHON_MODULE(tracker)
+BOOST_PYTHON_MODULE(oculus)
 {
 	init_ar();
 	to_python_converter<cv::Mat,
