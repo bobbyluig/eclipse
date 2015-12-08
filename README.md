@@ -30,7 +30,7 @@ USB is quite interesting. Pololu's configuation software is written in C# and us
 
 For Windows, it is necessary after initial configuration to install a driver compatible with pyusb. This can be done using [zadig](http://zadig.akeo.ie/). Ensure that you replace the driver (which should be WinUSB) for the actual device and not its two virtual COM ports. To reuse the Pololu controller interface, open device manager and uninstall the device. After a refresh, the original driver should reappear. 
 
-If installing manually, you will need to compile `oculous`, which implements DSST and KCF corelation-based trackers and exposes them to Python3. Check the README in `src/theia/oculous` for more information.
+If installing manually, you will need to compile `oculus`, which implements DSST and KCF corelation-based trackers and exposes them to Python3. Check the README in `src/theia/oculus` for more information.
 
 ## Deployment
   
