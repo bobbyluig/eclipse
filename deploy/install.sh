@@ -72,7 +72,7 @@ rm -rf Python-3.5.0
 rm -f Python-3.5.0.tgz
 
 # Get Python libraries.
-pip3 install numpy pyserial autobahn[accelerate] pyusb scipy
+pip3 install numpy pyserial autobahn[accelerate] pyusb
 apt-get -y install libportaudio0 libportaudio2 libportaudiocpp0 portaudio19-dev libav-tools
 pip3 install pyaudio pydub
 
@@ -127,4 +127,4 @@ rm -rf opencv-3.0.0 opencv_contrib
 ######################
 
 apt-get -y install arduino-core picocom python python-pip python-dev
-pip install ino
+pip install ino  
