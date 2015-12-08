@@ -17,9 +17,12 @@ After cloning the package, all the prerequisites for the project must be install
 - Raspberry Pi 2 Model B
 
 ##### Project requires
-- Python 3.5+ (usage of new async and await syntax)
-- OpenCV 3 and contrib module with Python binding.
+- Windows 7+, Linux (tested on Debian, Raspbian and Ubuntu), or OS X (untested but should work).
+- CMake 2.8.7 or higher.
+- Python 3.5+ (usage of new async and await syntax).
+- OpenCV 3 and contrib module with Python3 binding.
 - The latest version of the following Python packages and their dependencies: `numpy`, `pyserial`, `autobahn`, `pyusb`, `pyaudio`.
+- Processor support for SSE2 intrinsics (on most Intel and AMD processors) or NEON intrinsics (on ARM Cortex-A series).
 
 The root directory for the Python code is the `src` folder. Ensure that your IDE (like PyCharm) knows that it is the root directory. Tests should be written in `test.py` before being moved to `main.py` or other files.
 
