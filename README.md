@@ -8,7 +8,7 @@ In most cases, all code styling abides by [PEP 8](https://www.python.org/dev/pep
 
 ## Development
 
-After cloning the package, all the prerequisites for the project must be installed. This project has not been tested in Mac but should work find due to the versatility of Python.
+After cloning the package, all the prerequisites for the project must be installed. This project has not been tested in Mac but should work fine due to the versatility of Python.
 
 ##### Test with the following hardware
 - Pololu Mini Maestro 18
