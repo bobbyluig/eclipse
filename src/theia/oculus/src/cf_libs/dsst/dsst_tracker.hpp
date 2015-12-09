@@ -53,7 +53,7 @@ namespace cf_tracking
 	class DsstTracker
 	{
 	public:
-		typedef double T; // set precision here double or float
+		typedef float T; // set precision here double or float
 		static const int CV_TYPE = cv::DataType<T>::type;
 		typedef cv::Size_<T> Size;
 		typedef cv::Point_<T> Point;
