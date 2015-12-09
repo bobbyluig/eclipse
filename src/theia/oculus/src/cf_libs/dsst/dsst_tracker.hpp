@@ -184,8 +184,6 @@ namespace cf_tracking
 
 		bool reinit_(const cv::Mat& image, Rect& boundingBox)
 		{
-			std::cout << "1\n";
-
 			_pos.x = floor(boundingBox.x) + floor(boundingBox.width * consts::c0_5);
 			_pos.y = floor(boundingBox.y) + floor(boundingBox.height * consts::c0_5);
 			Size targetSize = Size(boundingBox.width, boundingBox.height);
@@ -206,8 +204,6 @@ namespace cf_tracking
 				_templateSz = Size(floor(_templateSz.width / _scale), floor(_templateSz.height / _scale));
 			}
 
-			std::cout << "2\n";
-
 			_baseTargetSz = Size(targetSize.width / _scale, targetSize.height / _scale);
 			_templateScaleFactor = 1 / _scale;
 
@@ -227,15 +223,11 @@ namespace cf_tracking
 			cosWindowX = hanningWindow<T>(_yf.cols);
 			_cosWindow = cosWindowY * cosWindowX.t();
 
-			std::cout << "3\n";
-
 			std::shared_ptr<DFC> hfNum(0);
 			cv::Mat hfDen;
 
 			if (getTranslationTrainingData(image, hfNum, hfDen, _pos) == false)
 				return false;
-
-			std::cout << "4\n";
 
 			_hfNumerator = hfNum;
 			_hfDenominator = hfDen;
@@ -245,8 +237,6 @@ namespace cf_tracking
 				_scaleEstimator->reinit(image, _pos, targetSize,
 					_scale * _templateScaleFactor);
 			}
-
-			std::cout << "5\n";
 
 			_lastBoundingBox = boundingBox;
 			_isInitialized = true;
