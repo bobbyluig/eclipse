@@ -220,9 +220,9 @@ def speed_test(camera):
     for i in range(300):
         frame = eye.getColorFrame()
         start = time.time()
-        total += time.time() - start
-        pos = tracker.getBoundingBox()
         tracker.update(frame)
+        pos = tracker.getBoundingBox()
+        total += time.time() - start
 
     print(300 / total)
 
