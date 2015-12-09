@@ -3,7 +3,6 @@ import time, logging
 import numpy as np
 from theia.eye import Eye
 from theia.tracker import DSST
-    from oculus import DsstParameters, DsstTracker, KcfParameters, KcfTracker
 
 logger = logging.getLogger('universe')
 
