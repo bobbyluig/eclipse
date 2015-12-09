@@ -235,6 +235,8 @@ namespace cf_tracking
 			if (getTranslationTrainingData(image, hfNum, hfDen, _pos) == false)
 				return false;
 
+			std::cout << "4\n";
+
 			_hfNumerator = hfNum;
 			_hfDenominator = hfDen;
 
@@ -243,6 +245,8 @@ namespace cf_tracking
 				_scaleEstimator->reinit(image, _pos, targetSize,
 					_scale * _templateScaleFactor);
 			}
+
+			std::cout << "5\n";
 
 			_lastBoundingBox = boundingBox;
 			_isInitialized = true;
