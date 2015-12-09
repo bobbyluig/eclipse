@@ -3,6 +3,7 @@ import time, logging
 import numpy as np
 from theia.eye import Eye
 from theia.tracker import DSST, KCF
+import dlib
 
 logger = logging.getLogger('universe')
 
@@ -224,10 +225,29 @@ def speed_test(camera):
         pos = tracker.getBoundingBox()
         delta = time.time() - start
         total += delta
-        print(delta)
 
     print(300 / total)
 
+
+def dlib_test(camera):
+    eye = Eye(camera)
+    eye.cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+
+    tracker = dlib.correlation_tracker()
+
+    frame = eye.getColorFrame()
+    tracker.start_track(frame, dlib.rectangle(541, 400, 541+43, 400+54))
+
+    total = 0
+    for i in range(300):
+        frame = eye.getColorFrame()
+        start = time.time()
+        tracker.update(frame)
+        pos = tracker.get_position()
+        delta = time.time() - start
+        total += delta
+
+    print(300 / total)
 
 def full_test(camera):
     eye = Eye(camera)

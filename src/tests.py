@@ -3,7 +3,7 @@ from agility.pololu.reader import BytecodeReader
 from tools.timer import timeIt
 from agility.maestro import Maestro
 from pprint import pprint
-from theia.vision import speed_test
+from theia.vision import speed_test, dlib_test
 from lykos.apollo import Apollo
 
 try:
@@ -69,6 +69,7 @@ def settingsTest():
 
 def testVideo(camera):
     speed_test(camera)
+    dlib_test(camera)
 
 
 if __name__ == '__main__':
