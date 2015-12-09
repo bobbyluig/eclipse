@@ -2,7 +2,7 @@ import cv2
 import time, logging
 import numpy as np
 from theia.eye import Eye
-from theia.tracker import DSST
+from theia.tracker import DSST, KCF
 
 logger = logging.getLogger('universe')
 
@@ -211,7 +211,7 @@ def speed_test(camera):
     eye = Eye(camera)
     eye.cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
 
-    tracker = DSST()
+    tracker = KCF()
 
     frame = eye.getColorFrame()
     tracker.init(frame, (541, 400, 43, 54))
