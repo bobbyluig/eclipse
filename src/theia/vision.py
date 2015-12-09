@@ -1,9 +1,9 @@
 import cv2
 import time, logging
 import numpy as np
-from DSST import DsstParameters, DsstTracker
 from theia.eye import Eye
-from theia.cmt import CMT
+from theia.tracker import DSST
+from oculus import DsstParameters, DsstTracker, KcfParameters, KcfTracker
 
 logger = logging.getLogger('universe')
 
@@ -184,8 +184,7 @@ def correlation_test(camera):
     eye = Eye(camera)
     eye.cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
 
-    params = DsstParameters()
-    tracker = DsstTracker(params)
+    tracker = DSST()
 
     while True:
         frame = eye.getColorFrame()
@@ -196,17 +195,36 @@ def correlation_test(camera):
 
     frame = eye.getColorFrame()
     tl, br = get_rect(frame)
-    tracker.reinit(frame, (tl[0], tl[1], br[0]-tl[0], br[1]-tl[1]))
+    tracker.init(frame, (tl[0], tl[1], br[0]-tl[0], br[1]-tl[1]))
 
     while True:
         frame = eye.getColorFrame()
-        print(tracker.update(frame))
-        pos = tracker.getPosition()
+        tracker.update(frame)
+        pos = tracker.getBoundingBox()
         frame = cv2.rectangle(frame, (int(pos[0]), int(pos[1])), (int(pos[0] + pos[2]), int(pos[1] + pos[3])), (0, 255, 0), 3)
         cv2.imshow('frame', frame)
         k = cv2.waitKey(1)
         if not k == -1:
             break
+
+
+def speed_test(camera):
+    eye = Eye(camera)
+    eye.cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+
+    tracker = DSST()
+
+    frame = eye.getColorFrame()
+    tracker.init(frame, (541, 400, 43, 54))
+
+    start = time.time()
+    for i in range(300):
+        frame = eye.getColorFrame()
+        tracker.update(frame)
+        pos = tracker.getBoundingBox()
+    delta = time.time() - start
+
+    print(300 / delta)
 
 
 def full_test(camera):
@@ -253,39 +271,5 @@ def full_test(camera):
             break
 
 
-def cmt_test(camera):
-    eye = Eye(camera)
-
-    while True:
-        frame = eye.getColorFrame()
-        cv2.imshow('preview', frame)
-        k = cv2.waitKey(int(1000 / 60))
-        if not k == -1:
-            break
-
-    color, gray = eye.getBothFrames()
-    tl, br = get_rect(color)
-
-    cmt = CMT(gray, tl, br)
-
-    while True:
-        im_draw, im_gray = eye.getBothFrames()
-        start = time.time()
-        cmt.process_frame(im_gray)
-        print(time.time() - start)
-
-        if cmt.has_result:
-            cv2.line(im_draw, cmt.tl, cmt.tr, (255, 0, 0), 4)
-            cv2.line(im_draw, cmt.tr, cmt.br, (255, 0, 0), 4)
-            cv2.line(im_draw, cmt.br, cmt.bl, (255, 0, 0), 4)
-            cv2.line(im_draw, cmt.bl, cmt.tl, (255, 0, 0), 4)
-
-        cv2.imshow('tracked', im_draw)
-
-        k = cv2.waitKey(int(1000 / 60))
-        if not k == -1:
-            break
-
-
-camera = 0
-correlation_test(camera)
+camera = "C:\\Users\\bobbyluig\\Desktop\\Eclipse Large\\chase.mp4"
+speed_test(camera)
