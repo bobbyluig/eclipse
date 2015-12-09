@@ -128,27 +128,19 @@ namespace cf_tracking
         bool reinit(const cv::Mat& image, const Point& pos,
             const Size& targetSize, const T& currentScaleFactor)
         {
-			std::cout << "1\n";
-
             _targetSize = targetSize;
             // scale filter output target
             T scaleSigma = static_cast<T>(sqrt(_N_SCALES) * _SCALE_SIGMA_FACTOR);
             cv::Mat colScales = numberToColVector<T>(_N_SCALES);
             T scaleHalf = static_cast<T>(ceil(_N_SCALES / 2.0));
 
-			std::cout << "2\n";
-
             cv::Mat ss = colScales - scaleHalf;
             cv::Mat ys;
             exp(-0.5 * ss.mul(ss) / (scaleSigma * scaleSigma), ys);
 
-			std::cout << "3\n";
-
             cv::Mat ysf;
             // always use CCS here; regular COMPLEX_OUTPUT is bugged
             cv::dft(ys, ysf, cv::DFT_ROWS);
-
-			std::cout << "4\n";
 
             // scale filter cos window
             if (_N_SCALES % 2 == 0)
@@ -161,14 +153,10 @@ namespace cf_tracking
                 _scaleWindow = hanningWindow<T>(_N_SCALES);
             }
 
-			std::cout << "5\n";
-
             ss = scaleHalf - colScales;
             _scaleFactors = pow<T, T>(_SCALE_STEP, ss);
             _scaleModelFactor = sqrt(_SCALE_MODEL_MAX_AREA / targetSize.area());
             _scaleModelSz = sizeFloor(targetSize *  _scaleModelFactor);
-
-			std::cout << "6\n";
 
             // expand ysf to have the number of rows of scale samples
             int ysfRow = static_cast<int>(floor(_scaleModelSz.width / _SCALE_CELL_SIZE)
@@ -176,15 +164,11 @@ namespace cf_tracking
 
             _ysf = repeat(ysf, ysfRow, 1);
 
-			std::cout << "7\n";
-
             cv::Mat sfNum, sfDen;
 
             if (getScaleTrainingData(image, pos,
                 currentScaleFactor, sfNum, sfDen) == false)
                 return false;
-
-			std::cout << "8\n";
 
             _sfNumerator = sfNum;
             _sfDenominator = sfDen;
@@ -252,8 +236,13 @@ namespace cf_tracking
             cv::Mat& sfNum, cv::Mat& sfDen) const
         {
             cv::Mat xs;
+
+			std::cout << "1\n";
+
             if (getScaleFeatures(image, pos, xs, currentScaleFactor) == false)
                 return false;
+
+			std::cout << "2\n";
 
             cv::Mat xsf;
             dft(xs, xsf, cv::DFT_ROWS);
