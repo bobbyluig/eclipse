@@ -222,7 +222,9 @@ def speed_test(camera):
         start = time.time()
         tracker.update(frame)
         pos = tracker.getBoundingBox()
-        total += time.time() - start
+        delta = time.time() - start
+        total += delta
+        print(delta)
 
     print(300 / total)
 
