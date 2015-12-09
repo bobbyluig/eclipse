@@ -492,7 +492,7 @@ namespace piotr {
         // compute unnormalized constrast sensitive histograms
         //TODO: Hackfix - size increased to +1; no idea why; but heap doesn't
         // get corrupted this way...
-        float * const R1 = (float*)wrCalloc(wb*hb*nOrients * 2 + 1, sizeof(float));
+        float * const R1 = (float*)wrCalloc(wb*hb*nOrients * 2 + 2, sizeof(float));
         R1[wb*hb*nOrients * 2] = 0.f;
 
         gradHist(M, O, R1, h, w, binSize, nOrients * 2, softBin, true);

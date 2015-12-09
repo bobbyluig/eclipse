@@ -269,24 +269,16 @@ namespace cf_tracking
             Point posInFirstPatch(0, 0);
             cosFactor = _scaleWindow.at<T>(idxScale, 0);
 
-			std::cout << "1\n";
-
             if (getSubWindow(image, firstPatch, firstPatchSize, pos, &posInFirstPatch) == false)
                 return false;
-
-			std::cout << "2\n";
 
             if (_ORIGINAL_VERSION)
                 depResize(firstPatch, patchResized, _scaleModelSz);
             else
                 cv::resize(firstPatch, patchResized, _scaleModelSz, 0, 0, _RESIZE_TYPE);
 
-			std::cout << "3\n";
-
             patchResized.convertTo(patchResizedFloat, CV_32FC(3));
             fhogToCvCol(patchResizedFloat, features, _SCALE_CELL_SIZE, idxScale, cosFactor);
-
-			std::cout << "4\n";
 
             for (idxScale = 2; idxScale < _N_SCALES - 1; ++idxScale)
             {
