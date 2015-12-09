@@ -25,10 +25,6 @@ if (MSVC)
     SET(Boost_USE_STATIC_RUNTIME ON)
 endif()
 
-add_definitions(-DBOOST_PYTHON_STATIC_LIB)
-SET(Boost_USE_STATIC_LIBS ON)
-SET(Boost_USE_MULTITHREADED ON)
-SET(Boost_USE_STATIC_RUNTIME ON)
 
 # Locate Boost and add include files.
 set(Boost_NO_BOOST_CMAKE ON)
