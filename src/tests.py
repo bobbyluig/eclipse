@@ -3,6 +3,7 @@ from agility.pololu.reader import BytecodeReader
 from tools.timer import timeIt
 from agility.maestro import Maestro
 from pprint import pprint
+from theia.vision import speed_test
 from lykos.apollo import Apollo
 
 try:
@@ -66,8 +67,13 @@ def settingsTest():
     usc.setUscSettings(settings, False)
 
 
+def testVideo(camera):
+    speed_test(camera)
+
+
 if __name__ == '__main__':
     # script_test()
     # settings_test()
     # get_variables()
-    audioCapture()
+    # audioCapture()
+    testVideo('theia/chase.mp4')

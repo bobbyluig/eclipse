@@ -269,7 +269,3 @@ def full_test(camera):
         k = cv2.waitKey(1)
         if not k == -1:
             break
-
-
-camera = "C:\\Users\\bobbyluig\\Desktop\\Eclipse Large\\chase.mp4"
-speed_test(camera)
