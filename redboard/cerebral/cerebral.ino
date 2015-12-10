@@ -1,12 +1,17 @@
 #include "Wire.h"
-#include "I2Cdev.h"
-#include "MPU6050.h"
+
+int incomingByte = 0;
 
 void setup() {
-  Serial.begin(38400); // Run at 38400 Baud.
+    Wire.begin();
+    Serial.begin(9600);
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
-
+    if (Serial.available() > 0) {
+        incomingByte = Serial.read();
+        if (incomingByte == 69) {
+            Serial.println("Hello!");
+        }
+    }
 }
