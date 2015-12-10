@@ -103,15 +103,17 @@ cd opencv-3.0.0
 mkdir build
 cd build
 cmake -D CMAKE_BUILD_TYPE=RELEASE \
+	-D ENABLE_VFPV3=ON \
+	-D ENABLE_NEON=ON \ 
 	-D CMAKE_INSTALL_PREFIX=/usr/local \
 	-D PYTHON3_LIBRARY=/usr/local/lib/libpython3.5m.so \
-    -D INSTALL_C_EXAMPLES=OFF \
+    	-D INSTALL_C_EXAMPLES=OFF \
 	-D INSTALL_PYTHON_EXAMPLES=OFF \
-    -D OPENCV_EXTRA_MODULES_PATH=~/opencv_contrib/modules \
+    	-D OPENCV_EXTRA_MODULES_PATH=~/opencv_contrib/modules \
 	-D BUILD_PERF_TESTS=OFF \
 	-D BUILD_TESTS=OFF \
 	-D BUILD_EXAMPLES=OFF ..
-make CXXFLAGS="-O3 -mfloat-abi=hard -mfpu=neon" -j4 && make install
+make CXXFLAGS="-O3 -mcpu=cortex-a5 -mfloat-abi=hard -mfpu=neon-fp16 -ffast-math" -j4 && make install
 ldconfig
 
 # Cleanup.
