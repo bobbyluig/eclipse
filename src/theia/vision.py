@@ -212,7 +212,7 @@ def speed_test(camera):
     eye = Eye(camera)
     eye.cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
 
-    tracker = KCF()
+    tracker = DSST()
 
     frame = eye.getColorFrame()
     tracker.init(frame, (541, 400, 43, 54))
