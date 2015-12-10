@@ -77,4 +77,4 @@ if __name__ == '__main__':
     # settings_test()
     # get_variables()
     # audioCapture()
-    testVideo('theia/chase.mp4')
+    testVideo('theia/liquor.wmv')

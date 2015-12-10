@@ -215,7 +215,7 @@ def speed_test(camera):
     tracker = DSST()
 
     frame = eye.getColorFrame()
-    tracker.init(frame, (692, 125, 268, 138))
+    tracker.init(frame, (258, 161, 66, 188))
 
     total = 0
     for i in range(300):
