@@ -73,7 +73,7 @@ message(STATUS "USING PYTHON_LIBS: ${PYTHON3_LIBRARY}")
 
 # Use ARM Neon and optimization on ARM-v7.
 if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "arm") 
-	set(ARM_CXX_FLAGS "-O3 -mcpu=cortex-a5 -mfloat-abi=hard -mfpu=neon-fp16 -ffast-math")		
+	set(ARM_CXX_FLAGS "-Ofast -mcpu=cortex-a5 -mfloat-abi=hard -mfpu=neon-fp16")		
 	set(CMAKE_CXX_FLAGS ${ARM_CXX_FLAGS})
 	message(STATUS "Detected ARM processor. Will try to compile using NEON intrinsics rather than SSE2.")
 endif()
