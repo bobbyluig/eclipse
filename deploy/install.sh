@@ -113,7 +113,7 @@ cmake -D CMAKE_BUILD_TYPE=RELEASE \
 	-D BUILD_PERF_TESTS=OFF \
 	-D BUILD_TESTS=OFF \
 	-D BUILD_EXAMPLES=OFF ..
-make -j4 && make install
+-make CXXFLAGS="-O3 -mcpu=cortex-a5 -mfloat-abi=hard -mfpu=neon-fp16 -ffast-math" -j4 && make install
 ldconfig
 
 # Cleanup.
