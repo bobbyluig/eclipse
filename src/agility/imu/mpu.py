@@ -230,7 +230,7 @@ class MPU:
         gy *= self.gRes
         gz *= self.gRes
 
-        mag = None
+        mag = self.readMagData()
         if mag is not None:
             mx, my, mz = mag
             mx *= self.mRes * self.magCalibration[0]
@@ -256,6 +256,7 @@ class MPU:
 
     def readMagData(self):
         self.bus.write_byte_data(Address.AK8975A_ADDRESS, Command.AK8975A_CNTL, 0x01)
+        time.sleep(0.01)
 
         if self.bus.read_byte_data(Address.AK8975A_ADDRESS, Command.AK8975A_ST1) & 0x01:
             data = self.bus.read_i2c_block_data(Address.AK8975A_ADDRESS, Command.AK8975A_XOUT_L, 6)
@@ -478,7 +479,29 @@ class MPU:
         self.bus.write_byte_data(Address.MPU9150_ADDRESS, Command.ACCEL_CONFIG, c & ~0xE0) # Clear self-test bits [7:5]
         self.bus.write_byte_data(Address.MPU9150_ADDRESS, Command.ACCEL_CONFIG, c & ~0x18) # Clear AFS bits [4:3]
         self.bus.write_byte_data(Address.MPU9150_ADDRESS, Command.ACCEL_CONFIG, c | self.gScale << 3) # Set full scale range for the accelerometer
-    
+
+        '''
+        # Configure Magnetometer for FIFO
+        # Initialize AK8975A for write
+        self.bus.write_byte_data(Address.MPU9150_ADDRESS, Command.I2C_SLV1_ADDR, 0x0C)  # Write address of AK8975A
+        self.bus.write_byte_data(Address.MPU9150_ADDRESS, Command.I2C_SLV1_REG, 0x0A)   # Register from within the AK8975 to which to write
+        self.bus.write_byte_data(Address.MPU9150_ADDRESS, Command.I2C_SLV1_DO, 0x01)    # Register that holds output data written into Slave 1 when in write mode
+        self.bus.write_byte_data(Address.MPU9150_ADDRESS, Command.I2C_SLV1_CTRL, 0x81)  # Enable Slave 1
+
+        # Set up auxilliary communication with AK8975A for FIFO read
+        self.bus.write_byte_data(Address.MPU9150_ADDRESS, Command.I2C_SLV0_ADDR, 0x8C) # Enable and read address (0x0C) of the AK8975A
+        self.bus.write_byte_data(Address.MPU9150_ADDRESS, Command.I2C_SLV0_REG, 0x03)  # Register within AK8975A from which to start data read
+        self.bus.write_byte_data(Address.MPU9150_ADDRESS, Command.I2C_SLV0_CTRL, 0x86) # Read six bytes and swap bytes
+
+        # Configure FIFO
+        self.bus.write_byte_data(Address.MPU9150_ADDRESS, Command.INT_ENABLE, 0x00) # Disable all interrupts
+        self.bus.write_byte_data(Address.MPU9150_ADDRESS, Command.FIFO_EN, 0x00)    # Disable FIFO
+        self.bus.write_byte_data(Address.MPU9150_ADDRESS, Command.USER_CTRL, 0x02)  # Reset I2C master and FIFO and DMP
+        self.bus.write_byte_data(Address.MPU9150_ADDRESS, Command.USER_CTRL, 0x00)  # Disable FIFO
+
+        time.sleep(0.1)
+        '''
+
         # Configure Interrupts and Bypass Enable
         # Set interrupt pin active high, push-pull, and clear on read of INT_STATUS, enable I2C_BYPASS_EN so additional chips
         # can join the I2C bus and all can be controlled by the Arduino as master
@@ -487,6 +510,6 @@ class MPU:
 
 
 mpu = MPU()
-mpu.initialize()
 mpu.calibrateDevice()
+mpu.initialize()
 print(mpu.getAll())
