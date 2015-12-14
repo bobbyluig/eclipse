@@ -3,6 +3,7 @@
 #include <boost/python/args.hpp>
 #include <boost/python.hpp>
 #include <boost/python/tuple.hpp>
+#include <boost/python/module.hpp>
 #include <pyboostcvconverter/pyboostcvconverter.hpp>
 
 #include <dsst_tracker.hpp>

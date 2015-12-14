@@ -2,6 +2,7 @@ from smbus import SMBus
 from enum import IntEnum
 import time
 import struct
+import math
 
 # http:#store.invensense.com/Datasheets/invensense/RM-MPU-9150A-00-v3.0.pdf
 
@@ -176,6 +177,8 @@ class MPU:
         self.accelBias = [0, 0, 0]
         self.magCalibration = [0, 0, 0]
 
+        self.lastUpdate = 0
+
     def initialize(self):
         if self.initialized:
             return False
@@ -212,6 +215,33 @@ class MPU:
             return 1000.0 / 32768.0
         elif scale == Gscale.GFS_2000DPS:
             return 2000.0 / 32768.0
+
+    def updateAll(self):
+        if self.lastUpdate == 0:
+            self.lastUpdate = time.time()
+
+        data = self.getAll()
+
+        now = time.time()
+        delta = now - self.lastUpdate
+        print(delta)
+        self.lastUpdate = now
+
+        q = self.MadgwickQuaternionUpdate(data[0], data[1], data[2], math.radians(data[3]), math.radians(data[4]),
+                                          math.radians(data[5]), data[6], data[7], data[8], delta)
+
+        if q is None:
+            return None
+
+        yaw = math.atan2(2.0 * (q[1] * q[2] + q[0] * q[3]), q[0] * q[0] + q[1] * q[1] - q[2] * q[2] - q[3] * q[3])
+        pitch = -math.asin(2.0 * (q[1] * q[3] - q[0] * q[2]))
+        roll = math.atan2(2.0 * (q[0] * q[1] + q[2] * q[3]), q[0] * q[0] - q[1] * q[1] - q[2] * q[2] + q[3] * q[3])
+        pitch = math.degrees(pitch)
+        yaw = math.degrees(yaw)
+        roll = math.degrees(roll)
+
+        return yaw, pitch, roll
+
 
     def getAll(self):
         if not self.initialized:
@@ -274,13 +304,13 @@ class MPU:
         # Reset device, reset all registers, clear gyro and accelerometer bias registers.
         self.bus.write_byte_data(Address.MPU9150_ADDRESS, Command.PWR_MGMT_1, 0x80) # Write a one to bit 7 reset bit toggle reset device.Command.
         time.sleep(0.1)
-    
+
         # Get stable time source.
         # Set clock source to be PLL with x-axis gyroscope reference, bits 2:0 = 001.
         self.bus.write_byte_data(Address.MPU9150_ADDRESS, Command.PWR_MGMT_1, 0x01)
         self.bus.write_byte_data(Address.MPU9150_ADDRESS, Command.PWR_MGMT_2, 0x00)
         time.sleep(0.2)
-    
+
         # Configure device for bias calculation.
         self.bus.write_byte_data(Address.MPU9150_ADDRESS, Command.INT_ENABLE, 0x00)   # Disable all interrupts
         self.bus.write_byte_data(Address.MPU9150_ADDRESS, Command.FIFO_EN, 0x00)      # Disable FIFO
@@ -289,21 +319,21 @@ class MPU:
         self.bus.write_byte_data(Address.MPU9150_ADDRESS, Command.USER_CTRL, 0x00)    # Disable FIFO and I2C master modes
         self.bus.write_byte_data(Address.MPU9150_ADDRESS, Command.USER_CTRL, 0x0C)    # Reset FIFO and DMP
         time.sleep(0.015)
-    
+
         # Configure MPU6050 gyro and accelerometer for bias calculation.
         self.bus.write_byte_data(Address.MPU9150_ADDRESS, Command.CONFIG, 0x01)      # Set low-pass filter to 188 Hz
         self.bus.write_byte_data(Address.MPU9150_ADDRESS, Command.SMPLRT_DIV, 0x00)  # Set sample rate to 1 kHz
         self.bus.write_byte_data(Address.MPU9150_ADDRESS, Command.GYRO_CONFIG, 0x00)  # Set gyro full-scale to 250 degrees per second, maximum sensitivity
         self.bus.write_byte_data(Address.MPU9150_ADDRESS, Command.ACCEL_CONFIG, 0x00) # Set accelerometer full-scale to 2 g, maximum sensitivity
-    
+
         gyro_sensitivity  = 131 # = 131 LSB/degrees/sec
         accel_sensitivity = 16384 # = 16384 LSB/g
-    
+
         # Configure FIFO to capture accelerometer and gyro data for bias calculation.
         self.bus.write_byte_data(Address.MPU9150_ADDRESS, Command.USER_CTRL, 0x40)   # Enable FIFO
         self.bus.write_byte_data(Address.MPU9150_ADDRESS, Command.FIFO_EN, 0x78)     # Enable gyro and accelerometer sensors for FIFO  (max size 1024 bytes in MPU-6050)
         time.sleep(0.08) # accumulate 80 samples in 80 milliseconds = 960 bytes
-    
+
         # At end of sample accumulation, turn off FIFO sensor read
         self.bus.write_byte_data(Address.MPU9150_ADDRESS, Command.FIFO_EN, 0x00)        # Disable gyro and accelerometer sensors for FIFO
         data = self.bus.read_i2c_block_data(Address.MPU9150_ADDRESS, Command.FIFO_COUNTH, 2) # read FIFO sample count
@@ -349,7 +379,7 @@ class MPU:
         self.bus.write_byte_data(Address.MPU9150_ADDRESS, Command.YG_OFFS_USRL, g_bias_write[3])
         self.bus.write_byte_data(Address.MPU9150_ADDRESS, Command.ZG_OFFS_USRH, g_bias_write[4])
         self.bus.write_byte_data(Address.MPU9150_ADDRESS, Command.ZG_OFFS_USRL, g_bias_write[5])
-    
+
         # Construct the accelerometer biases for push to the hardware accelerometer bias registers. These registers contain
         # factory trim values which must be added to the calculated accelerometer biases on boot up these registers will hold
         # non-zero values. In addition, bit 0 of the lower byte must be preserved since it is used for temperature
@@ -368,7 +398,7 @@ class MPU:
         for i in range(3):
             if accel_bias_reg[i] & 1:
                 mask_bit[i] = 0x01 # If temperature compensation bit is set, record that fact in mask_bit
-    
+
         # Construct total accelerometer bias, including calculated average accelerometer bias from above
         accel_bias_reg[0] -= a_bias[0] / 8 # Subtract calculated averaged accelerometer bias scaled to 2048 LSB/g (16 g full scale)
         accel_bias_reg[1] -= a_bias[1] / 8
@@ -407,24 +437,24 @@ class MPU:
         # Configure the accelerometer for self-test.
         self.bus.write_byte_data(Address.MPU9150_ADDRESS, Command.ACCEL_CONFIG, 0xF0) # Enable self test on all three axes and set accelerometer range to +/- 8 g
         self.bus.write_byte_data(Address.MPU9150_ADDRESS, Command.GYRO_CONFIG,  0xE0) # Enable self test on all three axes and set gyro range to +/- 250 degrees/s
-    
+
         time.sleep(0.25)  # Delay a while to let the device execute the self-test.
-    
+
         rawData[0] = self.bus.read_byte_data(Address.MPU9150_ADDRESS, Command.SELF_TEST_X) # X-axis self-test results
         rawData[1] = self.bus.read_byte_data(Address.MPU9150_ADDRESS, Command.SELF_TEST_Y) # Y-axis self-test results
         rawData[2] = self.bus.read_byte_data(Address.MPU9150_ADDRESS, Command.SELF_TEST_Z) # Z-axis self-test results
         rawData[3] = self.bus.read_byte_data(Address.MPU9150_ADDRESS, Command.SELF_TEST_A) # Mixed-axis self-test results
-    
+
         # Extract the acceleration test results first
         selfTest[0] = (rawData[0] >> 3) | (rawData[3] & 0x30) >> 4  # XA_TEST result is a five-bit unsigned integer
         selfTest[1] = (rawData[1] >> 3) | (rawData[3] & 0x0C) >> 4  # YA_TEST result is a five-bit unsigned integer
         selfTest[2] = (rawData[2] >> 3) | (rawData[3] & 0x03) >> 4  # ZA_TEST result is a five-bit unsigned integer
-    
+
         # Extract the gyration test results first
         selfTest[3] = rawData[0] & 0x1F  # XG_TEST result is a five-bit unsigned integer
         selfTest[4] = rawData[1] & 0x1F  # YG_TEST result is a five-bit unsigned integer
         selfTest[5] = rawData[2] & 0x1F  # ZG_TEST result is a five-bit unsigned integer
-    
+
         # Process results to allow final comparison with factory set values
         factoryTrim[0] = (4096 * 0.34) * (0.92/0.34) ** ((selfTest[0] - 1) / 30) # FT[Xa] factory trim calculation
         factoryTrim[1] = (4096 * 0.34) * (0.92/0.34) ** ((selfTest[1] - 1) / 30) # FT[Ya] factory trim calculation
@@ -473,7 +503,7 @@ class MPU:
         self.bus.write_byte_data(Address.MPU9150_ADDRESS, Command.GYRO_CONFIG, c & ~0xE0) # Clear self-test bits [7:5]
         self.bus.write_byte_data(Address.MPU9150_ADDRESS, Command.GYRO_CONFIG, c & ~0x18) # Clear AFS bits [4:3]
         self.bus.write_byte_data(Address.MPU9150_ADDRESS, Command.GYRO_CONFIG, c | self.gScale << 3) # Set full scale range for the gyro
-    
+
         # Set accelerometer configuration
         c = self.bus.read_byte_data(Address.MPU9150_ADDRESS, Command.ACCEL_CONFIG)
         self.bus.write_byte_data(Address.MPU9150_ADDRESS, Command.ACCEL_CONFIG, c & ~0xE0) # Clear self-test bits [7:5]
@@ -508,8 +538,99 @@ class MPU:
         self.bus.write_byte_data(Address.MPU9150_ADDRESS, Command.INT_PIN_CFG, 0x22)
         self.bus.write_byte_data(Address.MPU9150_ADDRESS, Command.INT_ENABLE, 0x01)  # Enable data ready (bit 0) interrupt
 
+    @staticmethod
+    def MadgwickQuaternionUpdate(ax, ay, az, gx, gy, gz, mx, my, mz, deltat):
+        GyroMeasError = math.pi * 40 / 180
+        GyroMeasDrift = math.pi * 0 / 180
+        beta = (3/4)**(1/2) * GyroMeasError
+        zeta = (3/4)**(1/2) * GyroMeasDrift
+        Kp = 10
+        Ki = 0
+
+        q1, q2, q3, q4 = 0, 0, 0, 0
+        
+        _2q1 = 2.0 * q1
+        _2q2 = 2.0 * q2
+        _2q3 = 2.0 * q3
+        _2q4 = 2.0 * q4
+        _2q1q3 = 2.0 * q1 * q3
+        _2q3q4 = 2.0 * q3 * q4
+        q1q1 = q1 * q1
+        q1q2 = q1 * q2
+        q1q3 = q1 * q3
+        q1q4 = q1 * q4
+        q2q2 = q2 * q2
+        q2q3 = q2 * q3
+        q2q4 = q2 * q4
+        q3q3 = q3 * q3
+        q3q4 = q3 * q4
+        q4q4 = q4 * q4
+
+        norm = (ax * ax + ay * ay + az * az)**(1/2)
+        if norm == 0:
+            return None
+        norm = 1 / norm
+        ax *= norm
+        ay *= norm
+        az *= norm
+        
+        norm = (mx * mx + my * my + mz * mz)**(1/2)
+        if norm == 1e-10:
+            return None
+        norm = 1 / norm
+        mx *= norm
+        my *= norm
+        mz *= norm
+
+        # Reference direction of Earth's magnetic field
+        _2q1mx = 2.0 * q1 * mx
+        _2q1my = 2.0 * q1 * my
+        _2q1mz = 2.0 * q1 * mz
+        _2q2mx = 2.0 * q2 * mx
+        hx = mx * q1q1 - _2q1my * q4 + _2q1mz * q3 + mx * q2q2 + _2q2 * my * q3 + _2q2 * mz * q4 - mx * q3q3 - mx * q4q4
+        hy = _2q1mx * q4 + my * q1q1 - _2q1mz * q2 + _2q2mx * q3 - my * q2q2 + my * q3q3 + _2q3 * mz * q4 - my * q4q4
+        _2bx = math.sqrt(hx * hx + hy * hy)
+        _2bz = -_2q1mx * q3 + _2q1my * q2 + mz * q1q1 + _2q2mx * q4 - mz * q2q2 + _2q3 * my * q4 - mz * q3q3 + mz * q4q4
+        _4bx = 2.0 * _2bx
+        _4bz = 2.0 * _2bz
+    
+        # Gradient decent algorithm corrective step
+        s1 = -_2q3 * (2 * q2q4 - _2q1q3 - ax) + _2q2 * (2 * q1q2 + _2q3q4 - ay) - _2bz * q3 * (_2bx * (0.5 - q3q3 - q4q4) + _2bz * (q2q4 - q1q3) - mx) + (-_2bx * q4 + _2bz * q2) * (_2bx * (q2q3 - q1q4) + _2bz * (q1q2 + q3q4) - my) + _2bx * q3 * (_2bx * (q1q3 + q2q4) + _2bz * (0.5 - q2q2 - q3q3) - mz)
+        s2 = _2q4 * (2 * q2q4 - _2q1q3 - ax) + _2q1 * (2 * q1q2 + _2q3q4 - ay) - 4 * q2 * (1 - 2 * q2q2 - 2 * q3q3 - az) + _2bz * q4 * (_2bx * (0.5 - q3q3 - q4q4) + _2bz * (q2q4 - q1q3) - mx) + (_2bx * q3 + _2bz * q1) * (_2bx * (q2q3 - q1q4) + _2bz * (q1q2 + q3q4) - my) + (_2bx * q4 - _4bz * q2) * (_2bx * (q1q3 + q2q4) + _2bz * (0.5 - q2q2 - q3q3) - mz)
+        s3 = -_2q1 * (2 * q2q4 - _2q1q3 - ax) + _2q4 * (2 * q1q2 + _2q3q4 - ay) - 4 * q3 * (1 - 2 * q2q2 - 2 * q3q3 - az) + (-_4bx * q3 - _2bz * q1) * (_2bx * (0.5 - q3q3 - q4q4) + _2bz * (q2q4 - q1q3) - mx) + (_2bx * q2 + _2bz * q4) * (_2bx * (q2q3 - q1q4) + _2bz * (q1q2 + q3q4) - my) + (_2bx * q1 - _4bz * q3) * (_2bx * (q1q3 + q2q4) + _2bz * (0.5 - q2q2 - q3q3) - mz)
+        s4 = _2q2 * (2 * q2q4 - _2q1q3 - ax) + _2q3 * (2 * q1q2 + _2q3q4 - ay) + (-_4bx * q4 + _2bz * q2) * (_2bx * (0.5 - q3q3 - q4q4) + _2bz * (q2q4 - q1q3) - mx) + (-_2bx * q1 + _2bz * q3) * (_2bx * (q2q3 - q1q4) + _2bz * (q1q2 + q3q4) - my) + _2bx * q2 * (_2bx * (q1q3 + q2q4) + _2bz * (0.5 - q2q2 - q3q3) - mz)
+
+        norm = math.sqrt(s1 * s1 + s2 * s2 + s3 * s3 + s4 * s4)
+
+        if norm == 0:
+            return None
+
+        norm = 1 / norm
+        s1 *= norm
+        s2 *= norm
+        s3 *= norm
+        s4 *= norm
+
+        # Compute rate of change of quaternion
+        qDot1 = 0.5 * (-q2 * gx - q3 * gy - q4 * gz) - beta * s1
+        qDot2 = 0.5 * ( q1 * gx + q3 * gz - q4 * gy) - beta * s2
+        qDot3 = 0.5 *( q1 * gy - q2 * gz + q4 * gx) - beta * s3
+        qDot4 = 0.5 * ( q1 * gz + q2 * gy - q3 * gx) - beta * s4
+
+        # Integrate to yield quaternion
+        q1 += qDot1 * deltat
+        q2 += qDot2 * deltat
+        q3 += qDot3 * deltat
+        q4 += qDot4 * deltat
+        norm = math.sqrt(q1 * q1 + q2 * q2 + q3 * q3 + q4 * q4)    # normalise quaternion
+        norm = 1.0 / norm
+
+        return q1 * norm, q2 * norm, q3 * norm, q4 * norm
+
 
 mpu = MPU()
 mpu.calibrateDevice()
 mpu.initialize()
-print(mpu.getAll())
+
+while True:
+    print(mpu.updateAll())
