@@ -11,6 +11,50 @@ logger = logging.getLogger('universe')
 class Theia:
     def __init__(self):
         self.cry = True
+		
+	##################################
+	# Detect the color of a given ROI.
+	# Computes mean HSV.
+	##################################
+	
+	@staticmethod
+	def detectColor(image):
+		COLORS = {
+			'red': (355.0, 10.5),
+			'red-orange': (10.5, 20.5),
+			'orange-brown': (20.5, 40.5),
+			'orange-yellow': (40.5, 50.5),
+			'yellow': (50.5, 60.5),
+			'yellow-green': (60.5, 80.5),
+			'green': (80.5, 140.5),
+			'green-cyan': (140.5, 169.5),
+			'cyan': (170.5, 200.5),
+			'cyan-blue': (201.5, 220.5),
+			'blue': (220.5, 240.5),
+			'blue-magenta': (240.5, 280.5),
+			'magenta': (280.5, 320.5),
+			'magenta-pink': (320.5, 330.5),
+			'pink': (330.5, 345.5),
+			'pink-red': (345.5, 355.0)
+		}
+	
+		hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+		h = hsv[:, :, 0].flatten()
+		avg = np.mean(h) * 2
+		
+		for color in COLORS:
+			min = COLORS[color][0]
+			max = COLORS[color][1]
+			
+			if min > max:
+				if avg >= min or avg < max:
+					return color
+			else:
+				if min <= avg < max:
+					return color
+		
+		return None
+		
 
     ####################################################
     # Obtain background using MOG2.
