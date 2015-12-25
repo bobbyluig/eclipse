@@ -24,7 +24,7 @@ class Apollo:
     def stop(self):
         self.stream.stop_stream()
 
-    def blockingDetect(self, callback, timeout=30):
+    def blockingDetect(self, callback=None, timeout=30):
         start = time.time()
 
         while time.time() - start < timeout:
@@ -40,7 +40,8 @@ class Apollo:
 
             if self.howls.count(self.target) > 2:
                 logger.info('Howl detected!')
-                callback()
+                if callback is not None:
+                    callback()
                 break
 
     def instant_detect(self):

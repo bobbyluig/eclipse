@@ -27,7 +27,7 @@ def getErrors():
 
 
 def audioCapture():
-    apollo.blockingDetect(lambda: print('Detected!'))
+    apollo.blockingDetect(lambda: print('Howl Detected'))
 
 
 @timeIt(100)
@@ -73,8 +73,4 @@ def testVideo(camera):
 
 
 if __name__ == '__main__':
-    # script_test()
-    # settings_test()
-    # get_variables()
-    # audioCapture()
-    testVideo('theia/liquor.wmv')
+    audioCapture()
