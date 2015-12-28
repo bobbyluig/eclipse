@@ -3,67 +3,52 @@ import time, logging
 import numpy as np
 from theia.eye import Eye
 from theia.tracker import DSST, KCF
-import dlib
+from theia.util import CIE76
 
 logger = logging.getLogger('universe')
 
 
 class Theia:
-    def __init__(self):
-        self.cry = True
-		
-	##################################
-	# Detect the color of a given ROI.
-	# Computes mean HSV.
-	##################################
-	
-	@staticmethod
-	def detectColor(image):
-		COLORS = {
-			'red': (355.0, 10.5),
-			'red-orange': (10.5, 20.5),
-			'orange-brown': (20.5, 40.5),
-			'orange-yellow': (40.5, 50.5),
-			'yellow': (50.5, 60.5),
-			'yellow-green': (60.5, 80.5),
-			'green': (80.5, 140.5),
-			'green-cyan': (140.5, 169.5),
-			'cyan': (170.5, 200.5),
-			'cyan-blue': (201.5, 220.5),
-			'blue': (220.5, 240.5),
-			'blue-magenta': (240.5, 280.5),
-			'magenta': (280.5, 320.5),
-			'magenta-pink': (320.5, 330.5),
-			'pink': (330.5, 345.5),
-			'pink-red': (345.5, 355.0)
-		}
-	
-		hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-		h = hsv[:, :, 0].flatten()
-		avg = np.mean(h) * 2
-		
-		for color in COLORS:
-			min = COLORS[color][0]
-			max = COLORS[color][1]
-			
-			if min > max:
-				if avg >= min or avg < max:
-					return color
-			else:
-				if min <= avg < max:
-					return color
-		
-		return None
-		
-
-    ####################################################
-    # Obtain background using MOG2.
-    # This allows for identification of moving PreyBOTS.
-    # Gaussian blur applied to remove grains.
-    ####################################################
 
     @staticmethod
-    def getForegroundMask(eye, frames, blur=True):
+    def getSandColor(image):
+        """
+        Returns the color of sand in a given image.
+        :param image: The image ROI as an 8-bit numpy array.
+        :return: The sand color name.
+        """
+
+        image = np.float32(image / 255)
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
+
+        lab = cv2.mean(image)[:3]
+        lab = np.array(lab)
+
+        labs = np.array([
+            (29.7821,  58.9401, -36.4980),  # Purple
+            (74.9322,  23.9359,  78.9565),  # Orange
+            (46.2288, -51.6991,  49.8975)   # Green
+        ])
+
+        colors = ['purple', 'orange', 'green']
+
+        distances = CIE76(lab, labs)
+        index = np.argmin(distances)
+
+        return colors[index]
+
+    @staticmethod
+    def getForeground(eye, frames, blur=True):
+        """
+        Gets the foreground given an eye object.
+        This uses the MOG2 background/foreground segmentation algorithm.
+        This allows for identification of moving PreyBOTS.
+        :param eye: An eye (camera) object.
+        :param frames: The number of initial frames to capture.
+        :param blur: Apply a smoothing gaussian blur to remove grains.
+        :return: A binary image, where white is the foreground object.
+        """
+
         subtractor = cv2.createBackgroundSubtractorMOG2(detectShadows=False)
         ksize = (5, 5)
 
@@ -80,14 +65,17 @@ class Theia:
 
         return mask
 
-    ####################################
-    # Get n blobs with the largest area.
-    # This is a helper function.
-    # Use only with binary images.
-    ####################################
-
     @staticmethod
     def boundBlobs(image, count, order=False):
+        """
+        Get n blobs with the largest area.
+        Ues only with binary images.
+        :param image: A binary image.
+        :param count: The number of blobs to find.
+        :param order: Order from largest to smallest.
+        :return: An array of bounding rectangles.
+        """
+
         _, contours, hierarchy = cv2.findContours(image, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
 
         areas = np.array([cv2.contourArea(cnt) for cnt in contours])
@@ -115,15 +103,19 @@ class Theia:
 
         return roi
 
-    ###################################################################
-    # Dense optical flow using Farneback.
-    # This identifies blobs, directions, & velocities of moving PreyBOTs.
-    # Takes two colored frames and an array of blobs.
-    # Detection based on edges and NOT color.
-    ###################################################################
-
     @staticmethod
     def dataOpticalFlow(frame1, frame2, blobs):
+        """
+        Dense optical flow using Farneback.
+        This identifies blobs, directions, & velocities of moving PreyBOTs.
+        Takes two colored frames and an array of blobs.
+        Detection based on edges and NOT color.
+        :param frame1: The first frame.
+        :param frame2: The second frame.
+        :param blobs: An array of blobs.
+        :return: An array of format (averageMagnitude, averageAngle)
+        """
+
         ksize = (5, 5)
 
         # Clean grains.
@@ -159,6 +151,13 @@ class Theia:
 
     @staticmethod
     def graphicOpticalFlow(frame1, frame2):
+        """
+        Computes the optical flow for the entire image.
+        :param frame1: The first frame.
+        :param frame2: The second frame.
+        :return: A BGR image.
+        """
+
         ksize = (5, 5)
 
         # Clean grains.
