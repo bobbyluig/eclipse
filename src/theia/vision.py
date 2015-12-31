@@ -180,7 +180,8 @@ class Theia:
         bgr = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
 
         return bgr
-    
+
+
 def get_rect(im, title='get_rect'):
     mouse_params = {'tl': None, 'br': None, 'current_pos': None,
         'released_once': False}
@@ -227,7 +228,7 @@ def correlation_test(camera):
     eye = Eye(camera)
     eye.cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
 
-    tracker = DSST()
+    tracker = DSST(enableTrackingLossDetection=True, psrThreshold=8, learningRate=0.025)
 
     while True:
         frame = eye.getColorFrame()
@@ -242,7 +243,7 @@ def correlation_test(camera):
 
     while True:
         frame = eye.getColorFrame()
-        tracker.update(frame)
+        success = tracker.update(frame)
         pos = tracker.getBoundingBox()
         frame = cv2.rectangle(frame, (int(pos[0]), int(pos[1])), (int(pos[0] + pos[2]), int(pos[1] + pos[3])), (0, 255, 0), 3)
         cv2.imshow('frame', frame)
@@ -334,3 +335,6 @@ def full_test(camera):
         k = cv2.waitKey(1)
         if not k == -1:
             break
+
+
+correlation_test(0)

@@ -18,6 +18,9 @@ class KCF:
         else:
             raise Exception('Unable to initialize KCF tracker with given frame.')
 
+    def reinit(self, image, boundingBox):
+        self.tracker.reinit(image, boundingBox)
+
     def update(self, image):
         return self.tracker.update(image)
 
