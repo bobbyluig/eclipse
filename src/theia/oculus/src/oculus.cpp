@@ -52,8 +52,8 @@ BOOST_PYTHON_MODULE(oculus)
 		.def_readwrite("minArea", &KcfParameters::minArea)
 		.def_readwrite("maxAreaFactor", &KcfParameters::maxAreaFactor)
 		.def_readwrite("nScalesVot", &KcfParameters::nScalesVot)
-		.def_readwrite("VotMinScaleFactor", &KcfParameters::VotMinScaleFactor)
-		.def_readwrite("VotMaxScaleFactor", &KcfParameters::VotMaxScaleFactor)
+		.def_readwrite("votMinScaleFactor", &KcfParameters::VotMinScaleFactor)
+		.def_readwrite("votMaxScaleFactor", &KcfParameters::VotMaxScaleFactor)
 		.def_readwrite("useCcs", &KcfParameters::useCcs);
 
 	class_<KcfTracker>("KcfTracker", init<KcfParameters>())

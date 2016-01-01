@@ -228,7 +228,7 @@ def correlation_test(camera):
     eye = Eye(camera)
     eye.cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
 
-    tracker = DSST(enableTrackingLossDetection=True, psrThreshold=8, learningRate=0.025)
+    tracker = KCF()
 
     while True:
         frame = eye.getColorFrame()
@@ -292,6 +292,7 @@ def dlib_test(camera):
         total += delta
 
     print(300 / total)
+
 
 def full_test(camera):
     eye = Eye(camera)
