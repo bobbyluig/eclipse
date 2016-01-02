@@ -258,6 +258,48 @@ namespace piotr {
         wrFree(H);
     }
 
+	template<typename PRIMITIVE_TYPE>
+	void cvOri(const cv::Mat& img, int binSize)
+	{
+		// ensure array is continuous
+		const cv::Mat& image = (img.isContinuous() ? img : img.clone());
+
+		int channels = image.channels();
+		int width = image.cols;
+		int height = image.rows;
+		int widthBin = width / binSize;
+		int heightBin = height / binSize;
+
+		CV_Assert(channels == 3);
+
+		float* const M = (float*)wrCalloc(static_cast<size_t>(width * height), sizeof(float));
+		float* const O = (float*)wrCalloc(static_cast<size_t>(width * height), sizeof(float));
+
+		float* I = NULL;
+
+		I = (float*)wrCalloc(static_cast<size_t>(width * height * channels), sizeof(float));
+		float* imageData = reinterpret_cast<float*>(image.data);
+		float* redChannel = I;
+		float* greenChannel = I + width * height;
+		float* blueChannel = I + 2 * width * height;
+
+		for (int i = 0; i < height * width; ++i)
+		{
+			blueChannel[i] = imageData[i * 3];
+			greenChannel[i] = imageData[i * 3 + 1];
+			redChannel[i] = imageData[i * 3 + 2];
+		}
+
+		// calc gradient ori in col major - switch width and height
+		gradMag(I, M, O, width, height, channels, false);
+
+		std::cout << O[0] << std::endl;
+
+		wrFree(M);
+		wrFree(O);
+		wrFree(I);
+	}
+
     template<typename PRIMITIVE_TYPE, class OUT>
     void cvFhogT(const cv::Mat& img, std::shared_ptr<OUT>& cvFeatures, int binSize, int fhogChannelsToCopy = 31)
     {

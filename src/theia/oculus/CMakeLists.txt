@@ -110,17 +110,25 @@ find_package(OpenCV REQUIRED HINTS ${OPENCV_DIR_HINT})
 set(CF_CV_EXT_DIR "src/3rdparty/cv_ext")
 set(CF_PIOTR_DIR "src/3rdparty/piotr")
 set(CF_PBCVT_DIR "src/3rdparty/pbcvt")
+set(CF_EXPORTS_DIR "src/exports")
 
 include_directories(${OpenCV_DIR}/include)
 include_directories(${CF_TCLAP_DIR}
                     ${CF_CV_EXT_DIR}
                     ${CF_PIOTR_DIR}
+                    ${CF_EXPORTS_DIR}
                     ${CF_PIOTR_DIR}/src
 					${CF_PBCVT_DIR}/include)
 
 include_directories(src/cf_libs/kcf
                     src/cf_libs/dsst
+                    src/cf_libs/line2d
                     src/cf_libs/common)
+					
+file(GLOB PYTHON_EXPORTS
+    "${CF_EXPORTS_DIR}/*.h"
+    "${CF_EXPORTS_DIR}/*.cpp"
+)
                
 set(CF_PIOTR_SOURCES
     ${CF_PIOTR_DIR}/gradientMex.hpp
@@ -146,7 +154,7 @@ set(CF_LIB_COMMON_SOURCES
 	
 # Add Python module and link.
 set(MODULE_NAME "oculus")
-PYTHON_ADD_MODULE(${MODULE_NAME} src/oculus.cpp ${CF_LIB_COMMON_SOURCES})
+PYTHON_ADD_MODULE(${MODULE_NAME} src/oculus.cpp ${CF_LIB_COMMON_SOURCES} ${PYTHON_EXPORTS})
 target_link_libraries(${MODULE_NAME} ${Boost_LIBRARIES} ${PYTHON3_LIBRARIES} ${OpenCV_LIBS})
 
 

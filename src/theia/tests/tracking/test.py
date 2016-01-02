@@ -7,15 +7,22 @@ import time
 
 
 class Eye:
-    def __init__(self, source):
+    def __init__(self, source, sequence=False):
         self.optogram = None
         self.frame = None
+        self.source = source
 
-        self.cap = cv2.VideoCapture(source)
-        if not self.cap.isOpened():
-            raise Exception("Unable to connect to video source '%s'." % source)
-        self.width = self.cap.get(cv2.CAP_PROP_FRAME_WIDTH)
-        self.height = self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
+        if sequence:
+            self.imageSequence = True
+            self.counter = 1
+        else:
+            self.imageSequence = False
+
+            self.cap = cv2.VideoCapture(source)
+            if not self.cap.isOpened():
+                raise Exception("Unable to connect to video source '%s'." % source)
+            self.width = self.cap.get(cv2.CAP_PROP_FRAME_WIDTH)
+            self.height = self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
 
     def close(self):
         self.cap.release()
@@ -23,7 +30,12 @@ class Eye:
     def updateFrame(self):
         if self.frame is not None:
             self.optogram = self.frame.copy()
-        _, self.frame = self.cap.read()
+
+        if self.imageSequence:
+            self.frame = cv2.imread(self.source % self.counter)
+            self.counter += 1
+        else:
+            _, self.frame = self.cap.read()
 
     def getGrayFrame(self):
         self.updateFrame()
@@ -403,37 +415,49 @@ def correlation_hom_test(camera):
             break
 
 
-def correlation_template_test(camera):
-    eye = Eye(camera)
-    eye.cap.set(cv2.CAP_PROP_POS_FRAMES, 1500)
+def correlation_template_test(camera, start=None, bb=None, sequence=False):
+    eye = Eye(camera, sequence)
+
+    if start is not None:
+        eye.cap.set(cv2.CAP_PROP_POS_FRAMES, start)
 
     tracker = DSST(enableTrackingLossDetection=True, psrThreshold=10, cellSize=4, padding=2)
     found = True
 
-    while True:
-        frame = eye.getColorFrame()
-        cv2.imshow('preview', frame)
-        k = cv2.waitKey(1)
-        if not k == -1:
-            break
+    if bb is None:
+        while True:
+            frame = eye.getColorFrame()
+            cv2.imshow('preview', frame)
+            k = cv2.waitKey(1)
+            if not k == -1:
+                break
+
+        tl, br = get_rect(frame)
+
+        bb = (tl[0], tl[1], br[0]-tl[0], br[1]-tl[1])
+
+        print(bb)
+
+        if not sequence:
+            print(eye.cap.get(cv2.CAP_PROP_POS_FRAMES))
+        else:
+            print(eye.counter)
 
     frame, gray = eye.getBothFrames()
-    tl, br = get_rect(frame)
+    w, h = bb[2], bb[3]
 
-    roi = frame[tl[1]:br[1], tl[0]:br[0]]
-    roi = cv2.resize(roi, (0,0), fx=0.2, fy=0.2)
-    # template = cv2.Canny(roi, 50, 200)
-    cv2.imshow('template', roi)
+    roi = frame[bb[1]:bb[1]+bb[3], bb[0]:bb[0]+bb[2]]
+    roi = cv2.resize(roi, (w // 5, h // 5))
+    template = cv2.Canny(roi, 50, 200)
+    cv2.imshow('template', template)
 
-    bb = (tl[0], tl[1], br[0]-tl[0], br[1]-tl[1])
-    pos = bb
     tracker.init(frame, bb)
 
     count = 0
-    updateInterval = 60
+    updateInterval = 20
 
     maxTemplates = 20
-    templates = [roi]
+    templates = [template]
     templateUses = [100]
 
     while True:
@@ -444,21 +468,21 @@ def correlation_template_test(camera):
 
         if not found:
             tmp = cv2.resize(frame, (0,0), fx=0.2, fy=0.2)
-            # gray = cv2.cvtColor(tmp, cv2.COLOR_BGR2GRAY)
-            # edged = cv2.Canny(gray, 50, 200)
+            gray = cv2.cvtColor(tmp, cv2.COLOR_BGR2GRAY)
+            edged = cv2.Canny(gray, 50, 200)
 
             values = np.array([])
             locs = []
 
             for template in templates:
-                res = cv2.matchTemplate(tmp, template, cv2.TM_CCOEFF_NORMED)
+                res = cv2.matchTemplate(edged, template, cv2.TM_CCOEFF_NORMED)
                 _, maxVal, _, maxLoc = cv2.minMaxLoc(res)
                 values = np.append(values, maxVal)
                 locs.append(maxLoc)
 
             index = np.argmax(values)
 
-            if values[index] > 0.7:
+            if values[index] > 0.15:
                 maxLoc = locs[index]
                 found = tracker.updateAt(frame, (maxLoc[0] * 5, maxLoc[1] * 5, pos[2], pos[3]))
 
@@ -474,15 +498,14 @@ def correlation_template_test(camera):
                     del templates[index]
                     del templateUses[index]
 
-                if cv2.Laplacian(frame, cv2.CV_64F).var() > 50:
-                    # gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+                if cv2.Laplacian(frame, cv2.CV_64F).var() > 10:
+                    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
                     roi = frame[pos[1]:pos[1]+pos[3], pos[0]:pos[0]+pos[2]]
-                    roi = cv2.resize(roi, (0,0), fx=0.2, fy=0.2)
-                    # template = cv2.Canny(roi, 50, 200)
-                    templates.append(roi)
+                    roi = cv2.resize(roi, (w // 5, h // 5))
+                    template = cv2.Canny(roi, 50, 200)
+                    templates.append(template)
                     templateUses.append(0)
-                    cv2.destroyWindow('template')
-                    cv2.imshow('template', roi)
+                    cv2.imshow('template', template)
                 else:
                     print('Blurry frame. Discounted.')
 
@@ -500,6 +523,198 @@ def correlation_template_test(camera):
         if not k == -1:
             break
 
+    '''
+    i = 0
+    for template in templates:
+        cv2.imwrite('%s.png' % i, template)
 
-# correlation_template_test('C:\\Users\\bobbyluig\\Desktop\\Eclipse Large\\chase2.mp4')
+        i += 1
+    '''
+
+frameNumber = 0
+saveFolder = 'C:/users/bobbyluig/desktop/kenneth'
+save = False
+
+
+def showSave(name, image):
+    global frameNumber, save
+
+    cv2.imshow(name, image)
+
+    if save:
+        fileName = os.path.join(saveFolder, '%04d.png' % frameNumber)
+        cv2.imwrite(fileName, image)
+
+        frameNumber += 1
+
+
+def kenneth():
+    from PIL import Image, ImageFont, ImageDraw, ImageOps
+
+    eye = Eye('C:\\Users\\bobbyluig\\Desktop\\Eclipse Large\\k.mp4')
+
+    tracker = DSST(enableTrackingLossDetection=True, psrThreshold=10, cellSize=4, padding=2)
+    found = True
+
+    font = ImageFont.truetype("arialbd.ttf", 14)
+    largeFont = ImageFont.truetype("arial.ttf", 50)
+
+    strip = Image.new('RGB', (1280, 80), (0, 0, 0))
+    draw = ImageDraw.Draw(strip)
+
+    msg = 'Waiting for Tracker Initialization'
+    tW, tH = draw.textsize(msg, font=largeFont)
+    draw.text(((1280 - tW) / 2, (80 - tH) / 2), msg, font=largeFont, fill='white')
+
+    while eye.cap.get(cv2.CAP_PROP_POS_FRAMES) < 209:
+        frame = eye.getColorFrame()
+        strip = np.array(strip)
+        frame = np.concatenate((frame, strip), axis=0)
+
+        showSave('frame', frame)
+
+        k = cv2.waitKey(20)
+        if not k == -1:
+            break
+
+    bb = (529, 102, 159, 249)
+    frame = eye.getColorFrame()
+    w, h = bb[2], bb[3]
+
+    roi = frame[bb[1]:bb[1]+bb[3], bb[0]:bb[0]+bb[2]]
+    roi = cv2.resize(roi, (w // 5, h // 5))
+    template = cv2.Canny(roi, 50, 200)
+
+    tracker.init(frame, bb)
+
+    count = 0
+    updateInterval = 10
+
+    maxTemplates = 10
+    templates = [template] + [None] * (maxTemplates - 1)
+    templateUses = [100] + [0] * (maxTemplates - 1)
+
+    while True:
+        frame = eye.getColorFrame()
+
+        found = tracker.update(frame)
+        pos = tracker.getBoundingBox()
+
+        tmp = cv2.resize(frame, (0,0), fx=0.2, fy=0.2)
+        gray = cv2.cvtColor(tmp, cv2.COLOR_BGR2GRAY)
+        edged = cv2.Canny(gray, 50, 200)
+        values = np.array([])
+        locs = []
+        for template in templates:
+            if template is not None:
+                res = cv2.matchTemplate(edged, template, cv2.TM_CCOEFF_NORMED)
+                _, maxVal, _, maxLoc = cv2.minMaxLoc(res)
+                values = np.append(values, maxVal)
+                locs.append(maxLoc)
+
+        index = np.argmax(values)
+        maxLoc = locs[index]
+
+        orangeIndex = None
+        greenIndex = None
+
+        if not found:
+            if values[index] > 0.15:
+                found = tracker.updateAt(frame, (maxLoc[0] * 5, maxLoc[1] * 5, pos[2], pos[3]))
+                frame = cv2.rectangle(frame, (maxLoc[0] * 5, maxLoc[1] * 5),
+                                      (int(maxLoc[0] * 5 + round(pos[2])), int(maxLoc[1] * 5 + round(pos[3]))), (255, 0, 255), 3)
+                orangeIndex = index
+
+            if found:
+                templateUses[index] += 10
+        else:
+            if ((maxLoc[0] * 5 - pos[0])**2 + (maxLoc[1] * 5 - pos[1])**2) ** (1/2) < 90:
+                templateUses[index] += 1
+                greenIndex = index
+
+            if count > updateInterval:
+                if templates.count(None) == 0:
+                    # Purge old templates.
+                    minTimes = min(templateUses)
+                    index = templateUses.index(minTimes)
+
+                    templates[index] = None
+                    templateUses[index] = 0
+
+                if cv2.Laplacian(frame, cv2.CV_64F).var() > 50:
+                    roi = frame[pos[1]:pos[1]+pos[3], pos[0]:pos[0]+pos[2]]
+                    roi = cv2.resize(roi, (w // 5, h // 5))
+                    template = cv2.Canny(roi, 50, 200)
+
+                    freeIndex = templates.index(None)
+                    templates[freeIndex] = template
+                    # cv2.imshow('template', template)
+                else:
+                    print('Blurry frame. Discounted.')
+
+                count = 0
+
+        if found:
+            frame = cv2.rectangle(frame, (int(pos[0]), int(pos[1])), (int(pos[0] + pos[2]), int(pos[1] + pos[3])), (0, 255, 0), 3)
+        else:
+            frame = cv2.rectangle(frame, (int(pos[0]), int(pos[1])), (int(pos[0] + pos[2]), int(pos[1] + pos[3])), (0, 0, 255), 3)
+
+        strip = Image.new('RGB', (1280, 80), (0, 0, 0))
+        draw = ImageDraw.Draw(strip)
+
+        offset = 5
+        for i in range(20):
+            if templates[i] is not None:
+                template = Image.fromarray(templates[i])
+                template = template.convert('RGB')
+
+                if orangeIndex == i:
+                    template = ImageOps.expand(template, border=2, fill=(255, 0, 255))
+                    strip.paste(template, (offset - 2, 6 - 2))
+                elif greenIndex == i:
+                    template = ImageOps.expand(template, border=2, fill=(0, 255, 0))
+                    strip.paste(template, (offset - 2, 6 - 2))
+                else:
+                    strip.paste(template, (offset, 6))
+
+                msg = str(templateUses[i])
+                tW, tH = draw.textsize(msg, font=font)
+                draw.text((offset + (31 - tW) / 2, 61), msg, font=font, fill='white')
+
+            offset += 31 + 30 + 4
+
+        count += 1
+
+        strip = np.array(strip)
+        frame = np.concatenate((frame, strip), axis=0)
+
+        showSave('frame', frame)
+        k = cv2.waitKey(1)
+        if not k == -1:
+            break
+
+    '''
+    i = 0
+    for template in templates:
+        cv2.imwrite('%s.png' % i, template)
+
+        i += 1
+    '''
+
+
+def makeBB(array):
+    x = array[::2]
+    y = array[1::2]
+
+    x0 = int(min(x))
+    x1 = int(max(x))
+    y0 = int(min(y))
+    y1 = int(max(y))
+
+    return (x0, y0, x1 - x0, y1 - y0)
+
+
+# correlation_template_test('C:\\Users\\bobbyluig\\Desktop\\Eclipse Large\\k.mp4', 209, (529, 102, 159, 249))
 correlation_template_test(0)
+# correlation_template_test('C:/users/bobbyluig/desktop/vot2015/tunnel/%08d.jpg', bb=makeBB([328.000,339.000,350.000,339.000,350.000,308.000,328.000,308.000]), sequence=True)
+# kenneth()
