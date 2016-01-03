@@ -259,7 +259,7 @@ namespace piotr {
     }
 
 	template<typename PRIMITIVE_TYPE>
-	void cvOri(const cv::Mat& img, int binSize)
+	void cvOri(const cv::Mat& img, cv::Mat& out, int binSize)
 	{
 		// ensure array is continuous
 		const cv::Mat& image = (img.isContinuous() ? img : img.clone());
@@ -275,9 +275,7 @@ namespace piotr {
 		float* const M = (float*)wrCalloc(static_cast<size_t>(width * height), sizeof(float));
 		float* const O = (float*)wrCalloc(static_cast<size_t>(width * height), sizeof(float));
 
-		float* I = NULL;
-
-		I = (float*)wrCalloc(static_cast<size_t>(width * height * channels), sizeof(float));
+		float* I = (float*)wrCalloc(static_cast<size_t>(width * height * channels), sizeof(float));
 		float* imageData = reinterpret_cast<float*>(image.data);
 		float* redChannel = I;
 		float* greenChannel = I + width * height;
@@ -291,9 +289,11 @@ namespace piotr {
 		}
 
 		// calc gradient ori in col major - switch width and height
-		gradMag(I, M, O, width, height, channels, false);
+		gradMag(I, M, O, width, height, 3, false);
 
-		std::cout << O[0] << std::endl;
+		// optimize later?
+		cv::Mat output(height, width, CV_32FC1, O);
+		out = output.clone();
 
 		wrFree(M);
 		wrFree(O);

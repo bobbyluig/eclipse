@@ -61,7 +61,7 @@ namespace cf_tracking
     {
     public:
         static const int NUM_FEATURE_CHANNELS = 31;
-        typedef float T; // set precision here: double or float
+        typedef double T; // set precision here: double or float
         static const int CV_TYPE = cv::DataType<T>::type;
         typedef cv::Size_<T> Size;
         typedef FhogFeatureChannels<T> FFC;

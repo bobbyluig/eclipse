@@ -24,22 +24,28 @@ namespace template_match
 	class Line2D
 	{
 	public:
-		typedef float T; // set precision here double or float
+		typedef double T; // set precision here double or float
 
 		Line2D(Line2DParameters paras)
 			: _NUM_QUANTS(paras.numQuantizations)
 		{
-
+			cvOri = &piotr::cvOri <T>;
 		}
 
 		void test(const cv::Mat& image)
 		{
-			cv::imshow("Test", image);
+			cv::Mat floatImage;
+			cv::Mat out;
+
+			image.convertTo(floatImage, CV_32FC(3));
+			cvOri(floatImage, out, 8);
+
+			cv::imshow("test", out);
 		}
 		
 	private:
 		typedef void(*cvOriPtr)
-			(const cv::Mat& img, int binSize);
+			(const cv::Mat& img, cv::Mat& out, int binSize);
 		cvOriPtr cvOri = 0;
 
 		const int _NUM_QUANTS;
