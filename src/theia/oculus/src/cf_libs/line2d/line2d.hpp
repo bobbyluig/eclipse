@@ -8,16 +8,19 @@
 
 #include <memory>
 #include <iostream>
-#include <iomanip>
 #include <fstream>
 #include <stdlib.h>
 #include <stdio.h>
+#include <vector>
+#include <math.h>
 
 #include "gradientMex.hpp"
 #include "feature_maps.hpp"
 
 using namespace boost::python;
 using namespace std;
+
+#define PI 3.14159265f
 
 namespace template_match
 {
@@ -66,16 +69,50 @@ namespace template_match
 
 		void test2()
 		{
-			int a_data[9] = { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
-			cv::Mat a(3, 3, CV_32SC1, a_data);
-			a = translateImg(a, 1, 1);
-
-			cout << a << endl;
+			cout << findCosMax(195, 8) << endl;
 		}
 		
 	private:
+		void generateLookupTable()
+		{
+			const int size = (1 << _TAU) - 1;
+
+			// allocate space for table
+			_lookupTable.reserve(size * _TAU);
+
+
+		}
+
+		// the world's worst function
+		// it's okay, computed offline :p
+		T findCosMax(int cell, int bin)
+		{
+			bool* a = new bool[_TAU];
+			T max = 0;
+
+			for (int i = _TAU - 1; i >= 0; --i)
+				a[i] = (cell >> i) & 1;
+			
+			for (int i = 0; i < _TAU; ++i) {
+				if (a[i]) {
+					T similarity;
+					similarity = (1 << i) * _radsPerBin;
+					similarity = abs(cos(similarity - (bin * _radsPerBin)));
+
+					if (similarity > max)
+						max = similarity;
+				}
+			}
+
+			delete[] a;
+
+			return max;
+		}
+
 		void computeBinaryMap(cv::Mat& bins, cv::Mat& out)
 		{
+			CV_Assert(out.channels() == 1);
+
 			// compute binary map
 			for (int i = 0; i < bins.cols * bins.rows; ++i)
 				bins.at<int>(i) = (1 << bins.at<int>(i)) >> 1;
@@ -214,6 +251,9 @@ namespace template_match
 		const T _THRESHOLD;
 		const bool _USE_GAUSSIAN;
 		const int _TAU;
+
+		vector<int> _lookupTable;
+		const T _radsPerBin = PI / _NUM_ORIENTS;
 	};
 }
 
