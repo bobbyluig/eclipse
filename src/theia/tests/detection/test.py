@@ -18,7 +18,7 @@ def cam():
 
 
 def image():
-    frame = cv2.imread('roi.jpg')
+    frame = cv2.imread('duck.jpg')
     line.test(frame)
     cv2.waitKey(0)
 

@@ -78,7 +78,7 @@ namespace template_match
 		{
 			// compute binary map
 			for (int i = 0; i < bins.cols * bins.rows; ++i)
-				bins.at<int>(i) = 1 << bins.at<int>(i);
+				bins.at<int>(i) = (1 << bins.at<int>(i)) >> 1;
 
 			// spread binary map
 			const int shifts = _TAU / 2;
