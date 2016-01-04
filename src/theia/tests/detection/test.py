@@ -23,4 +23,4 @@ def image():
     cv2.waitKey(0)
 
 
-line.test2()
+image()

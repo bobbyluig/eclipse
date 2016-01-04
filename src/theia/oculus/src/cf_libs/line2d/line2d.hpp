@@ -14,6 +14,7 @@
 #include <stdio.h>
 
 #include "gradientMex.hpp"
+#include "feature_maps.hpp"
 
 using namespace boost::python;
 using namespace std;
@@ -46,54 +47,58 @@ namespace template_match
 			cv::Mat floatImage;
 			image.convertTo(floatImage, CV_32FC3);
 
-			int* const out = (int*)alMalloc(image.cols * image.rows * sizeof(int), 16);
+			cv::Mat bins(image.size(), CV_32SC1);
 
 			if (_USE_GAUSSIAN) {
 				cv::GaussianBlur(floatImage, floatImage, cv::Size(11, 11), 0);
-				cvOriNone(floatImage, out, _NUM_ORIENTS);
+				cvOriNone(floatImage, reinterpret_cast<int*>(bins.data), _NUM_ORIENTS);
 			}
 			else {
-				cvOri(floatImage, out, _NUM_ORIENTS);
+				cvOri(floatImage, reinterpret_cast<int*>(bins.data), _NUM_ORIENTS);
 			}
 
-			cv::Mat display(image.rows, image.cols, CV_32FC1);
-			float* cdata = reinterpret_cast<float*>(display.data);
+			cv::Mat map(image.size(), CV_32SC1);
 
-			for (int i = 0; i < image.cols * image.rows; ++i)
-				cdata[i] = (float)out[i] / 8.0f;
+			computeBinaryMap(bins, map);
 
-			cv::imshow("out", display);
-
-			alFree(out);
+			cout << map << endl;
 		}
 
 		void test2()
 		{
-			int a_data[4] = { 1, 2, 3, 4 };
-			int b_data[4] = { 2, 3, 4, 10 };
-			cv::Mat a(2, 2, CV_32SC1, a_data);
-			cv::Mat b(2, 2, CV_32SC1, b_data);
-			cv::Mat c;
-			cv::bitwise_or(a, b, c);
+			int a_data[9] = { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+			cv::Mat a(3, 3, CV_32SC1, a_data);
+			a = translateImg(a, 1, 1);
 
-			cout << c << endl;
+			cout << a << endl;
 		}
 		
 	private:
-		void computeBinaryMap(int* bins, int* out, const int width, const int height)
+		void computeBinaryMap(cv::Mat& bins, cv::Mat& out)
 		{
 			// compute binary map
-			for (int i = 0; i < width * height; ++i)
-				bins[i] = 2 << bins[i];
+			for (int i = 0; i < bins.cols * bins.rows; ++i)
+				bins.at<int>(i) = 1 << bins.at<int>(i);
 
 			// spread binary map
-			int* district = new int[_TAU * _TAU];
+			const int shifts = _TAU / 2;
+			out = bins.clone();
 
-			for (int i = 0; i < height - _TAU; ++i) {
-				for (int j = 0; j < width - _TAU; ++j) {
-
+			// shift the image and OR
+			for (int i = -shifts; i <= shifts; ++i) {
+				for (int j = -shifts; j <= shifts; ++j) {
+					cv::Mat mask = translateImg(bins, i, j);
+					cv::bitwise_or(mask, out, out);
 				}
 			}
+		}
+
+		cv::Mat translateImg(cv::Mat &img, int shiftCol, int shiftRow) {
+			cv::Mat out = cv::Mat::zeros(img.size(), img.type());
+			cv::Rect a = cv::Rect(max(0, -shiftCol), max(0, -shiftRow), img.cols - abs(shiftCol), img.rows - abs(shiftRow));
+			cv::Rect b = cv::Rect(max(0, shiftCol), max(0, shiftRow), img.cols - abs(shiftCol), img.rows - abs(shiftRow));
+			img(a).copyTo(out(b));
+			return out;
 		}
 
 		void cvOriNone(const cv::Mat& img, int* out, int nOrients)
