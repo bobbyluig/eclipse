@@ -92,17 +92,23 @@ RETf AND(const __m128 x, const __m128 y) { return _mm_and_ps(x, y); }
 RETi AND(const __m128i x, const __m128i y) { return _mm_and_si128(x, y); }
 RETf ANDNOT(const __m128 x, const __m128 y) { return _mm_andnot_ps(x, y); }
 RETf OR(const __m128 x, const __m128 y) { return _mm_or_ps(x, y); }
+RETi OR(const __m128i x, const __m128i y) { return _mm_or_si128(x, y); }
 RETf XOR(const __m128 x, const __m128 y) { return _mm_xor_ps(x, y); }
 
 // comparison operators
 RETf CMPGT(const __m128 x, const __m128 y) { return _mm_cmpgt_ps(x, y); }
+RETf CMPGE(const __m128 x, const __m128 y) { return _mm_cmpge_ps(x, y); }
 RETf CMPLT(const __m128 x, const __m128 y) { return _mm_cmplt_ps(x, y); }
+RETf CMPLE(const __m128 x, const __m128 y) { return _mm_cmple_ps(x, y); }
 RETi CMPGT(const __m128i x, const __m128i y) { return _mm_cmpgt_epi32(x, y); }
 RETi CMPLT(const __m128i x, const __m128i y) { return _mm_cmplt_epi32(x, y); }
 
 // conversion operators
 RETf CVT(const __m128i x) { return _mm_cvtepi32_ps(x); }
 RETi CVT(const __m128 x) { return _mm_cvttps_epi32(x); }
+
+RETf CAST(const __m128i x) { return _mm_castsi128_ps(x); }
+RETi CAST(const __m128 x) { return _mm_castps_si128(x); }
 
 #undef RETf
 #undef RETi

@@ -56,6 +56,8 @@ namespace piotr {
     void gradMag(float * const I, float * const M,
         float * const O, int h, int w, int d, bool full);
 
+	void oriQuantize(float const *O, float const *M, int * const O0, int n, int nOrients, float threshold, bool full);
+
     template<typename PRIMITIVE_TYPE>
     void fhogToCol(const cv::Mat& img, cv::Mat& cvFeatures,
         int binSize, int colIdx, PRIMITIVE_TYPE cosFactor)
@@ -257,48 +259,6 @@ namespace piotr {
         wrFree(I);
         wrFree(H);
     }
-
-	template<typename PRIMITIVE_TYPE>
-	void cvOri(const cv::Mat& img, cv::Mat& out, int binSize)
-	{
-		// ensure array is continuous
-		const cv::Mat& image = (img.isContinuous() ? img : img.clone());
-
-		int channels = image.channels();
-		int width = image.cols;
-		int height = image.rows;
-		int widthBin = width / binSize;
-		int heightBin = height / binSize;
-
-		CV_Assert(channels == 3);
-
-		float* const M = (float*)wrCalloc(static_cast<size_t>(width * height), sizeof(float));
-		float* const O = (float*)wrCalloc(static_cast<size_t>(width * height), sizeof(float));
-
-		float* I = (float*)wrCalloc(static_cast<size_t>(width * height * channels), sizeof(float));
-		float* imageData = reinterpret_cast<float*>(image.data);
-		float* redChannel = I;
-		float* greenChannel = I + width * height;
-		float* blueChannel = I + 2 * width * height;
-
-		for (int i = 0; i < height * width; ++i)
-		{
-			blueChannel[i] = imageData[i * 3];
-			greenChannel[i] = imageData[i * 3 + 1];
-			redChannel[i] = imageData[i * 3 + 2];
-		}
-
-		// calc gradient ori in col major - switch width and height
-		gradMag(I, M, O, width, height, 3, false);
-
-		// optimize later?
-		cv::Mat output(height, width, CV_32FC1, O);
-		out = output.clone();
-
-		wrFree(M);
-		wrFree(O);
-		wrFree(I);
-	}
 
     template<typename PRIMITIVE_TYPE, class OUT>
     void cvFhogT(const cv::Mat& img, std::shared_ptr<OUT>& cvFeatures, int binSize, int fhogChannelsToCopy = 31)

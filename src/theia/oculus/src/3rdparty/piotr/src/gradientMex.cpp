@@ -225,6 +225,29 @@ namespace piotr {
         if (sse) i *= 4; for (; i < n; i++) M[i] /= (S[i] + norm);
     }
 
+	// quantize O into O0, taking M magnitude as a threshold into account
+	// output O0 ranges from 0 to nOrients, with 0 being invalid
+	void oriQuantize(float const *O, float const *M, int * const O0, int n, int nOrients, float threshold, bool full)
+	{
+		// assumes all matrices are 4-byte aligned
+		int i;
+		__m128i _o0, *_O0; __m128 _o;
+		// define useful constants
+		const float oMult = (float)nOrients / (full ? 2 * PI : PI); const int oMax = nOrients - 1;
+		const __m128 _oMult = SET(oMult);
+		const __m128 _threshold = SET(threshold);
+		const __m128i _oMax = SET(oMax);
+		const __m128i _one = SET(1);
+		// perform the majority of the work with sse
+		_O0 = (__m128i*) O0;
+		for (i = 0; i <= n - 4; i += 4) {
+			_o = MUL(LD(O[i]), _oMult); _o0 = CVT(_o);
+			_o0 = OR(OR(CMPLT(_oMax, _o0), CAST(CMPLT(LD(M[i]), _threshold))), _o0);
+			_o0 = ADD(_o0, _one);
+			*_O0++ = _o0;
+		}
+	}
+
     // helper for gradHist, quantize O and M into O0, O1 and M0, M1 (uses sse)
     void gradQuantize(float const *O, float * const M, int * const O0,
         int * const O1, float * const M0, float * const M1,
