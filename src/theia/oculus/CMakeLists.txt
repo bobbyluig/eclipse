@@ -110,6 +110,7 @@ find_package(OpenCV REQUIRED HINTS ${OPENCV_DIR_HINT})
 set(CF_CV_EXT_DIR "src/3rdparty/cv_ext")
 set(CF_PIOTR_DIR "src/3rdparty/piotr")
 set(CF_PBCVT_DIR "src/3rdparty/pbcvt")
+set(CV_INPAINT_DIR "src/3rdparty/inpaint")
 set(CF_EXPORTS_DIR "src/exports")
 
 include_directories(${OpenCV_DIR}/include)
@@ -117,6 +118,7 @@ include_directories(${CF_TCLAP_DIR}
                     ${CF_CV_EXT_DIR}
                     ${CF_PIOTR_DIR}
                     ${CF_EXPORTS_DIR}
+					${CV_INPAINT_DIR}/include
                     ${CF_PIOTR_DIR}/src
 					${CF_PBCVT_DIR}/include)
 
@@ -149,7 +151,8 @@ set(CF_LIB_COMMON_SOURCES
     ${CF_CV_EXT_DIR}/math_spectrums.cpp
     ${CF_CV_EXT_DIR}/math_spectrums.hpp
     ${CF_CV_EXT_DIR}/psr.hpp
-    ${CF_PIOTR_SOURCES})
+    ${CF_PIOTR_SOURCES}
+	${CV_INPAINT_DIR}/src/template_match_candidates.cpp)
 	
 	
 # Add Python module and link.
