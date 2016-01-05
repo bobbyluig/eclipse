@@ -22,12 +22,6 @@ def image():
     # frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     template = cv2.imread('roi.jpg')
     # template = cv2.cvtColor(template, cv2.COLOR_BGR2GRAY)
-    start = time.time()
-    for i in range(100):
-        cv2.Canny(frame, 50, 200)
-        # line.test2(frame, template)
-    print(time.time() - start)
-    cv2.imshow("original", cv2.matchTemplate(frame, template, cv2.TM_CCOEFF_NORMED))
-    cv2.waitKey(0)
+    line.test2(frame, template)
 
 image()
