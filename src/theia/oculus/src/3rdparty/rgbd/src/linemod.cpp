@@ -40,6 +40,7 @@
 //
 //M*/
 
+#include "linemod.hpp"
 #include "opencv2/rgbd.hpp"
 #include "opencv2/calib3d.hpp"
 #include "opencv2/imgproc.hpp"
@@ -1892,6 +1893,21 @@ namespace cv
 			modalities.push_back(makePtr<ColorGradient>());
 			modalities.push_back(makePtr<DepthNormal>());
 			return makePtr<Detector>(modalities, std::vector<int>(T_DEFAULTS, T_DEFAULTS + 2));
+		}
+
+		void Detector::removeTemplate(const String& class_id, const int template_id)
+		{
+			TemplatesMap::iterator i = class_templates.find(class_id);
+			CV_Assert(i != class_templates.end());
+			CV_Assert(i->second.size() > size_t(template_id));
+			i->second.erase(i->second.begin() + template_id);
+		}
+
+		void Detector::removeClass(const String& class_id)
+		{
+			TemplatesMap::iterator i = class_templates.find(class_id);
+			CV_Assert(i != class_templates.end());
+			class_templates.erase(i);
 		}
 
 	} // namespace linemod

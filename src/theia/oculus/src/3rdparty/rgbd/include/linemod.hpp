@@ -415,6 +415,16 @@ namespace cv {
 				const String& format = "templates_%s.yml.gz");
 			void writeClasses(const String& format = "templates_%s.yml.gz") const;
 
+			/**
+			* \brief Delete a template identified by class_id and template_id.
+			*/
+			void removeTemplate(const String& class_id, const int template_id);
+
+			/**
+			* \brief Delete a class identified by class_id.
+			*/
+			void removeClass(const String& class_id);
+
 		protected:
 			std::vector< Ptr<Modality> > modalities;
 			int pyramid_levels;

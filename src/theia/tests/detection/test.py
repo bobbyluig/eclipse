@@ -1,10 +1,9 @@
-from oculus import Line2DParameters, Line2D
+from oculus import Line2D, Line2DParameters, Match
 import cv2
 import time
 
 
 p = Line2DParameters()
-p.useGaussian = True
 line = Line2D(p)
 
 
@@ -19,9 +18,16 @@ def cam():
 
 def image():
     frame = cv2.imread('duck.jpg')
-    # frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     template = cv2.imread('roi.jpg')
-    # template = cv2.cvtColor(template, cv2.COLOR_BGR2GRAY)
-    line.test2(frame, template)
+
+    print(line.addTemplate(template, 'duck'))
+    print(line.addTemplate(template, 'duck'))
+
+    line.removeTemplate('duck', 2)
+
+    matches = line.match(frame, 80)
+    matches = list(matches)
+
+    print(matches)
 
 image()

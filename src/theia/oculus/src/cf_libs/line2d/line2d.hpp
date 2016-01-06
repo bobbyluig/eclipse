@@ -13,74 +13,92 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <vector>
-#include <math.h>
 
 #include "linemod.hpp"
 
 using namespace boost::python;
 using namespace std;
 
-#define PI 3.14159265f
-
 namespace template_match
 {
 	struct Line2DParameters
 	{
-		int numQuantizations = 8;
-		float threshold = 5.0;
-		bool useGaussian = true;
-		int tau = 8;
+		float weakThreshold = 10.0;
+		int numFeatures = 63;
+		float strongThreshold = 55.0;
+		vector<int> pyramid = { 5, 8 };
 	};
 
 	class Line2D
 	{
 	public:
 		Line2D(Line2DParameters paras)
-			: _NUM_ORIENTS(paras.numQuantizations),
-			_THRESHOLD(paras.threshold),
-			_USE_GAUSSIAN(paras.useGaussian),
-			_TAU(paras.tau)
+			: _WEAK_THRESHOLD(paras.weakThreshold),
+			_NUM_FEATURES(paras.numFeatures),
+			_STRONG_THRESHOLD(paras.strongThreshold),
+			_PYRAMID(paras.pyramid)
 		{
+			initialize();
 		}
 
-		void test(const cv::Mat& image, const cv::Mat& templ)
+		int  addTemplate(const cv::Mat& templ, const string& class_id)
 		{
-		}
-
-		void test2(const cv::Mat& image, const cv::Mat& templ)
-		{
-			cv::Ptr<cv::linemod::Detector> detector;
-			detector = cv::linemod::getDefaultLINE();
-
-			vector<cv::Mat> sources;
 			vector<cv::Mat> templates;
-			sources.push_back(image);
 			templates.push_back(templ);
 
-			detector->addTemplate(templates, "test1", cv::Mat());
-			detector->addTemplate(templates, "test2", cv::Mat());
+			return _detector->addTemplate(templates, class_id, cv::Mat());
+		}
 
-			// perform matching
+		void removeTemplate(const string& class_id, const int template_id)
+		{
+			_detector->removeTemplate(class_id, template_id);
+		}
+
+		void removeClass(const string& class_id)
+		{
+			_detector->removeClass(class_id);
+		}
+
+		vector<cv::linemod::Match> match(const cv::Mat& image, float threshold)
+		{
+			vector<cv::Mat> sources;
+			sources.push_back(image);
+
 			vector<cv::linemod::Match> matches;
+			_detector->match(sources, threshold, matches);
 
-			auto start = std::chrono::high_resolution_clock::now();
-			detector->match(sources, 80, matches);
-			auto elapsed = std::chrono::high_resolution_clock::now() - start;
+			return matches;
+		}
 
-			long long microseconds = std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count();
+		int numTemplates()
+		{
+			return _detector->numTemplates();
+		}
 
-			cout << microseconds << endl;
-			cout << matches.size();
+		int numTemplatesInClass(const string& class_id)
+		{
+			return _detector->numTemplates(class_id);
+		}
+
+		int numClasses()
+		{
+			return _detector->numClasses();
 		}
 
 	private:
-		const int _NUM_ORIENTS;
-		const float _THRESHOLD;
-		const bool _USE_GAUSSIAN;
-		const int _TAU;
+		void initialize()
+		{
+			vector< cv::Ptr<cv::linemod::Modality> > modalities;
+			modalities.push_back(cv::makePtr<cv::linemod::ColorGradient>(_WEAK_THRESHOLD, _NUM_FEATURES, _STRONG_THRESHOLD));
+			_detector = cv::makePtr<cv::linemod::Detector>(modalities, _PYRAMID);
+		}
 
-		cv::Mat _lookupTable;
-		const float _radsPerBin = PI / _NUM_ORIENTS;
+		cv::Ptr<cv::linemod::Detector> _detector;
+
+		const float _WEAK_THRESHOLD;
+		const int _NUM_FEATURES;
+		const float _STRONG_THRESHOLD;
+		const vector<int> _PYRAMID;
 	};
 }
 
