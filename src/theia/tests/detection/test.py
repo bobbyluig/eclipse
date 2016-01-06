@@ -20,14 +20,13 @@ def image():
     frame = cv2.imread('duck.jpg')
     template = cv2.imread('roi.jpg')
 
-    print(line.addTemplate(template, 'duck'))
-    print(line.addTemplate(template, 'duck'))
+    line.addTemplate(template, 'duck')
+    t = line.exportTemplate('duck', 0)
 
-    line.removeTemplate('duck', 2)
+    line.removeTemplate('duck', 0)
+    line.importTemplate(t)
 
     matches = line.match(frame, 80)
-    matches = list(matches)
-
-    print(matches)
+    print(list(matches))
 
 image()

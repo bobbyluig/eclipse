@@ -425,6 +425,9 @@ namespace cv {
 			*/
 			void removeClass(const String& class_id);
 
+			int readTemplate(const FileNode& fn);
+			void writeTemplate(const String& class_id, const int template_id, FileStorage& fs) const;
+
 		protected:
 			std::vector< Ptr<Modality> > modalities;
 			int pyramid_levels;

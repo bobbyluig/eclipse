@@ -1910,5 +1910,71 @@ namespace cv
 			class_templates.erase(i);
 		}
 
+		int Detector::readTemplate(const FileNode& fn)
+		{
+			// Verify compatible with Detector settings
+			FileNode mod_fn = fn["modalities"];
+			CV_Assert(mod_fn.size() == modalities.size());
+			FileNodeIterator mod_it = mod_fn.begin(), mod_it_end = mod_fn.end();
+			int i = 0;
+			for (; mod_it != mod_it_end; ++mod_it, ++i)
+				CV_Assert(modalities[i]->name() == (String)(*mod_it));
+			CV_Assert((int)fn["pyramid_levels"] == pyramid_levels);
+
+			// Read data
+			FileNode templates_fn = fn["templates"];
+			TemplatePyramid tp(templates_fn.size());
+
+			FileNodeIterator templ_it = templates_fn.begin(), templ_it_end = templates_fn.end();
+			int idx = 0;
+			for (; templ_it != templ_it_end; ++templ_it)
+			{
+				tp[idx++].read(*templ_it);
+			}
+
+			// Check if class already exists
+			String class_id = fn["class_id"];
+			int return_index = 0;
+
+			// Create if class doesn't already exist
+			if (class_templates.find(class_id) == class_templates.end())
+			{
+				TemplatesMap::value_type v(class_id, std::vector<TemplatePyramid>());
+				v.second.push_back(tp);
+				class_templates.insert(v);
+			}
+			else
+			{
+				return_index = addSyntheticTemplate(tp, class_id);
+			}
+
+			return return_index;
+		}
+
+		void Detector::writeTemplate(const String& class_id, const int template_id,
+			FileStorage& fs) const
+		{
+			TemplatesMap::const_iterator it = class_templates.find(class_id);
+			CV_Assert(it != class_templates.end());
+			CV_Assert(it->second.size() > size_t(template_id));
+			const std::vector<TemplatePyramid>& tps = it->second;
+			const TemplatePyramid& tp = tps[template_id];
+
+			fs << "class_id" << it->first;
+			fs << "modalities" << "[:";
+			for (size_t i = 0; i < modalities.size(); ++i)
+				fs << modalities[i]->name();
+			fs << "]"; // modalities
+			fs << "pyramid_levels" << pyramid_levels;
+			fs << "templates" << "[";
+			for (size_t j = 0; j < tp.size(); ++j)
+			{
+				fs << "{";
+				tp[j].write(fs);
+				fs << "}"; // current template
+			}
+			fs << "]"; // templates
+		}
+
 	} // namespace linemod
 } // namespace cv

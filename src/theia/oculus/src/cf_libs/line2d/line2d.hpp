@@ -70,6 +70,36 @@ namespace template_match
 			return matches;
 		}
 
+		string exportTemplate(const string& class_id, const int template_id)
+		{
+			cv::FileStorage fs("temp", cv::FileStorage::WRITE | cv::FileStorage::MEMORY);
+			_detector->writeTemplate(class_id, template_id, fs);
+			string serializedString = fs.releaseAndGetString();
+			return serializedString;
+		}
+
+		int importTemplate(const string& data)
+		{
+			cv::FileStorage fs(data, cv::FileStorage::READ | cv::FileStorage::MEMORY);
+			cv::FileNode n = fs.root();
+			return _detector->readTemplate(n);
+		}
+
+		string exportClass(const string& class_id)
+		{
+			cv::FileStorage fs("temp", cv::FileStorage::WRITE | cv::FileStorage::MEMORY);
+			_detector->writeClass(class_id, fs);
+			string serializedString = fs.releaseAndGetString();
+			return serializedString;
+		}
+
+		string importClass(const string& data)
+		{
+			cv::FileStorage fs(data, cv::FileStorage::READ | cv::FileStorage::MEMORY);
+			cv::FileNode n = fs.root();
+			return _detector->readClass(n);
+		}
+
 		int numTemplates()
 		{
 			return _detector->numTemplates();
