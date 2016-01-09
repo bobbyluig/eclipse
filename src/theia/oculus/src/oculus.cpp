@@ -9,6 +9,7 @@
 #include "kcf_export.h"
 #include "dsst_export.h"
 #include "line2d_export.h"
+#include "saliency_export.h"
 
 using namespace boost::python;
 
@@ -30,4 +31,5 @@ BOOST_PYTHON_MODULE(oculus)
 	KCF_EXPORT();
 	DSST_EXPORT();
 	LINE2D_EXPORT();
+	SALIENCY_EXPORT();
 }

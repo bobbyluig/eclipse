@@ -41,7 +41,7 @@ namespace template_match
 			initialize();
 		}
 
-		int  addTemplate(const cv::Mat& templ, const string& class_id)
+		int addTemplate(const cv::Mat& templ, const string& class_id)
 		{
 			vector<cv::Mat> templates;
 			templates.push_back(templ);

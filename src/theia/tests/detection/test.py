@@ -1,9 +1,12 @@
 from oculus import Line2D, Line2DParameters, Match
 import cv2
 import time
+import os
+import psutil
 
 
 p = Line2DParameters()
+p.pyramid = [5, 5, 5]
 line = Line2D(p)
 
 
@@ -20,13 +23,46 @@ def image():
     frame = cv2.imread('duck.jpg')
     template = cv2.imread('roi.jpg')
 
-    line.addTemplate(template, 'duck')
-    t = line.exportTemplate('duck', 0)
+    process = psutil.Process(os.getpid())
+    startMem = process.memory_info().rss
 
-    line.removeTemplate('duck', 0)
-    line.importTemplate(t)
+    for i in range(1000):
+        line.addTemplate(template, 'duck')
 
-    matches = line.match(frame, 80)
-    print(list(matches))
+    print(process.memory_info().rss - startMem)
 
-image()
+    '''
+    start = time.time()
+    for i in range(100):
+        matches = line.match(frame, 80)
+    print((time.time() - start) / 100)
+    '''
+
+
+def cv():
+    total = 0
+    frame = cv2.imread('duck.jpg')
+    template = cv2.imread('roi.jpg')
+    template = cv2.Canny(template, 50, 100)
+    cv2.imwrite('roi.png', template)
+
+    start = time.time()
+    for i in range(1000):
+        cv2.Canny(template, 50, 100)
+    print(time.time() - start)
+
+    # template = cv2.Canny(template, 50, 200)
+
+    '''
+    start = time.time()
+    for i in range(2000):
+        matches = cv2.matchTemplate(frame, template, cv2.TM_CCOEFF_NORMED)
+        cv2.minMaxLoc(matches)
+    total += time.time() - start
+
+    print(total)
+    '''
+
+cv()
+
+

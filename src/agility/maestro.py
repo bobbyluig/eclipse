@@ -148,18 +148,32 @@ class Maestro:
     ##########################################
 
     # Set multiple targets with one command. Faster than multiple set_target().
+    # Only use for contiguous blocks!
     def set_multiple_targets(self, *servos):
         # Count the number of targets. Required by controller.
         count = len(servos)
 
+        # Sort.
+        servos = sorted(servos, key=lambda servo: servo.channel)
+
+        # Start channel
+        start = servos[0].channel
+
         # Data header.
-        data = bytearray((0x9F, count))
+        data = bytearray((0x9F, count, start))
 
         # Iterate through all servos, appending to data as needed.
         for servo in servos:
             target = servo.deg_to_maestro(servo.target)
+
+            # Check contiguity.
+            if servo.channel != start:
+                raise Exception('Channels not contiguous!')
+            else:
+                start += 1
+
             lsb, msb = self.endianize(target)
-            data.extend((servo.channel, lsb, msb))
+            data.extend((lsb, msb))
 
             # Update object.
             servo.pwm = target
@@ -292,4 +306,8 @@ class Maestro:
         self.flush()
 
         # Move all servos to their respective targets.
-        self.set_multiple_targets(*servos)
+        for servo in servos:
+            self.set_target(servo)
+
+        # Flush to execute move.
+        self.flush()

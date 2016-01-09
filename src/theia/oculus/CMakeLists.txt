@@ -125,6 +125,7 @@ include_directories(${CF_TCLAP_DIR}
 include_directories(src/cf_libs/kcf
                     src/cf_libs/dsst
                     src/cf_libs/line2d
+					src/cf_libs/saliency
                     src/cf_libs/common)
 					
 file(GLOB PYTHON_EXPORTS

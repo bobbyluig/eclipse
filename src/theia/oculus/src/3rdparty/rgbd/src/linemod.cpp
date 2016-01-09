@@ -1585,8 +1585,10 @@ namespace cv
 							int offset = lowest_T / 2 + (lowest_T % 2 - 1);
 							int x = c * lowest_T + offset;
 							int y = r * lowest_T + offset;
+							int width = tp[0].width;
+							int height = tp[0].height;
 							float score = (raw_score * 100.f) / (4 * num_features) + 0.5f;
-							candidates.push_back(Match(x, y, score, class_id, static_cast<int>(template_id)));
+							candidates.push_back(Match(x, y, width, height, score, class_id, static_cast<int>(template_id)));
 						}
 					}
 				}

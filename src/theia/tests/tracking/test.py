@@ -1,8 +1,10 @@
-from oculus import DsstParameters, DsstTracker, KcfParameters, KcfTracker
+from oculus import DsstParameters, DsstTracker, KcfParameters, KcfTracker,\
+    Line2D, Line2DParameters
 import cv2
 import os
 import numpy as np
 from cmt import CMT
+from threading import Thread
 import time
 
 
@@ -424,6 +426,9 @@ def correlation_template_test(camera, start=None, bb=None, sequence=False):
     tracker = DSST(enableTrackingLossDetection=True, psrThreshold=10, cellSize=4, padding=2)
     found = True
 
+    p = Line2DParameters()
+    line = Line2D(p)
+
     if bb is None:
         while True:
             frame = eye.getColorFrame()
@@ -443,22 +448,19 @@ def correlation_template_test(camera, start=None, bb=None, sequence=False):
         else:
             print(eye.counter)
 
-    frame, gray = eye.getBothFrames()
+    frame = eye.getColorFrame()
     w, h = bb[2], bb[3]
 
     roi = frame[bb[1]:bb[1]+bb[3], bb[0]:bb[0]+bb[2]]
-    roi = cv2.resize(roi, (w // 5, h // 5))
-    template = cv2.Canny(roi, 50, 200)
-    cv2.imshow('template', template)
+    index = line.addTemplate(roi, 'track')
 
     tracker.init(frame, bb)
 
     count = 0
-    updateInterval = 20
+    updateInterval = 10
 
-    maxTemplates = 20
-    templates = [template]
-    templateUses = [100]
+    maxTemplates = 100
+    templates = {index: 100}
 
     while True:
         frame = eye.getColorFrame()
@@ -467,47 +469,24 @@ def correlation_template_test(camera, start=None, bb=None, sequence=False):
         pos = tracker.getBoundingBox()
 
         if not found:
-            tmp = cv2.resize(frame, (0,0), fx=0.2, fy=0.2)
-            gray = cv2.cvtColor(tmp, cv2.COLOR_BGR2GRAY)
-            edged = cv2.Canny(gray, 50, 200)
-
-            values = np.array([])
-            locs = []
-
-            for template in templates:
-                res = cv2.matchTemplate(edged, template, cv2.TM_CCOEFF_NORMED)
-                _, maxVal, _, maxLoc = cv2.minMaxLoc(res)
-                values = np.append(values, maxVal)
-                locs.append(maxLoc)
-
-            index = np.argmax(values)
-
-            if values[index] > 0.15:
-                maxLoc = locs[index]
-                found = tracker.updateAt(frame, (maxLoc[0] * 5, maxLoc[1] * 5, pos[2], pos[3]))
+            matches = line.match(frame, 75)
+            bestMatch = list(matches)[0]
+            found = tracker.updateAt(frame, (bestMatch.x, bestMatch.y, bestMatch.width, bestMatch.height))
 
             if found:
-                templateUses[index] += 1
+                templates[bestMatch.template_id] += 1
         else:
             if count > updateInterval:
                 if len(templates) == maxTemplates:
                     # Purge old templates.
-                    minTimes = min(templateUses)
-                    index = templateUses.index(minTimes)
+                    minTimes = min(templates, key=templates.get)
 
-                    del templates[index]
-                    del templateUses[index]
+                    line.removeTemplate('track', minTimes)
+                    del[minTimes]
 
-                if cv2.Laplacian(frame, cv2.CV_64F).var() > 10:
-                    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-                    roi = frame[pos[1]:pos[1]+pos[3], pos[0]:pos[0]+pos[2]]
-                    roi = cv2.resize(roi, (w // 5, h // 5))
-                    template = cv2.Canny(roi, 50, 200)
-                    templates.append(template)
-                    templateUses.append(0)
-                    cv2.imshow('template', template)
-                else:
-                    print('Blurry frame. Discounted.')
+                roi = frame[pos[1]:pos[1]+pos[3], pos[0]:pos[0]+pos[2]]
+                index = line.addTemplate(roi, 'track')
+                templates[index] = 0
 
                 count = 0
 
@@ -520,16 +499,15 @@ def correlation_template_test(camera, start=None, bb=None, sequence=False):
 
         cv2.imshow('frame', frame)
         k = cv2.waitKey(1)
-        if not k == -1:
+        k = chr(k & 255)
+
+        if k == 'q':
+            data = line.exportClass('track')
+            file = open('track.yaml', 'w')
+            file.write(data)
+            file.close()
             break
 
-    '''
-    i = 0
-    for template in templates:
-        cv2.imwrite('%s.png' % i, template)
-
-        i += 1
-    '''
 
 frameNumber = 0
 saveFolder = 'C:/users/bobbyluig/desktop/kenneth'

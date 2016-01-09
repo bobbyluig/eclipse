@@ -285,7 +285,7 @@ namespace cv {
 			{
 			}
 
-			Match(int x, int y, float similarity, const String& class_id, int template_id);
+			Match(int x, int y, int width, int height, float similarity, const String& class_id, int template_id);
 
 			/// Sort matches with high similarity to the front
 			bool operator<(const Match& rhs) const
@@ -304,14 +304,16 @@ namespace cv {
 
 			int x;
 			int y;
+			int width;
+			int height;
 			float similarity;
-			String class_id;
+			std::string class_id;
 			int template_id;
 		};
 
 		inline
-			Match::Match(int _x, int _y, float _similarity, const String& _class_id, int _template_id)
-			: x(_x), y(_y), similarity(_similarity), class_id(_class_id), template_id(_template_id)
+			Match::Match(int _x, int _y, int _width, int _height, float _similarity, const String& _class_id, int _template_id)
+			: x(_x), y(_y), width(_width), height(_height), similarity(_similarity), class_id(_class_id), template_id(_template_id)
 		{}
 
 		/**

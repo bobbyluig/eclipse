@@ -19,7 +19,7 @@ def forward(lengths, angles):
     return (x1, y1, z1), (x2, y2, z2), (x3, y3, z3)
 
 
-def inverse(lengths, target):
+def inverse(lengths, target, deg=True):
     l1, l2 = lengths
     x, y, z = target
     dist = np.linalg.norm(target)
@@ -27,24 +27,30 @@ def inverse(lengths, target):
     if dist > sum(lengths):
         return None
 
-    theta3 = (l1**2 + l2**2 - dist**2) / (2 * l1 * l2)
-
-    if theta3 > 1:
-        theta3 = 1
-    elif theta3 < -1:
-        theta3 = -1
-
-    theta3 = pi - acos(theta3)
     # theta3 *= -1
     # Returns [0, 180]. +/- expands solution to [-180, 180].
+    try:
+        theta3 = (l1**2 + l2**2 - dist**2) / (2 * l1 * l2)
+        theta3 = pi - acos(theta3)
+    except (ValueError, ZeroDivisionError):
+        return None
 
-    theta2 = -y / (l1 + l2 * cos(theta3))
-    theta2 = asin(theta2) # Our of range means invalid solution.
     # theta2 = (pi - theta2)
     # Returns [-90, 90]. (pi - theta2) expands solution to [-180, 180].
+    try:
+        theta2 = -y / (l1 + l2 * cos(theta3))
+        theta2 = asin(theta2)
+    except (ValueError, ZeroDivisionError):
+        return None
 
-    theta1 = atan2(z, x) - atan2((-l1 - l2 * cos(theta3)) * cos(theta2), l2 * sin(theta3))
     # theta1 += 2 * pi
     # Sometimes (2 * pi + theta1). Doesn't matter. Either is cool.
+    try:
+        theta1 = atan2(z, x) - atan2((-l1 - l2 * cos(theta3)) * cos(theta2), l2 * sin(theta3))
+    except (ValueError, ZeroDivisionError):
+        return None
 
-    return theta1, theta2, theta3
+    if deg:
+        return degrees(theta1), degrees(theta2), degrees(theta3)
+    else:
+        return theta1, theta2, theta3
