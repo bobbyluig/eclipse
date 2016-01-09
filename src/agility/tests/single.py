@@ -16,9 +16,10 @@ maestro = Maestro()
 servo1 = Servo(0, -90, 180, 500, 2500, 10)
 servo2 = Servo(1, -45, 225, 500, 2500, 10)
 servo3 = Servo(3, -135, 135, 500, 2500, 10)
+servos = [servo1, servo2, servo3]
 
 # Define home (what IK considers 0, 0, 0).
-SERVO1_HOME = 3
+SERVO1_HOME = 0
 SERVO2_HOME = 180
 SERVO3_HOME = -2
 
@@ -46,7 +47,7 @@ def moveToEuclidean(position):
         servo1.target = angles[0] + SERVO1_HOME
         servo2.target = angles[1] + SERVO2_HOME
         servo3.target = angles[2] + SERVO3_HOME
-        maestro.end_together(servo1, servo2, servo3)
+        maestro.end_together(servo1, servo2, servo3, update=True, time=150)
         # maestro.set_target(servo1)
         # maestro.set_target(servo2)
         # maestro.set_target(servo3)
@@ -56,14 +57,32 @@ def moveToEuclidean(position):
         goHome()
 
 
-moveToEuclidean((0, 0, -10))
-
 # Are servos at their targets?
-def isAtTarget(*servos):
+def isAtTarget(servos):
     for servo in servos:
         maestro.get_position(servo)
 
-    if all(abs(servo.deg - servo.target) < 2 for servo in servos):
+    if all(abs(servo.deg - servo.target) < 1 for servo in servos):
         return True
 
     return False
+
+
+def moveToPoints(servos, points):
+    for servo in servos:
+        maestro.get_position(servo)
+
+    while True:
+
+        for point in points:
+            moveToEuclidean(point)
+
+            while not isAtTarget(servos):
+                pass
+
+
+moveToPoints(servos, [(0, 0, -8),
+                      (5, 0, -10),
+                      (3, 0, -12),
+                      (0, 0, -12.1),
+                      (-3, 0, -12)])

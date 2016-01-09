@@ -115,9 +115,6 @@ class Maestro:
         # Compose and add to buffer.
         self.data.extend((0x84, servo.channel, lsb, msb))
 
-        # Update object.
-        servo.deg = servo.target
-
     # Set servo speed.
     def set_speed(self, servo, speed):
         # logger.
@@ -177,7 +174,6 @@ class Maestro:
 
             # Update object.
             servo.pwm = target
-            servo.deg = servo.target
 
         # Write.
         self.usb.write(data)
@@ -297,7 +293,7 @@ class Maestro:
 
             # Compute velocity as a change in 0.25us PWM / 10ms.
             delta = abs(servo.target - servo.deg) * servo.k_deg2mae
-            vel = int(round(delta / (time / 10)))
+            vel = int(round(delta / time * 10))
 
             # Set velocity.
             self.set_speed(servo, vel)

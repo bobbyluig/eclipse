@@ -54,3 +54,21 @@ def inverse(lengths, target, deg=True):
         return degrees(theta1), degrees(theta2), degrees(theta3)
     else:
         return theta1, theta2, theta3
+
+
+def fixingOtherPeoplesProblems(lengths, target, deg=True):
+    l1, l2, l3 = lengths
+    x, y ,z = target
+    dist = np.linalg.norm(target)
+
+    if dist > sum(lengths):
+        return None
+
+    theta4 = atan(l1 / l2)
+    theta3 = (l1**2 + l2**2 + l3**2 - dist**2) / (2 * (l1**2 + l2**2)**(1/2) * l3**2)
+    theta3 = acos(theta3)
+    theta3 = pi - (theta3 - theta4)
+    print
+
+
+fixingOtherPeoplesProblems((1, 7.5, 7.5), (8.5, 0, -7.5))
