@@ -5,22 +5,32 @@ logger = logging.getLogger('universe')
 
 
 class Servo:
-    def __init__(self, channel, min_deg, max_deg, min_pwm, max_pwm, max_vel, direction=1):
+    def __init__(self, channel, min_deg, max_deg, min_pwm, max_pwm, max_vel,
+                 bias=0, direction=1):
         self.channel = channel # 0 to 17
         self.min_deg = min_deg # -360 to 360 as (degrees)
         self.max_deg = max_deg # -360 to 360 as (degrees)
-        self.min_pwm = min_pwm * 4 # 0 to 4000 as (us pwm)
-        self.max_pwm = max_pwm * 4 # 0 to 4000 as (us pwm)
+        self.min_pwm = min_pwm * 4 # 0 to 4000 as (us)
+        self.max_pwm = max_pwm * 4 # 0 to 4000 as (us)
         self.max_vel = max_vel # 0 to 1000, as (ms / 60deg)
+
+        # Bias should be adjusted such that the servo is at kinematic "0" degree when it's target is 0 degrees.
+        # This is used to compensate for ridge spacing and inaccuracies during installation.
+        # Think of this like the "home" value of the servo.
+        self.bias = bias
+
+        # If the front of the servo is pointing in a negative axis, set this to negative 1.
+        # This reverses the directionality of all angle inputs.
         self.direction = direction
 
         # Dynamic current data.
-        self.deg = (self.min_deg + self.max_deg) / 2
+        self.pwm = 0
         self.vel = 0
         self.accel = 0
 
         # User defined target. Also used to store last target.
-        self.target = self.deg
+        # In units of 0.25 us.
+        self.target = 0
 
         # Compute constants.
         self.k_deg2mae = (self.max_pwm - self.min_pwm) / (self.max_deg - self.min_deg)
@@ -28,11 +38,29 @@ class Servo:
         self.k_vel2mae = (60 * self.k_deg2mae) / self.max_vel * 10
         self.k_mae2vel = self.max_vel / ((60 * self.k_deg2mae) * 10)
 
-    # Convert degrees to quarter us `.
+    def set_target(self, deg):
+        # Account for direction and bias.
+        deg = deg * self.direction + self.bias
+
+        # Normalize.
+        if deg > self.max_deg:
+            deg -= 360
+        elif deg < self.min_deg:
+            deg += 360
+
+        if deg > self.max_deg or deg < self.min_deg:
+            raise Exception('Target out of range!')
+
+        self.target = self.deg_to_maestro(deg)
+
+    def at_target(self):
+        return self.target == self.pwm
+
+    # Convert degrees to 0.25 us `.
     def deg_to_maestro(self, deg):
         return round(self.min_pwm + self.k_deg2mae * (deg - self.min_deg))
 
-    # Convert quarter us PWM to degrees.
+    # Convert 0.25 us to degrees.
     def maestro_to_deg(self, pwm):
         return self.min_deg + self.k_mae2deg * (pwm - self.min_pwm)
 
@@ -103,21 +131,18 @@ class Maestro:
 
     # Move a servo to the target defined by its object representation.
     def set_target(self, servo):
-        # Normalize and convert target to PWM.
-        target = servo.deg_to_maestro(servo.target)
-
-        # logger.
-        logger.debug('Setting servo %s\'s position to %s.' % (servo.channel, target))
+        # Logging.
+        logger.debug('Setting servo %s\'s position to %s.' % (servo.channel, servo.target))
 
         # Use endian format suitable for Maestro.
-        lsb, msb = self.endianize(target)
+        lsb, msb = self.endianize(servo.target)
 
         # Compose and add to buffer.
         self.data.extend((0x84, servo.channel, lsb, msb))
 
     # Set servo speed.
     def set_speed(self, servo, speed):
-        # logger.
+        # Logging.
         logger.debug('Setting servo %s\'s speed to %s.' % (servo.channel, speed))
 
         # Use endian format suitable for Maestro.
@@ -126,12 +151,12 @@ class Maestro:
         # Compose and add to buffer.
         self.data.extend((0x87, servo.channel, lsb, msb))
 
-        # Update object.
+        # Update object. However, this will not be accurate until flush.
         servo.vel = speed
 
     # Set servo acceleration.
     def set_acceleration(self, servo, accel):
-        # logger.
+        # Logging.
         logger.debug('Setting servo %s\'s acceleration to %s.' % (servo.channel, accel))
 
         # Use endian format suitable for Maestro.
@@ -139,6 +164,9 @@ class Maestro:
 
         # Compose and add to buffer.
         self.data.extend((0x89, servo.channel, lsb, msb))
+
+        # Update object. However, this will not be accurate until flush.
+        servo.accel = accel
 
     ##########################################
     # Begin implementation of bulk operations.
@@ -192,7 +220,7 @@ class Maestro:
         pwm = struct.unpack('<H', reply)[0]
 
         # Set servo data.
-        servo.deg = servo.maestro_to_deg(pwm)
+        servo.pwm = pwm
 
     # Get if any servos are moving.
     def get_moving_state(self):
@@ -282,17 +310,22 @@ class Maestro:
         # Flush buffer.
         self.flush()
 
-        # Compute and set the velocity for every servo.
-        for servo in servos:
-            # Update servo positions as needed.
-            if update:
+        # Update servo positions as needed.
+        if update:
+            for servo in servos:
                 self.get_position(servo)
 
+        # Max speed.
+        if time == 0:
+            time = max([abs(servo.target - servo.pwm) / servo.max_vel * 10 for servo in servos])
+
+        # Compute and set the velocity for every servo.
+        for servo in servos:
             # Set acceleration to zero.
             self.set_acceleration(servo, 0)
 
             # Compute velocity as a change in 0.25us PWM / 10ms.
-            delta = abs(servo.target - servo.deg) * servo.k_deg2mae
+            delta = abs(servo.target - servo.pwm)
             vel = int(round(delta / time * 10))
 
             # Set velocity.
