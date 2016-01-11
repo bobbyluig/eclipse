@@ -1,4 +1,5 @@
 import serial, os, struct, logging, re
+from agility.pololu.usc import Usc
 from serial.tools import list_ports
 
 logger = logging.getLogger('universe')
@@ -43,7 +44,7 @@ class Servo:
         Set the target for the servo.
         :param deg: The input degrees.
         """
-        
+
         # Account for direction and bias.
         deg = deg * self.direction + self.bias
 
@@ -87,7 +88,13 @@ class Servo:
 
 
 class Maestro:
-    def __init__(self, port=None, timeout=0):
+    def __init__(self, port=None, timeout=0, use_usc=True):
+        """
+        :param port: The virtual port number.
+        :param timeout: Timeout option for each transfer.
+        :param use_usc: Use low level USB controls.
+        """
+
         # Determine the operating system and port strings.
         # Command port is used for USB Dual Port mode.
         # Can automatically determine from a scan.
@@ -123,6 +130,17 @@ class Maestro:
             logger.debug('Using command port "%s".' % self.usb.port)
         except:
             raise Exception('Unable to connect to servo controller at %s.' % self.port)
+
+        if use_usc:
+            try:
+                self.usc = Usc()
+            except:
+                raise Exception('Unable to use low level communication!')
+        else:
+            self.usc = None
+
+        # Struct objects are faster.
+        self.struct = struct.Struct('<H')
 
         # Data buffer.
         self.data = bytearray()
@@ -217,12 +235,46 @@ class Maestro:
     # Begin implementation of bulk operations.
     ##########################################
 
-    def set_multiple_targets(self, *servos):
+    def get_multiple_positions(self, servos):
+        """
+        Get multiple positions.
+        :param servos: Servo objects.
+        """
+
+        data = bytearray()
+
+        for servo in servos:
+            data.extend((0x90, servo.channel))
+
+        self.usb.write(data)
+
+        for servo in servos:
+            reply = self.usb.read(size=2)
+            servo.pwm = self.struct.unpack(reply)
+
+    def get_all(self, servos):
+        """
+        Get acceleration, velocity, and position for multiple servos.
+        :param servos: Servo objects.
+        """
+
+        if self.usc is None:
+            return
+
+        data = self.usc.getVariables('servos')
+
+        for i in range(len(servos)):
+            servos[i].pwm = data[i].position
+            servos[i].vel = data[i].speed
+            servos[i].accel = data[i].acceleration
+
+    def set_multiple_targets(self, servos):
         """
         Set multiple targets with one command. Faster than multiple set_target().
         Only use for contiguous blocks!
         :param servos: Servo objects.
         """
+
         # Count the number of targets. Required by controller.
         count = len(servos)
 
@@ -269,7 +321,7 @@ class Maestro:
 
         # Receive 2 bytes of data and unpack
         reply = self.usb.read(size=2)
-        pwm = struct.unpack('<H', reply)[0]
+        pwm = self.struct.unpack(reply)[0]
 
         # Set servo data.
         servo.pwm = pwm
@@ -301,7 +353,7 @@ class Maestro:
         # Process and return.
         reply = self.usb.read(size=2)
         if reply:
-            return struct.unpack('<H', reply)[0]
+            return self.struct.unpack(reply)[0]
         else:
             return None
 
@@ -382,7 +434,7 @@ class Maestro:
     # Begin implementation of complex helper functions.
     ###################################################
 
-    def end_together(self, *servos, time=1000, update=False):
+    def end_together(self, servos, time=1000, update=False):
         """
         Move all servos to their respective targets such that they arrive together.
         This will reset all accelerations to 0 and flush buffer.
