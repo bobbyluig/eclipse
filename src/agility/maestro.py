@@ -106,31 +106,43 @@ class Maestro:
         # Data buffer.
         self.data = bytearray()
 
-    # Flush data buffer and clear.
     def flush(self):
+        """
+        Flush data buffer and clear. Send the data buffer to the Maestro.
+        """
+
         if len(self.data) > 0:
             self.usb.write(self.data)
             self.data.clear()
 
-    # Closing the USB port.
     def close(self):
+        """
+        Close the USB port.
+        """
         self.usb.close()
 
     ##########################################
     # Begin implementation of static methods.
     ##########################################
 
-    # Endian formatting for Pololu commands.
     @staticmethod
     def endianize(value):
+        """
+        Endian formatting for Pololu commands.
+        :param value: Integer value.
+        :return: (lsb, msb)
+        """
         return value & 0x7F, (value >> 7) & 0x7F
 
     ##########################################################
     # Begin implementation of buffer-capable compact protocol.
     ##########################################################
 
-    # Move a servo to the target defined by its object representation.
     def set_target(self, servo):
+        """
+        Move a servo to its target.
+        :param servo: A servo object.
+        """
         # Logging.
         logger.debug('Setting servo %s\'s position to %s.' % (servo.channel, servo.target))
 
@@ -142,6 +154,12 @@ class Maestro:
 
     # Set servo speed.
     def set_speed(self, servo, speed):
+        """
+        Set the servo speed.
+        :param servo: A servo object.
+        :param speed: The speed in 0.25 us / 10 ms.
+        """
+
         # Logging.
         logger.debug('Setting servo %s\'s speed to %s.' % (servo.channel, speed))
 
@@ -156,6 +174,12 @@ class Maestro:
 
     # Set servo acceleration.
     def set_acceleration(self, servo, accel):
+        """
+        Set the servo acceleration.
+        :param servo: A servo object.
+        :param accel: The acceleration in 0.25 us / 10 ms / 80 ms. See documentation for different PWM.
+        """
+
         # Logging.
         logger.debug('Setting servo %s\'s acceleration to %s.' % (servo.channel, accel))
 
@@ -172,9 +196,12 @@ class Maestro:
     # Begin implementation of bulk operations.
     ##########################################
 
-    # Set multiple targets with one command. Faster than multiple set_target().
-    # Only use for contiguous blocks!
     def set_multiple_targets(self, *servos):
+        """
+        Set multiple targets with one command. Faster than multiple set_target().
+        Only use for contiguous blocks!
+        :param servos: Servo objects.
+        """
         # Count the number of targets. Required by controller.
         count = len(servos)
 
@@ -210,8 +237,12 @@ class Maestro:
     # Begin implementation of read operations.
     ##########################################
 
-    # Get the position of one servo. (An update operation on the object).
     def get_position(self, servo):
+        """
+        Get the position of one servo.
+        :param servo: A servo object.
+        """
+
         # Send command.
         self.usb.write((0x90, servo.channel))
 
@@ -222,8 +253,12 @@ class Maestro:
         # Set servo data.
         servo.pwm = pwm
 
-    # Get if any servos are moving.
     def get_moving_state(self):
+        """
+        Checks if any servos are moving.
+        :return: Returns True if one or more servos are moving, else False.
+        """
+
         # Send command.
         self.usb.write((0x93,))
 
@@ -233,8 +268,12 @@ class Maestro:
         else:
             return False
 
-    # Get errors.
     def get_errors(self):
+        """
+        Gets errors.
+        :return: Returns an integer reprenstation of an error or None if there are no errors.
+        """
+
         # Send command.
         self.usb.write((0xA1,))
 
@@ -249,8 +288,13 @@ class Maestro:
     # Begin implementation of accessory operations.
     ###############################################
 
-    # Set PWM.
     def set_pwm(self, time, period):
+        """
+        Set the PWM.
+        :param time: The time parameter as specified by the documentation.
+        :param period: THe period parameter as specified by the documentation.
+        """
+
         # Use endian format suitable for Maestro.
         lsb1, msb1 = self.endianize(time)
         lsb2, msb2 = self.endianize(period)
@@ -261,8 +305,10 @@ class Maestro:
         # Write.
         self.usb.write(data)
 
-    # Go hard, or go home.
     def go_home(self):
+        """
+        Return all servos to their home positions.
+        """
         # Send command.
         self.usb.write(chr(0xA2))
 
@@ -270,13 +316,22 @@ class Maestro:
     # Begin implementation of script operations.
     ############################################
 
-    # Stop script.
     def stop_script(self):
+        """
+        Stops the running script.
+        """
+
         # Send command.
         self.usb.write((0xA4,))
 
     # Restart script.
     def restart(self, subroutine, parameter=None):
+        """
+        Starts or restarts a script.
+        :param subroutine: The subroutine number.
+        :param parameter: An integer parameter to put on the stack for consumption.
+        """
+
         # Construct command depending on parameter.
         if parameter is None:
             data = (0xA7, subroutine)
@@ -287,8 +342,12 @@ class Maestro:
         # Send data.
         self.usb.write(data)
 
-    # Get script status.
     def get_script_status(self):
+        """
+        Get a script status.
+        :return: Returns True if script is running and False if it is not.
+        """
+
         # Send command.
         self.usb.write((0xAE,))
 
@@ -302,11 +361,15 @@ class Maestro:
     # Begin implementation of complex helper functions.
     ###################################################
 
-    # Move all servos to their respective targets such that they arrive together.
-    # This will reset all accelerations to 0 and flush buffer.
-    # The time is how long the turn should take in milliseconds.
-    # Update determines whether or not to update servo positions. Slow operation.
     def end_together(self, *servos, time=1000, update=False):
+        """
+        Move all servos to their respective targets such that they arrive together.
+        This will reset all accelerations to 0 and flush buffer.
+        :param servos: Servo objects.
+        :param time: The time in ms for the operation. Set to 0 for max speed.
+        :param update: Whether of not to update servo positions.
+        """
+
         # Flush buffer.
         self.flush()
 
