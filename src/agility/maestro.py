@@ -39,6 +39,11 @@ class Servo:
         self.k_mae2vel = self.max_vel / ((60 * self.k_deg2mae) * 10)
 
     def set_target(self, deg):
+        """
+        Set the target for the servo.
+        :param deg: The input degrees.
+        """
+        
         # Account for direction and bias.
         deg = deg * self.direction + self.bias
 
@@ -54,14 +59,30 @@ class Servo:
         self.target = self.deg_to_maestro(deg)
 
     def at_target(self):
+        """
+        Checks if the servo is at its target.
+        :return: True if servo is at its target, else False.
+        """
+
         return self.target == self.pwm
 
-    # Convert degrees to 0.25 us `.
     def deg_to_maestro(self, deg):
+        """
+        Converts degrees to 0.25 us.
+        :param deg: The input degrees.
+        :return: The PWM in units of 0.25 us.
+        """
+
         return round(self.min_pwm + self.k_deg2mae * (deg - self.min_deg))
 
     # Convert 0.25 us to degrees.
     def maestro_to_deg(self, pwm):
+        """
+        Converts 0.25 us to degrees.
+        :param pwm: The input PWM in units of 0.25 us.
+        :return: Degrees.
+        """
+
         return self.min_deg + self.k_mae2deg * (pwm - self.min_pwm)
 
 
