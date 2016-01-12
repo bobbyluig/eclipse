@@ -3,7 +3,6 @@ from agility.pololu.reader import BytecodeReader
 from tools.timer import timeIt
 from agility.maestro import Maestro
 from pprint import pprint
-from theia.vision import speed_test, dlib_test
 from lykos.apollo import Apollo
 
 try:

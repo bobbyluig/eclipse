@@ -1,44 +1,7 @@
 import numpy as np
 from math import *
-from tests.ik.finesse.helper import *
-from numba import jit
-from timeit import Timer
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
-
-
-def forward_kinematics(lengths, angles):
-    # Set initial points.
-    points = [
-        np.array([0, 0, 0]),
-        np.array([0, 0, -lengths[0]]),
-        np.array([0, 0, -lengths[0] + -lengths[1]])
-    ]
-
-    # Get angles.
-    yaw = angles[0]
-    roll = angles[1]
-
-    # Reduction to 2D.
-    angle = -atan2(points[2][2], points[2][1]) - pi/2
-
-    # Roll
-    points[1] = rotate(points[1], 'x', roll)
-    points[2] = rotate(points[2], 'x', roll)
-
-    # Yaw
-    points[1] = rotate(points[1], 'y', yaw)
-    points[2] = rotate(points[2], 'y', yaw)
-
-    # Knee
-    n = np.array([0, 1, 0])
-    n = rotate(n, 'x', roll)
-    n = rotate(n, 'y', yaw)
-    q = quaternion(n, angles[2])
-
-    points[2] = points[1] + np.dot(points[2] - points[1], q)
-
-    return points
 
 
 def pure_math(lengths, angles):
@@ -47,18 +10,18 @@ def pure_math(lengths, angles):
 
     x1, y1, z1 = 0, 0, 0
 
-    x2 = l1 * sin(theta1) * cos(theta2)
-    y2 = -l1 * sin(theta2)
+    x2 = -l1 * sin(theta1) * cos(theta2)
+    y2 = l1 * sin(theta2)
     z2 = -l1 * cos(theta1) * cos(theta2)
 
-    x3 = x2 + l2 * cos(theta1) * sin(theta3) + l2 * cos(theta2) * cos(theta3) * sin(theta1)
-    y3 = y2 - l2 * cos(theta3) * sin(theta2)
+    x3 = x2 - l2 * cos(theta1) * sin(theta3) - l2 * cos(theta2) * cos(theta3) * sin(theta1)
+    y3 = y2 + l2 * cos(theta3) * sin(theta2)
     z3 = z2 + l2 * sin(theta1) * sin(theta3) - l2 * cos(theta1) * cos(theta2) * cos(theta3)
 
     return (x1, y1, z1), (x2, y2, z2), (x3, y3, z3)
 
 
-def inverse(lengths, target):
+def inverse(lengths, target, a2=False, a3=False, deg=False):
     l1, l2 = lengths
     x, y, z = target
     dist = np.linalg.norm(target)
@@ -66,33 +29,37 @@ def inverse(lengths, target):
     if dist > sum(lengths):
         return None
 
-    theta3 = (l1**2 + l2**2 - dist**2) / (2 * l1 * l2)
-
-    if theta3 > 1:
-        theta3 = 1
-    elif theta3 < -1:
-        theta3 = -1
-
-    theta3 = pi - acos(theta3)
     # theta3 *= -1
-    # Returns [0, 180]. +/- expands solution to  [-180, 180].
+    # Returns [0, 180]. +/- expands solution to [-180, 180].
+    try:
+        theta3 = (l1**2 + l2**2 - dist**2) / (2 * l1 * l2)
+        theta3 = acos(theta3) - pi
+        if a3:
+            theta3 *= -1
+    except (ValueError, ZeroDivisionError):
+        return None
 
-    theta2 = -y / (l1 + l2 * cos(theta3))
-
-    if theta2 > 1:
-        theta2 = 1
-    elif theta2 < -1:
-        theta2 = -1
-
-    theta2 = asin(theta2) # There is a problem here. Asin's range is bad. Related by np.pi.
     # theta2 = (pi - theta2)
-    # Should be in range [-180, 180]. Really bad range for asin. Sometimes (pi - theta2)
+    # Returns [-90, 90]. (pi - theta2) expands solution to [-180, 180].
+    try:
+        theta2 = y / (l1 + l2 * cos(theta3))
+        theta2 = asin(theta2)
+        if a2:
+            theta2 = pi - theta2
+    except (ValueError, ZeroDivisionError):
+        return None
 
-    theta1 = atan2(z, x) - atan2((-l1 - l2 * cos(theta3)) * cos(theta2), l2 * sin(theta3))
-    # theta1 += 2 * pi
-    # Sometimes (2 * pi + theta1). Doesn't matter. Either is cool.
+    # theta1 -= 2 * pi
+    # Sometimes (theta1 - 2 * pi). Doesn't matter. Either is cool.
+    try:
+        theta1 = atan2(z, -x) + atan2((l1 + l2 * cos(theta3)) * cos(theta2), l2 * sin(theta3))
+    except (ValueError, ZeroDivisionError):
+        return None
 
-    return theta1, theta2, theta3
+    if deg:
+        return degrees(theta1), degrees(theta2), degrees(theta3)
+    else:
+        return theta1, theta2, theta3
 
 
 def full_analysis(l1, l2, n):
@@ -135,32 +102,36 @@ def full_analysis(l1, l2, n):
     ax.set_ylabel('Y Label')
     ax.set_zlabel('Z Label')
 
-    fig2 = plt.figure()
+    fig2 = plt.figure(figsize=(25, 7.5), dpi=80)
+    fig2.suptitle('Dead Zone Analysis (Configuration 1)', fontsize=16, fontweight='bold')
+
     ax1 = fig2.add_subplot(131)
     ax1.set_aspect('equal')
     ax1.scatter(x_good, y_good, c='g', alpha=0.5)
     ax1.scatter(x_bad, y_bad, c='r')
-    ax1.set_xlabel('X Points')
-    ax1.set_ylabel('Y Points')
+    ax1.set_xlabel('X Axis')
+    ax1.set_ylabel('Y Axis')
 
     ax2 = fig2.add_subplot(132)
     ax2.set_aspect('equal')
     ax2.scatter(x_good, z_good, c='g', alpha=0.5)
     ax2.scatter(x_bad, z_bad, c='r')
-    ax2.set_xlabel('X Points')
-    ax2.set_ylabel('Z Points')
+    ax2.set_xlabel('X Axis')
+    ax2.set_ylabel('Z Axis')
 
     ax3 = fig2.add_subplot(133)
     ax3.set_aspect('equal')
     ax3.scatter(y_good, z_good, c='g', alpha=0.5)
     ax3.scatter(y_bad, z_bad, c='r')
-    ax3.set_xlabel('Y Points')
-    ax3.set_ylabel('Z Points')
+    ax3.set_xlabel('Y Axis')
+    ax3.set_ylabel('Z Axis')
+
+    fig2.savefig('analysis.png', bbox_inches='tight')
 
     plt.show()
 
 
-full_analysis(5, 10, 10000)
+full_analysis(7.5, 7.5, 10000)
 
 
 close = []
@@ -246,6 +217,7 @@ def analyze():
     ax.scatter(x, y, z, c='g')
 
     plt.show()
+
 
 # solve a = n * Cos[x] * Sin[z] + n * Cos[z] * Sin[x] * Cos[y] + m * Sin[x] * Cos[y] for x
 # solve b = -m * Sin[y] - n * Cos[z] * Sin[y]

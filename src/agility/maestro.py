@@ -250,7 +250,7 @@ class Maestro:
 
         for servo in servos:
             reply = self.usb.read(size=2)
-            servo.pwm = self.struct.unpack(reply)
+            servo.pwm = self.struct.unpack(reply)[0]
 
     def get_all(self, servos):
         """
