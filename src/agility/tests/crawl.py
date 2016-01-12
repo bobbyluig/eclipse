@@ -1,5 +1,5 @@
 from agility.maestro import Maestro, Servo
-from finesse.kinematics import Finesse
+from finesse.main import Finesse
 import math, time
 import collections
 

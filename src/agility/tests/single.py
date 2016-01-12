@@ -1,7 +1,7 @@
 from agility.pololu.usc import Usc
 from agility.pololu.reader import BytecodeReader
 from agility.maestro import Maestro, Servo
-from finesse.kinematics import Finesse
+from finesse.main import Finesse
 import math, time
 
 ###########################

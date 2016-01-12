@@ -132,10 +132,7 @@ class Maestro:
             raise Exception('Unable to connect to servo controller at %s.' % self.port)
 
         if use_usc:
-            try:
-                self.usc = Usc()
-            except:
-                raise Exception('Unable to use low level communication!')
+            self.usc = Usc()
         else:
             self.usc = None
 
