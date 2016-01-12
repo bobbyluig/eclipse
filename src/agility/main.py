@@ -61,7 +61,7 @@ class Robot:
             raise Exception('Unknown gait.')
 
         self.gait = gait
-        
+
 
 class Agility:
     def __init__(self, robot):
