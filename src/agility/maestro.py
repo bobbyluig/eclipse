@@ -1,5 +1,4 @@
 import serial, os, struct, logging, re
-from agility.pololu.usc import Usc
 from serial.tools import list_ports
 
 logger = logging.getLogger('universe')
@@ -88,7 +87,7 @@ class Servo:
 
 
 class Maestro:
-    def __init__(self, port=None, timeout=0, use_usc=True):
+    def __init__(self, port=None, timeout=0):
         """
         :param port: The virtual port number.
         :param timeout: Timeout option for each transfer.
@@ -130,11 +129,6 @@ class Maestro:
             logger.debug('Using command port "%s".' % self.usb.port)
         except:
             raise Exception('Unable to connect to servo controller at %s.' % self.port)
-
-        if use_usc:
-            self.usc = Usc()
-        else:
-            self.usc = None
 
         # Struct objects are faster.
         self.struct = struct.Struct('<H')
@@ -248,22 +242,6 @@ class Maestro:
         for servo in servos:
             reply = self.usb.read(size=2)
             servo.pwm = self.struct.unpack(reply)[0]
-
-    def get_all(self, servos):
-        """
-        Get acceleration, velocity, and position for multiple servos.
-        :param servos: Servo objects.
-        """
-
-        if self.usc is None:
-            return
-
-        data = self.usc.getVariables('servos')
-
-        for i in range(len(servos)):
-            servos[i].pwm = data[i].position
-            servos[i].vel = data[i].speed
-            servos[i].accel = data[i].acceleration
 
     def set_multiple_targets(self, servos):
         """

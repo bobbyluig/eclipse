@@ -40,7 +40,7 @@ def moveToEuclidean(position, a3=False):
         servo1.set_target(angles[0])
         servo2.set_target(angles[1])
         servo3.set_target(angles[2])
-        maestro.end_together(servos, update=True, time=100)
+        maestro.end_together(servos, update=True, time=200)
     else:
         print('Unable to reach position (%s, %s, %s)!' % position)
         goHome()
@@ -87,10 +87,12 @@ UPPER_CUT = [(-2, 0, -5), (13, 0, -2)]
 FORWARD_PUNCH = [(-3, 0, -10), (15, 0, 0)]
 DIG = [(10, 0, -9), (-3, 0, -9), (-3, 0, -8), (10, 0, -8)]
 
-goHome()
+# goHome()
 
-time.sleep(3)
+# time.sleep(3)
 
-moveToPoints(servos, BASIC_WALK)
+# moveToPoints(servos, MOTION_RANGE)
+
+moveToEuclidean((12, 3, 0), a3=True)
 
 # dig(servos)

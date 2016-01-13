@@ -470,11 +470,12 @@ def correlation_template_test(camera, start=None, bb=None, sequence=False):
 
         if not found:
             matches = line.match(frame, 75)
-            bestMatch = list(matches)[0]
-            found = tracker.updateAt(frame, (bestMatch.x, bestMatch.y, bestMatch.width, bestMatch.height))
+            if len(matches) > 0:
+                bestMatch = list(matches)[0]
+                found = tracker.updateAt(frame, (bestMatch.x, bestMatch.y, bestMatch.width, bestMatch.height))
 
-            if found:
-                templates[bestMatch.template_id] += 1
+                if found:
+                    templates[bestMatch.template_id] += 1
         else:
             if count > updateInterval:
                 if len(templates) == maxTemplates:
@@ -693,6 +694,6 @@ def makeBB(array):
 
 
 # correlation_template_test('C:\\Users\\bobbyluig\\Desktop\\Eclipse Large\\k.mp4', 209, (529, 102, 159, 249))
-correlation_template_test(0)
+correlation_template_test(0  )
 # correlation_template_test('C:/users/bobbyluig/desktop/vot2015/tunnel/%08d.jpg', bb=makeBB([328.000,339.000,350.000,339.000,350.000,308.000,328.000,308.000]), sequence=True)
 # kenneth()

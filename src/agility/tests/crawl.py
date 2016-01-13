@@ -44,7 +44,6 @@ def go_home(servos):
 # Set position.
 def target_euclidean(leg, position, a3=False):
     angles = Finesse.inverse((7.5, 7.5), position, a3=a3)
-    print(angles)
 
     if angles is not None:
         leg[0].set_target(angles[0])
@@ -81,7 +80,7 @@ CRAWL_GAIT = [
 # Only for 2 legs. 1423 crawl gait.
 def animate(gait, leg2, leg4):
     gait = collections.deque(gait)
-    frame_time = 150
+    frame_time = 100
 
     leg4_points = gait.copy()
     leg2_points = gait.copy()
