@@ -113,7 +113,7 @@ cmake -D CMAKE_BUILD_TYPE=RELEASE \
 	-D BUILD_PERF_TESTS=OFF \
 	-D BUILD_TESTS=OFF \
 	-D BUILD_EXAMPLES=OFF ..
--make CXXFLAGS="-O3 -mcpu=cortex-a5 -mfloat-abi=hard -mfpu=neon-fp16 -ffast-math" -j4 && make install
+make CXXFLAGS="-O3 -mcpu=cortex-a5 -mfloat-abi=hard -mfpu=neon-fp16 -ffast-math" -j4 && make install
 ldconfig
 
 # Cleanup.
@@ -123,6 +123,12 @@ rm -rf opencv-3.0.0 opencv_contrib
 #################
 # Install oculus.
 #################
+
+cd ~/Eclipse/src/theia/oculus
+mkdir build
+cd build
+cmake ..
+make CXXFLAGS="-O3 -mcpu=cortex-a5 -mfloat-abi=hard -mfpu=neon-fp16 -ffast-math" && make install
 
 ######################
 # Arduino development.

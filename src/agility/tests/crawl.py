@@ -3,32 +3,39 @@ from finesse.main import Finesse
 import math, time
 import collections
 
-###########################
-# Front right leg only!
-# Currently the white one.
-###########################
+#############################
+# This test will save us all.
+#############################
 
 maestro = Maestro()
 
-# Define servos.
-servo1 = Servo(0, -90, 180, 500, 2500, 150, bias=0, direction=-1)
-servo2 = Servo(1, -45, 225, 500, 2500, 150, bias=180, direction=1)
-servo3 = Servo(3, -135, 135, 500, 2500, 150, bias=-2, direction=-1)
-servo4 = Servo(6, -180, 90, 500, 2500, 150, bias=0, direction=-1)
-servo5 = Servo(8, -45, 225, 500, 2500, 150, bias=180, direction=1)
-servo6 = Servo(10, -135, 135, 500, 2500, 150, bias=-2, direction=-1)
+# Leg 1 servos.
+servo1 = Servo(0, -180, 90, 500, 2500, 150, bias=-5, direction=1)
+servo2 = Servo(1, -45, 225, 500, 2500, 150, bias=10, direction=1)
+servo3 = Servo(2, -135, 135, 500, 2500, 150, bias=0, direction=-1)
+leg1 = [servo1, servo2, servo3]
 
-# Define legs.
-leg2 = [servo1, servo2, servo3]
-leg4 = [servo4, servo5, servo6]
+# Leg 2 servos.
+servo4 = Servo(3, -90, 180, 500, 2500, 150, bias=0, direction=-1)
+servo5 = Servo(4, -225, 45, 500, 2500, 150, bias=0, direction=1)
+servo6 = Servo(5, -135, 135, 500, 2500, 150, bias=-13, direction=1)
+leg2 = [servo4, servo5, servo6]
+
+# Leg 3 servos.
+servo7 = Servo(6, -90, 180, 500, 2500, 150, bias=0, direction=1)
+servo8 = Servo(7, -45, 225, 500, 2500, 150, bias=7, direction=1)
+servo9 = Servo(8, -135, 135, 500, 2500, 150, bias=-2, direction=-1)
+leg3 = [servo7, servo8, servo9]
+
+# Leg 4 servos.
+servo10 = Servo(9, -180, 90, 500, 2500, 150, bias=4, direction=-1)
+servo11 = Servo(10, -225, 45, 500, 2500, 150, bias=7, direction=1)
+servo12 = Servo(11, -135, 135, 500, 2500, 150, bias=8, direction=1)
+leg4 = [servo10, servo11, servo12]
 
 # Configure velocity.
-maestro.set_speed(servo1, servo1.max_vel)
-maestro.set_speed(servo2, servo2.max_vel)
-maestro.set_speed(servo3, servo3.max_vel)
-maestro.set_speed(servo4, servo4.max_vel)
-maestro.set_speed(servo5, servo5.max_vel)
-maestro.set_speed(servo6, servo6.max_vel)
+for servo in leg1 + leg2 + leg3 + leg4:
+    maestro.set_speed(servo, servo.max_vel)
 maestro.flush()
 
 
@@ -65,38 +72,77 @@ def is_at_target(servos):
     return False
 
 
-CRAWL_GAIT = [
-    (5, 0, -9),     # Top of descent
-    (3, 0, -12),    # Drag 1
-    (2, 0, -12),    # Drag 2
-    (1, 0, -12.1),  # Drag 3
-    (0, 0, -12.2),  # Drag 4
-    (-1, 0, -12.2), # Drag 5
-    (-2, 0, -12.1), # Drag 6
-    (-3, 0, -12),   # Drag 7
-]
-
-
-# Only for 2 legs. 1423 crawl gait.
-def animate(gait, leg2, leg4):
+# Animate the 1423 crawl gait.
+def animate(gait, leg1, leg2, leg3, leg4):
     gait = collections.deque(gait)
     frame_time = 100
 
-    leg4_points = gait.copy()
+    leg1_points = gait.copy()
     leg2_points = gait.copy()
-    leg2_points.rotate(-2)
+    leg3_points = gait.copy()
+    leg4_points = gait.copy()
+
+    # Rotate.
+    leg4_points.rotate(-2)
+    leg2_points.rotate(-4)
+    leg3_points.rotate(-6)
 
     while True:
         for i in range(len(gait)):
-            target_euclidean(leg4, leg4_points[i])
+            target_euclidean(leg1, leg1_points[i])
             target_euclidean(leg2, leg2_points[i])
-            maestro.get_multiple_positions(leg4 + leg2)
-            maestro.end_together(leg4 + leg2, time=frame_time, update=False)
+            target_euclidean(leg3, leg3_points[i])
+            target_euclidean(leg4, leg4_points[i])
+            maestro.get_multiple_positions(leg1 + leg2 + leg3 + leg4)
+            maestro.end_together(leg1 + leg2 + leg3 + leg4, time=frame_time, update=False)
 
             # No need to check all.
-            while not is_at_target(leg4):
+            while not is_at_target(leg1):
                 pass
 
-go_home(leg4 + leg2)
-time.sleep(2)
-animate(CRAWL_GAIT, leg2, leg4)
+
+# Animate the trot gait.
+def animate_trot(gait, leg1, leg2, leg3, leg4):
+    gait = collections.deque(gait)
+    frame_time = 200
+
+    leg14_points = gait.copy()
+    leg23_points = gait.copy()
+
+    # Rotate.
+    leg23_points.rotate(-2)
+
+    while True:
+        for i in range(len(gait)):
+            target_euclidean(leg1, leg14_points[i])
+            target_euclidean(leg2, leg23_points[i])
+            target_euclidean(leg3, leg23_points[i])
+            target_euclidean(leg4, leg14_points[i])
+            maestro.get_multiple_positions(leg1 + leg2 + leg3 + leg4)
+            maestro.end_together(leg1 + leg2 + leg3 + leg4, time=frame_time, update=False)
+
+            while not is_at_target(leg1):
+                pass
+
+
+CRAWL_GAIT = [
+    (5, 0, -9),         # Top of descent
+    (3, 0, -12),        # Drag 1
+    (2, 0, -12),        # Drag 2
+    (1, 0, -12.1),      # Drag 3
+    (0, 0, -12.2),      # Drag 4
+    (-1, 0, -12.2),     # Drag 5
+    (-2, 0, -12.1),     # Drag 6
+    (-3, 0, -12),       # Drag 7
+]
+
+
+TROT_GAIT = [
+    (5, 0, -11),         # Top of descent
+    (4, 0, -13.2),      # Drag 1
+    (0, 0, -13.3),      # Drag 2
+    (-4, 0, -13.2),     # Drag 3
+]
+
+animate(CRAWL_GAIT, leg1, leg2, leg3, leg4)
+# animate_trot(TROT_GAIT, leg1, leg2, leg3, leg4)
