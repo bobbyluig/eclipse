@@ -5,7 +5,6 @@ import asyncio, logging, time
 from autobahn.asyncio.wamp import ApplicationSession
 from autobahn.wamp import auth
 from cerebral.autoreconnect import ApplicationRunner
-from cerebral.hippocampus import Memory
 
 ####################
 # Configure logging.
@@ -18,25 +17,6 @@ ch.setLevel(logging.DEBUG)
 formatter = logging.Formatter(fmt='%(asctime)s | %(levelname)s | %(message)s', datefmt='%m/%d/%Y %H:%M:%S')
 ch.setFormatter(formatter)
 logger.addHandler(ch)
-
-#############################
-# Define shared memory class.
-#############################
-
-memory = Memory()
-
-#####################
-# Servo control test.
-#####################
-
-def moveServo(channel, degrees):
-    servo = memory.servos[channel]
-    servo.target = degrees
-    memory.maestro.set_target(servo)
-    memory.maestro.flush()
-    logging.info('Executed move_servo(%s, %s).' % (channel, degrees))
-
-    return True
 
 ##############################
 # Create the main application.

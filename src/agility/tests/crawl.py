@@ -128,8 +128,8 @@ def animate_trot(gait, leg1, leg2, leg3, leg4):
 CRAWL_GAIT = [
     (5, 0, -9),         # Top of descent
     (3, 0, -12),        # Drag 1
-    (2, 0, -12),        # Drag 2
-    (1, 0, -12.1),      # Drag 3
+    (2, 0, -12.1),      # Drag 2
+    (1, 0, -12.2),      # Drag 3
     (0, 0, -12.2),      # Drag 4
     (-1, 0, -12.2),     # Drag 5
     (-2, 0, -12.1),     # Drag 6
