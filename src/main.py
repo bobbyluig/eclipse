@@ -18,25 +18,38 @@ formatter = logging.Formatter(fmt='%(asctime)s | %(levelname)s | %(message)s', d
 ch.setFormatter(formatter)
 logger.addHandler(ch)
 
+############
+# Functions.
+############
+
+
+
+
+
 ##############################
 # Create the main application.
 ##############################
 
+# Constants.
+user = 'DOG-1E5'
+password = 'de2432k,/s-=/8Eu'
+
+
 class Cerebral(ApplicationSession):
     def onConnect(self):
         logging.info('Connected to server.')
-        self.join(self.config.realm, ['wampcra'], memory.whoami)
+        self.join(self.config.realm, ['wampcra'], user)
 
     def onChallenge(self, challenge):
         logging.info('Challenge received.')
         if challenge.method == 'wampcra':
             if 'salt' in challenge.extra:
-                key = auth.derive_key(memory.password.encode(),
+                key = auth.derive_key(password.encode(),
                                       challenge.extra['salt'].encode(),
                                       challenge.extra.get('iterations', None),
                                       challenge.extra.get('keylen', None))
             else:
-                key = memory.password.encode()
+                key = password.encode()
             signature = auth.compute_wcs(key, challenge.extra['challenge'])
             return signature.decode('ascii')
         else:

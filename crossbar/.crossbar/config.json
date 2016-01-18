@@ -17,43 +17,7 @@
               ]
             },
             {
-              "name":"DOG-1E5",
-              "permissions":[
-                {
-                  "uri":"*",
-                  "publish":true,
-                  "subscribe":true,
-                  "call":true,
-                  "register":true
-                }
-              ]
-            },
-            {
-              "name":"DOG-4S1",
-              "permissions":[
-                {
-                  "uri":"*",
-                  "publish":true,
-                  "subscribe":true,
-                  "call":true,
-                  "register":true
-                }
-              ]
-            },
-            {
-              "name":"Alpha",
-              "permissions":[
-                {
-                  "uri":"*",
-                  "publish":true,
-                  "subscribe":true,
-                  "call":true,
-                  "register":true
-                }
-              ]
-            },
-            {
-              "name":"Zeus",
+              "name":"Full",
               "permissions":[
                 {
                   "uri":"*",
@@ -77,7 +41,7 @@
           "paths":{
             "/":{
               "type":"static",
-              "directory":".."
+              "directory":"../../src/zeus"
             },
             "ws":{
               "type":"websocket",
@@ -91,19 +55,23 @@
                   "users":{
                     "DOG-1E5":{
                       "secret":"de2432k,/s-=/8Eu",
-                      "role":"DOG-1E5"
+                      "role":"Full"
                     },
                     "DOG-4S1":{
                       "secret":"A@Q+xfQ[9<<5,+YG",
-                      "role":"DOG-4S1"
+                      "role":"Full"
                     },
                     "Alpha":{
                       "secret":"YCd:<Tfw73ga}AL3",
-                      "role":"Alpha"
+                      "role":"Full"
                     },
                     "Zeus":{
                       "secret":"+Ew~77XrvW-c<6sZ",
-                      "role":"Zeus"
+                      "role":"Full"
+                    },
+                    "Voice":{
+                      "secret":"ALyfTuqZvHHbwQCE",
+                      "role":"Full"
                     }
                   }
                 }
