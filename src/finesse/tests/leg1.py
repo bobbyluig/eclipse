@@ -98,9 +98,9 @@ def full_analysis(l1, l2, n):
     ax.scatter([-d, d, 0, 0, 0, 0], [0, 0, -d, d, 0, 0], [0, 0, 0, 0, -d, d], alpha=0)
     # ax.scatter(x_good, y_good, z_good, c='g', alpha=0.7)
     ax.scatter(x_bad, y_bad, z_bad, c='r')
-    ax.set_xlabel('X Label')
-    ax.set_ylabel('Y Label')
-    ax.set_zlabel('Z Label')
+    ax.set_xlabel('X Axis')
+    ax.set_ylabel('Y Axis')
+    ax.set_zlabel('Z Axis')
 
     fig2 = plt.figure(figsize=(25, 7.5), dpi=80)
     fig2.suptitle('Dead Zone Analysis (Configuration 1)', fontsize=16, fontweight='bold')
