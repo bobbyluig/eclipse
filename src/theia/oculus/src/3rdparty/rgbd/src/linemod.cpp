@@ -985,7 +985,7 @@ namespace cv
 					for (; c < width - 15; c += 16)
 					{
 						int8x16_t val = vld1q_s8(reinterpret_cast<const int8_t*>(src + c));
-						int8x16_t* dst_ptr = reinterpret_cast<int8_t*>(dst + c);
+						int8x16_t* dst_ptr = reinterpret_cast<int8x16_t*>(dst + c);
 						*dst_ptr = vorrq_s8(*dst_ptr, val);
 					}
 				}
