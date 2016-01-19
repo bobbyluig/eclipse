@@ -17,7 +17,7 @@
               ]
             },
             {
-              "name":"Full",
+              "name":"full",
               "permissions":[
                 {
                   "uri":"*",
@@ -36,7 +36,11 @@
           "type":"web",
           "endpoint":{
             "type":"tcp",
-            "port":80
+            "port":443,
+            "tls": {
+              "key": "server_key.pem",
+              "certificate": "server_cert.pem"
+            }
           },
           "paths":{
             "/":{
@@ -55,23 +59,23 @@
                   "users":{
                     "DOG-1E5":{
                       "secret":"de2432k,/s-=/8Eu",
-                      "role":"Full"
+                      "role":"full"
                     },
                     "DOG-4S1":{
                       "secret":"A@Q+xfQ[9<<5,+YG",
-                      "role":"Full"
+                      "role":"full"
                     },
                     "Alpha":{
                       "secret":"YCd:<Tfw73ga}AL3",
-                      "role":"Full"
+                      "role":"full"
                     },
                     "Zeus":{
                       "secret":"+Ew~77XrvW-c<6sZ",
-                      "role":"Full"
+                      "role":"full"
                     },
                     "Voice":{
                       "secret":"ALyfTuqZvHHbwQCE",
-                      "role":"Full"
+                      "role":"full"
                     }
                   }
                 }

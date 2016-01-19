@@ -1,7 +1,19 @@
+// Global variables.
 var user = 'Zeus';
 var key = '+Ew~77XrvW-c<6sZ';
+var url = 'wss://192.168.0.6/ws/';
+var ws = null;
 
-function onchallenge(session, method, extra) {
+// Speak functions.
+function speak(args) {
+    var msg = new SpeechSynthesisUtterance();
+    msg.lang = 'en-US';
+    msg.text = args[0];
+    window.speechSynthesis.speak(msg);
+}
+
+//  Communication.
+function onChallenge(session, method, extra) {
     if (method === 'wampcra') {
         return autobahn.auth_cra.sign(key, extra.challenge);
     } else {
@@ -10,19 +22,19 @@ function onchallenge(session, method, extra) {
 }
 
 var connection = new autobahn.Connection({
-    url: 'ws://127.0.0.1:8080/ws/',
+    url: url,
     realm: 'lycanthrope',
     authmethods: ['wampcra'],
     authid: user,
-    onchallenge: onchallenge
+    onchallenge: onChallenge
 });
 
-var ws = null;
-
-connection.onopen = function(session, details) {
+connection.onopen = function(session) {
     console.log('Connected session with ID: ' + session.id);
     ws = session;
-    ws.call('com.agility', [1, 60]);
-}
+
+    // Register everything.
+    ws.register('zeus.speak', speak);
+};
 
 connection.open();
