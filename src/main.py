@@ -57,9 +57,11 @@ class Cerebral(ApplicationSession):
                                 "I am designed for Project Lycanthrope by E D D Red Team 2016. "
                                 "Rawr."
                   )
+        logger.info('Executed identify().')
 
     def hello(self):
         self.call('zeus.speak', "Hello world!")
+        logger.info('Executed hello().')
 
 if __name__ == '__main__':
     ip = '192.168.0.6'

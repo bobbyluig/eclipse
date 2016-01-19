@@ -10,19 +10,11 @@ var voice_walkForward = function() {
     ws.call('zeus.speak', ['Executing forward walk.']);
 };
 
-var voice_identify = function() {
-    ws.call('dog.identify');
-};
-
-var voice_hello = function() {
-    ws.call('dog.hello');
-};
-
 function startVoice() {
     var commands = {
         'DOG walk (forward)': voice_walkForward,
-        'DOG identify (yourself)': voice_identify,
-        'DOG hello': voice_hello
+        'DOG identify (yourself)': function() { ws.call('dog.identify'); },
+        'DOG hello': function() { ws.call('dog.hello'); }
     };
 
     annyang.addCommands(commands);
