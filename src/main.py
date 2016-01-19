@@ -5,9 +5,9 @@ import config
 import asyncio
 import ssl
 
-from autobahn.asyncio.wamp import ApplicationSession
+from autobahn.asyncio.wamp import ApplicationSession, ApplicationRunner
 from autobahn.wamp import auth
-from cerebral.autoreconnect import ApplicationRunner
+# from cerebral.autoreconnect import ApplicationRunner
 
 ##############################
 # Create the main application.
