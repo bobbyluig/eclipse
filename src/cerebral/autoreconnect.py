@@ -185,7 +185,7 @@ class ApplicationRunner(object):
 
                 self.retry_strategy.increase_retry_interval()
 
-    def reconnect(self):
+    def reconnect(self, param):
         if not self.closing:
             asyncio.ensure_future(self.connect(), loop=self.loop)
 

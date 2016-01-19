@@ -11,19 +11,11 @@ var voice_walkForward = function() {
 };
 
 var voice_identify = function() {
-    ws.call('dog.get_identity').then(
-        function (result) {
-            ws.call('zeus.speak', [result]);
-        }
-    )
+    ws.call('dog.identify');
 };
 
 var voice_hello = function() {
-    ws.call('dog.hello').then(
-        function (result) {
-            ws.call('zeus.speak', [result]);
-        }
-    )
+    ws.call('dog.hello');
 };
 
 function startVoice() {
