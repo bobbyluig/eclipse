@@ -1252,7 +1252,7 @@ namespace cv
 #if CV_NEON
 				if (haveNEON)
 				{
-					int8x16_t responses = vld1q_s8(reinterpret_cast<const int8x16_t*>(lm_ptr + j));
+					int8x16_t responses = vld1q_s8(reinterpret_cast<const int8_t*>(lm_ptr + j));
 					int8x16_t* dst_ptr_neon = reinterpret_cast<int8x16_t*>(dst_ptr + j);
 					*dst_ptr_neon = vaddq_s8(*dst_ptr_neon, responses);
 				}
@@ -1345,7 +1345,7 @@ namespace cv
 				{
 					for (int row = 0; row < 16; ++row)
 					{
-						int8x16_t aligned = vld1q_s8(reinterpret_cast<const int8x16_t*>(lm_ptr));
+						int8x16_t aligned = vld1q_s8(reinterpret_cast<const int8_t*>(lm_ptr));
 						dst_ptr_neon[row] = vaddq_s8(dst_ptr_neon[row], aligned);
 						lm_ptr += W; // Step to next row
 					}
