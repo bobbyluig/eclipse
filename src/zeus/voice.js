@@ -1,7 +1,7 @@
 // Global variables.
 var user = 'Voice';
 var key = 'ALyfTuqZvHHbwQCE';
-var url = 'wss://192.168.0.6/ws/';
+var url = 'wss://192.168.12.18/ws/';
 var ws = null;
 
 
@@ -12,11 +12,16 @@ var voice_walkForward = function() {
 
 function startVoice() {
     var commands = {
-        'DOG walk (forward)': voice_walkForward,
-        'DOG identify (yourself)': function() { ws.call('dog.identify'); },
-        'DOG hello': function() { ws.call('dog.hello'); }
+        '(DOG) walk (forward)': function() { ws.call('dog.walk') },
+        '(DOG) do pushups': function() { ws.call('dog.pushup') },
+        '(DOG) stop': function() { ws.call('dog.stop') },
+        '(DOG) go home': function() { ws.call('dog.home') },
+        '(DOG) identify (yourself)': function() { ws.call('dog.identify'); },
+        '(DOG) hello': function() { ws.call('dog.hello'); },
+        '(DOG) tell us about blue team\'s robot': function() { ws.call('dog.blue_team') }
     };
 
+    annyang.debug();
     annyang.addCommands(commands);
     annyang.start();
 }

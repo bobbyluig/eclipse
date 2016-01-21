@@ -694,6 +694,6 @@ def makeBB(array):
 
 
 # correlation_template_test('C:\\Users\\bobbyluig\\Desktop\\Eclipse Large\\k.mp4', 209, (529, 102, 159, 249))
-correlation_template_test(0)
+correlation_template_test(1)
 # correlation_template_test('C:/users/bobbyluig/desktop/vot2015/tunnel/%08d.jpg', bb=makeBB([328.000,339.000,350.000,339.000,350.000,308.000,328.000,308.000]), sequence=True)
 # kenneth()

@@ -1,13 +1,14 @@
 // Global variables.
 var user = 'Zeus';
 var key = '+Ew~77XrvW-c<6sZ';
-var url = 'wss://192.168.0.6/ws/';
+var url = 'wss://192.168.12.18/ws/';
 var ws = null;
 
 // Speak functions.
 function speak(args) {
     var msg = new SpeechSynthesisUtterance();
     msg.lang = 'en-US';
+    // msg.voice = speechSynthesis.getVoices().filter(function(voice) { return voice.name == 'Google UK English Male'; })[0];
     msg.text = args[0];
     window.speechSynthesis.speak(msg);
 }
