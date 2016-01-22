@@ -25,7 +25,7 @@ from queue import Queue
 import time
 
 q = Queue()
-# agility = Agility(q)
+agility = Agility(q)
 
 
 class Cerebral(ApplicationSession):

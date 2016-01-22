@@ -1,7 +1,9 @@
 from agility.maestro import Maestro, Servo
 from finesse.main import Finesse
-import math, time
+import math, time, sys
 import collections
+import numpy as np
+from itertools import chain
 
 #############################
 # This test will save us all.
@@ -32,6 +34,22 @@ servo10 = Servo(9, -180, 90, 500, 2500, 150, bias=4, direction=-1)
 servo11 = Servo(10, -225, 45, 500, 2500, 150, bias=10, direction=1)
 servo12 = Servo(11, -135, 135, 500, 2500, 150, bias=8, direction=1)
 leg4 = [servo10, servo11, servo12]
+
+# Testing.
+t = [
+    [0, 125, 500, 875],
+    [125, 250, 375, 750],
+    [0, 375, 500, 625],
+    [250, 625, 750, 875]
+]
+
+p = [
+    [(5, 0, -9), (3, 0, -12), (0, 0, -12.2), (-3, 0, -12)],
+    [(-3, 0, -12), (5, 0, -9), (3, 0, -12), (0, 0, -12.2)],
+    [(0, 0, -12.2), (-3, 0, -12), (5, 0, -9), (3, 0, -12)],
+    [(0, 0, -12.2), (-3, 0, -12), (5, 0, -9), (3, 0, -12)]
+]
+
 
 # Configure velocity.
 for servo in leg1 + leg2 + leg3 + leg4:
@@ -127,14 +145,14 @@ def animate_trot(gait, leg1, leg2, leg3, leg4):
 
 
 CRAWL_GAIT = [
-    (7 - 1, 0, -6),         # Top of descent
-    (3 - 1, 0, -12),        # Drag 1
-    (2 - 1, 0, -12.1),      # Drag 2
-    (1 - 1, 0, -12.2),      # Drag 3
-    (0 - 1, 0, -12.2),      # Drag 4
-    (-1 -1, 0, -12.2),     # Drag 5
-    (-2 -1, 0, -12.1),     # Drag 6
-    (-3 -1, 0, -12),       # Drag 7
+    (6, 0, -9),         # Top of descent
+    (3, 0, -12),        # Drag 1
+    (2, 0, -12.1),      # Drag 2
+    (1, 0, -12.2),      # Drag 3
+    (0, 0, -12.2),      # Drag 4
+    (-1, 0, -12.2),     # Drag 5
+    (-2, 0, -12.1),     # Drag 6
+    (-3, 0, -12),       # Drag 7
 ]
 
 
@@ -228,9 +246,3 @@ class Agility:
         self.queue.put(0)
         self.t.join()
         self.t = None
-
-
-go_home(leg1 + leg2 + leg3 + leg4)
-time.sleep(3)
-animate(CRAWL_GAIT, leg1, leg2, leg3, leg4)
-# animate_trot(TROT_GAIT, leg1, leg2, leg3, leg4)
