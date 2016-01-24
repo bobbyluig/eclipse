@@ -24,7 +24,7 @@ class Apollo:
             pass
 
         p = pyaudio.PyAudio()
-        self.stream= p.open(self.SAMPLE_RATE, self.CHANNELS, self.AUDIO_FORMAT,
+        self.stream = p.open(self.SAMPLE_RATE, self.CHANNELS, self.AUDIO_FORMAT,
                             input=True, frames_per_buffer=self.CHUNK_SIZE)
         self.stream.start_stream()
         self.target = target
