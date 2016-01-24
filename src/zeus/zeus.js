@@ -35,7 +35,7 @@ connection.onopen = function(session) {
     ws = session;
 
     // Register everything.
-    ws.register('zeus.speak', speak);
+    ws.register('zeus.info', speak);
 };
 
 connection.open();

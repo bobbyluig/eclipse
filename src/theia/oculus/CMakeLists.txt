@@ -125,7 +125,6 @@ include_directories(${CF_TCLAP_DIR}
 include_directories(src/cf_libs/kcf
                     src/cf_libs/dsst
                     src/cf_libs/line2d
-					src/cf_libs/saliency
                     src/cf_libs/common)
 					
 file(GLOB PYTHON_EXPORTS
@@ -146,6 +145,7 @@ set(CF_LIB_COMMON_SOURCES
     src/cf_libs/common/math_helper.cpp
     src/cf_libs/common/scale_estimator.hpp
     src/cf_libs/common/cv_ext.hpp
+    src/cf_libs/common/gil.hpp
 	${CF_PBCVT_DIR}/src/pyboost_cv3_converter.cpp
     ${CF_CV_EXT_DIR}/shift.cpp
     ${CF_CV_EXT_DIR}/shift.hpp

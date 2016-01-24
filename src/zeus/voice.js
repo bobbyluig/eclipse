@@ -6,19 +6,18 @@ var ws = null;
 
 
 // Voice command functions.
-var voice_walkForward = function() {
-    ws.call('zeus.speak', ['Executing forward walk.']);
-};
-
 function startVoice() {
     var commands = {
-        '(DOG) walk (forward)': function() { ws.call('dog.walk') },
-        '(DOG) do pushups': function() { ws.call('dog.pushup') },
-        '(DOG) stop': function() { ws.call('dog.stop') },
-        '(DOG) go home': function() { ws.call('dog.home') },
-        '(DOG) identify (yourself)': function() { ws.call('dog.identify'); },
-        '(DOG) hello': function() { ws.call('dog.hello'); },
-        '(DOG) tell us about blue team\'s robot': function() { ws.call('dog.blue_team') }
+        'DOG walk (forward)': function() { ws.call('dog.walk') },
+        'DOG do pushups': function() { ws.call('dog.pushup') },
+        'DOG stop': function() { ws.call('dog.stop') },
+        'DOG go home': function() { ws.call('dog.home') },
+        'DOG *phrase': function(phrase) { ws.call('dog.converse', [phrase])}
+        /*
+        'DOG identify (yourself)': function() { ws.call('dog.identify'); },
+        'DOG hello': function() { ws.call('dog.hello'); },
+        'DOG tell us about blue team\'s robot': function() { ws.call('dog.blue_team') }
+        */
     };
 
     annyang.debug();

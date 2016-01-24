@@ -1,14 +1,14 @@
 #!/usr/bin/env python3.5
 
+# Configure global logging.
 import logging
-import config
-import asyncio
 import ssl
 
 from autobahn.asyncio.wamp import ApplicationSession
 from autobahn.wamp import auth
-from cerebral.autoreconnect import ApplicationRunner
-# from agility.tests.crawl import Agility
+
+from agility.tests.crawl import Agility
+from tools.autoreconnect import ApplicationRunner
 
 ##############################
 # Create the main application.
@@ -22,7 +22,6 @@ password = 'de2432k,/s-=/8Eu'
 
 # Agility.
 from queue import Queue
-import time
 
 q = Queue()
 agility = Agility(q)
@@ -48,15 +47,16 @@ class Cerebral(ApplicationSession):
         else:
             raise Exception('Unknown challenge method: %s' % challenge.method)
 
-    def onJoin(self, details):
+    async def onJoin(self, details):
         logger.info('Joined "%s" realm.' % self.config.realm)
-        self.register(self.identify, 'dog.identify')
-        self.register(self.hello, 'dog.hello')
-        self.register(self.walk, 'dog.walk')
-        self.register(self.pushup, 'dog.pushup')
-        self.register(self.stop, 'dog.stop')
-        self.register(self.home, 'dog.home')
-        self.register(self.blue_team, 'dog.blue_team')
+
+        await self.register(self.identify, 'dog.identify')
+        await self.register(self.hello, 'dog.hello')
+        await self.register(self.walk, 'dog.walk')
+        await self.register(self.pushup, 'dog.pushup')
+        await self.register(self.stop, 'dog.stop')
+        await self.register(self.home, 'dog.home')
+        await self.register(self.blue_team, 'dog.blue_team')
 
     def onDisconnect(self):
         logger.warning('Connection lost!')
@@ -65,38 +65,39 @@ class Cerebral(ApplicationSession):
     # Functions.
     ############
 
-    def identify(self):
+    async def identify(self):
         self.call('zeus.speak', "Hello. I am DOG-1E5, Eclipse Technology's first generation quadruped. "
                                 "I am designed for Project Lycanthrope by E D D Red Team 2016. "
                                 "Rawr."
                   )
         logger.info('Executed identify().')
 
-    def hello(self):
+    async def hello(self):
         self.call('zeus.speak', "Hello world!")
         logger.info('Executed hello().')
 
-    def blue_team(self):
+    async def blue_team(self):
         self.call('zeus.speak', "I could not find Blue Team's robot. Robot does not exist.")
         logger.info('Executed blue_team().')
 
-    def walk(self):
+    async def walk(self):
         self.call('zeus.speak', "Executing walking sequence.")
         agility.walk()
         logger.info('Executed walk().')
 
-    def pushup(self):
+    async def pushup(self):
         self.call('zeus.speak', "Executing push-ups.")
         agility.pushup()
         logger.info('Executed pushup().')
 
-    def stop(self):
+    async def stop(self):
         agility.stop()
         logger.info('Executed stop().')
 
-    def home(self):
+    async def home(self):
         agility.home()
         logger.info('Executed home().')
+
 
 if __name__ == '__main__':
     ip = '192.168.12.18'

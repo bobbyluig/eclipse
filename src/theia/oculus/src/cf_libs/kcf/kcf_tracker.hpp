@@ -16,6 +16,7 @@
 #include "math_helper.hpp"
 #include "scale_estimator.hpp"
 #include "psr.hpp"
+#include "gil.hpp"
 
 using namespace boost::python;
 
@@ -128,6 +129,8 @@ namespace cf_tracking
 
 		bool reinit(const cv::Mat& image, Tuple boundingBox)
 		{
+			releaseGIL unlock;
+
 			Rect bb = Rect(
 				extract<T>(boundingBox[0]),
 				extract<T>(boundingBox[1]),
@@ -140,6 +143,8 @@ namespace cf_tracking
 
 		bool update(const cv::Mat& image)
 		{
+			releaseGIL unlock;
+
 			Rect bb = Rect(
 				position[0],
 				position[1],
@@ -159,6 +164,8 @@ namespace cf_tracking
 
 		bool updateAt(const cv::Mat& image, Tuple boundingBox)
 		{
+			releaseGIL unlock;
+
 			bool isValid = false;
 
 			Rect bb = Rect(

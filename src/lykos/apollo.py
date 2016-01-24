@@ -2,20 +2,29 @@ import numpy as np
 import pyaudio
 from collections import deque
 import math, time, logging
+from tools.alsa import noalsaerr
 
 logger = logging.getLogger('universe')
+
+# Prevent Python from spewing errors on devices without proper sound cards.
 
 
 class Apollo:
     AUDIO_FORMAT = pyaudio.paInt16
     CHANNELS = 1
-    SAMPLE_RATE = 44100
+    SAMPLE_RATE = 32000
     CHUNK_SIZE = 8192
-    CAPTURE_LEN = int(round(SAMPLE_RATE / CHUNK_SIZE * 0.25))
+    CAPTURE_LEN = 1
 
-    def __init__(self, target, index=0):
+    def __init__(self, target):
+        try:
+            # Prevent devices without a sound card from spewing errors like crazy.
+            noalsaerr()
+        except OSError:
+            pass
+
         p = pyaudio.PyAudio()
-        self.stream= p.open(self.SAMPLE_RATE, self.CHANNELS, self.AUDIO_FORMAT, input_device_index=index,
+        self.stream= p.open(self.SAMPLE_RATE, self.CHANNELS, self.AUDIO_FORMAT,
                             input=True, frames_per_buffer=self.CHUNK_SIZE)
         self.stream.start_stream()
         self.target = target

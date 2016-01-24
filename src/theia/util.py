@@ -1,4 +1,4 @@
-import numpy as np
+from numpy import sqrt, sum, power
 
 
 def CIE76(lab_color_vector, lab_color_matrix):
@@ -9,4 +9,4 @@ def CIE76(lab_color_vector, lab_color_matrix):
     :return: A numpy array of CIE76 distances.
     """
 
-    return np.sqrt(np.sum(np.power(lab_color_vector - lab_color_matrix, 2), axis=1))
+    return sqrt(sum(power(lab_color_vector - lab_color_matrix, 2), axis=1))

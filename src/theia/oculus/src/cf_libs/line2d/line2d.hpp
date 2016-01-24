@@ -15,6 +15,7 @@
 #include <vector>
 
 #include "linemod.hpp"
+#include "gil.hpp"
 
 using namespace boost::python;
 using namespace std;
@@ -43,6 +44,8 @@ namespace template_match
 
 		int addTemplate(const cv::Mat& templ, const string& class_id)
 		{
+			releaseGIL unlock;
+
 			vector<cv::Mat> templates;
 			templates.push_back(templ);
 
@@ -51,16 +54,22 @@ namespace template_match
 
 		void removeTemplate(const string& class_id, const int template_id)
 		{
+			releaseGIL unlock;
+
 			_detector->removeTemplate(class_id, template_id);
 		}
 
 		void removeClass(const string& class_id)
 		{
+			releaseGIL unlock;
+
 			_detector->removeClass(class_id);
 		}
 
 		vector<cv::linemod::Match> match(const cv::Mat& image, float threshold)
 		{
+			releaseGIL unlock;
+
 			vector<cv::Mat> sources;
 			sources.push_back(image);
 
@@ -72,6 +81,8 @@ namespace template_match
 
 		string exportTemplate(const string& class_id, const int template_id)
 		{
+			releaseGIL unlock;
+
 			cv::FileStorage fs("temp", cv::FileStorage::WRITE | cv::FileStorage::MEMORY);
 			_detector->writeTemplate(class_id, template_id, fs);
 			string serializedString = fs.releaseAndGetString();
@@ -80,6 +91,8 @@ namespace template_match
 
 		int importTemplate(const string& data)
 		{
+			releaseGIL unlock;
+
 			cv::FileStorage fs(data, cv::FileStorage::READ | cv::FileStorage::MEMORY);
 			cv::FileNode n = fs.root();
 			return _detector->readTemplate(n);
@@ -87,6 +100,8 @@ namespace template_match
 
 		string exportClass(const string& class_id)
 		{
+			releaseGIL unlock;
+
 			cv::FileStorage fs("temp", cv::FileStorage::WRITE | cv::FileStorage::MEMORY);
 			_detector->writeClass(class_id, fs);
 			string serializedString = fs.releaseAndGetString();
@@ -95,6 +110,8 @@ namespace template_match
 
 		string importClass(const string& data)
 		{
+			releaseGIL unlock;
+
 			cv::FileStorage fs(data, cv::FileStorage::READ | cv::FileStorage::MEMORY);
 			cv::FileNode n = fs.root();
 			return _detector->readClass(n);

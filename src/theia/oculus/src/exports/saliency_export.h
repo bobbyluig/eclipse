@@ -1,6 +1,0 @@
-#ifndef SALIENCY_EXPORT_
-#define SALIENCY_EXPORT_
-
-void SALIENCY_EXPORT();
-
-#endif

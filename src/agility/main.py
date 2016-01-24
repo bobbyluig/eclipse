@@ -29,6 +29,9 @@ class Leg:
     def __add__(self, other):
         return self.servos + other.servos
 
+    def __radd__(self, other):
+        return other + self.servos
+
 
 class Robot:
     def __init__(self, leg1, leg2, leg3, leg4):

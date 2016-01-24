@@ -130,6 +130,18 @@ cd build
 cmake ..
 make CXXFLAGS="-O3 -mcpu=cortex-a5 -mfloat-abi=hard -mfpu=neon-fp16 -ffast-math" && make install
 
+#################
+# MJPEG-Streamer.
+#################
+
+cd ~
+git clone https://github.com/codewithpassion/mjpg-streamer.git
+cd mjpg-streamer/mjpg-streamer
+apt-get install imagemagick libv4l-dev
+make USE_LIBV4L2=true clean all
+export LD_LIBRARY_PATH=.
+./mjpg_streamer -o "output_http.so -w ./www"
+
 ######################
 # Arduino development.
 ######################

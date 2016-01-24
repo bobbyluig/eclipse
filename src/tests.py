@@ -15,10 +15,8 @@ try:
 except:
     pass
 
-try:
-    apollo = Apollo(-2)
-except:
-    pass
+
+apollo = Apollo(-2)
 
 
 def getErrors():
