@@ -89,17 +89,15 @@ apt-get -y install libatlas-base-dev gfortran
 # Get contrib module.
 cd ~
 git clone https://github.com/Itseez/opencv_contrib.git
-cd opencv_contrib
-git checkout 3.0.0
 
 # Get version 3.
 cd ~
-wget https://github.com/Itseez/opencv/archive/3.0.0.zip
-7z x 3.0.0.zip
-rm -f 3.0.0.zip
+wget https://github.com/Itseez/opencv/archive/3.1.0.zip
+7z x 3.1.0.zip
+rm -f 3.1.0.zip
 
 # Compile.
-cd opencv-3.0.0
+cd opencv-3.1.0
 mkdir build
 cd build
 cmake -D CMAKE_BUILD_TYPE=RELEASE \
@@ -118,7 +116,7 @@ ldconfig
 
 # Cleanup.
 cd ~
-rm -rf opencv-3.0.0 opencv_contrib
+rm -rf opencv-3.1.0 opencv_contrib
 
 #################
 # Install oculus.
@@ -130,6 +128,20 @@ cd build
 cmake ..
 make CXXFLAGS="-O3 -mcpu=cortex-a5 -mfloat-abi=hard -mfpu=neon-fp16 -ffast-math" && make install
 
+###############
+# LLVM + Numba.
+###############
+
+cd ~
+wget http://llvm.org/releases/3.6.2/llvm-3.6.2.src.tar.xz
+tar xf llvm-3.6.2.src.tar.xz
+cd llvm-3.6.2.src
+mkdir build
+cd build
+cmake -DCMAKE_BUILD_TYPE=Release -DLLVM_TARGETS_TO_BUILD="ARM" ..
+make -j4 && make install
+rm -rf llvm-3.6.2.src
+
 #################
 # MJPEG-Streamer.
 #################
@@ -140,7 +152,7 @@ cd mjpg-streamer/mjpg-streamer
 apt-get install imagemagick libv4l-dev
 make USE_LIBV4L2=true clean all
 export LD_LIBRARY_PATH=.
-./mjpg_streamer -o "output_http.so -w ./www"
+# ./mjpg_streamer -o "output_http.so -w ./www"
 
 ######################
 # Arduino development.
