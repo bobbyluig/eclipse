@@ -44,9 +44,13 @@ var paths = {
   ],
   // These files are for your app's JavaScript
   appJS: [
-    'client/assets/js/app.js'
+    'client/assets/js/annyang.js',
+    'bower_components/autobahn/autobahn.js',
+    'bower_components/angular-wamp/release/angular-wamp.js',
+    'client/assets/js/app.js',
+    'client/assets/js/main.js'
   ]
-}
+};
 
 // 3. TASKS
 // - - - - - - - - - - - - - - -
@@ -116,7 +120,7 @@ gulp.task('sass', function () {
 });
 
 // Compiles and copies the Foundation for Apps JavaScript, as well as your app's custom JS
-gulp.task('uglify', ['uglify:foundation', 'uglify:app'])
+gulp.task('uglify', ['uglify:foundation', 'uglify:app']);
 
 gulp.task('uglify:foundation', function(cb) {
   var uglify = $.if(isProduction, $.uglify()

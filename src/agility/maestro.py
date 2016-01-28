@@ -1,89 +1,11 @@
-import serial, os, struct, logging, re
+import logging
+import os
+import re
+import serial
+import struct
 from serial.tools import list_ports
 
 logger = logging.getLogger('universe')
-
-
-class Servo:
-    def __init__(self, channel, min_deg, max_deg, min_pwm, max_pwm, max_vel,
-                 bias=0, direction=1):
-        self.channel = channel # 0 to 17
-        self.min_deg = min_deg # -360 to 360 as (degrees)
-        self.max_deg = max_deg # -360 to 360 as (degrees)
-        self.min_pwm = min_pwm * 4 # 0 to 4000 as (us)
-        self.max_pwm = max_pwm * 4 # 0 to 4000 as (us)
-        self.max_vel = max_vel # 0 to 1000, as (ms / 60deg)
-
-        # Bias should be adjusted such that the servo is at kinematic "0" degree when it's target is 0 degrees.
-        # This is used to compensate for ridge spacing and inaccuracies during installation.
-        # Think of this like the "home" value of the servo.
-        self.bias = bias
-
-        # If the front of the servo is pointing in a negative axis, set this to negative 1.
-        # This reverses the directionality of all angle inputs.
-        self.direction = direction
-
-        # Dynamic current data.
-        self.pwm = 0
-        self.vel = 0
-        self.accel = 0
-
-        # User defined target. Also used to store last target.
-        # In units of 0.25 us.
-        self.target = 0
-
-        # Compute constants.
-        self.k_deg2mae = (self.max_pwm - self.min_pwm) / (self.max_deg - self.min_deg)
-        self.k_mae2deg = (self.max_deg - self.min_deg) / (self.max_pwm - self.min_pwm)
-        self.k_vel2mae = (60 * self.k_deg2mae) / self.max_vel * 10
-        self.k_mae2vel = self.max_vel / ((60 * self.k_deg2mae) * 10)
-
-    def set_target(self, deg):
-        """
-        Set the target for the servo.
-        :param deg: The input degrees.
-        """
-
-        # Account for direction and bias.
-        deg = deg * self.direction + self.bias
-
-        # Normalize.
-        if deg > self.max_deg:
-            deg -= 360
-        elif deg < self.min_deg:
-            deg += 360
-
-        if deg > self.max_deg or deg < self.min_deg:
-            raise Exception('Target out of range!')
-
-        self.target = self.deg_to_maestro(deg)
-
-    def at_target(self):
-        """
-        Checks if the servo is at its target.
-        :return: True if servo is at its target, else False.
-        """
-
-        return self.target == self.pwm
-
-    def deg_to_maestro(self, deg):
-        """
-        Converts degrees to 0.25 us.
-        :param deg: The input degrees.
-        :return: The PWM in units of 0.25 us.
-        """
-
-        return round(self.min_pwm + self.k_deg2mae * (deg - self.min_deg))
-
-    # Convert 0.25 us to degrees.
-    def maestro_to_deg(self, pwm):
-        """
-        Converts 0.25 us to degrees.
-        :param pwm: The input PWM in units of 0.25 us.
-        :return: Degrees.
-        """
-
-        return self.min_deg + self.k_mae2deg * (pwm - self.min_pwm)
 
 
 class Maestro:
@@ -311,10 +233,10 @@ class Maestro:
         self.usb.write((0x93,))
 
         # Check and return.
-        if self.usb.read() == b'\x01':
-            return True
-        else:
+        if self.usb.read() == b'\x00':
             return False
+        else:
+            return True
 
     def get_errors(self):
         """

@@ -12,8 +12,7 @@ from concurrent.futures import ThreadPoolExecutor
 from autobahn.asyncio.wamp import ApplicationSession
 from autobahn.wamp import auth
 
-from agility.maestro import Servo
-from agility.main import Leg, Robot
+from agility.main import Leg, Robot, Servo
 from lykos.apollo import Apollo
 from tools.autoreconnect import ApplicationRunner
 

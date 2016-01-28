@@ -1,5 +1,5 @@
 from agility.maestro import Maestro, Servo
-from agility.main import Agility, Robot, Leg
+from agility.main import Agility, Robot, Leg, Servo
 
 # Define servos.
 servo1 = Servo(0, -90, 180, 500, 2500, 150, bias=0, direction=-1)

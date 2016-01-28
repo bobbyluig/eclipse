@@ -26,3 +26,6 @@ build/
 bld/
 [Bb]in/
 [Oo]bj/
+
+# Custom pid
+*.pid

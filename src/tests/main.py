@@ -7,7 +7,7 @@ import ssl
 from autobahn.asyncio.wamp import ApplicationSession
 from autobahn.wamp import auth
 
-from agility.tests.crawl import Agility
+# from agility.tests.crawl import Agility
 from tools.autoreconnect import ApplicationRunner
 
 ##############################
@@ -24,7 +24,7 @@ password = 'de2432k,/s-=/8Eu'
 from queue import Queue
 
 q = Queue()
-agility = Agility(q)
+# agility = Agility(q)
 
 
 class Cerebral(ApplicationSession):
@@ -100,7 +100,7 @@ class Cerebral(ApplicationSession):
 
 
 if __name__ == '__main__':
-    ip = '192.168.12.18'
+    ip = '127.0.0.1'
 
     context = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
     context.verify_mode = ssl.CERT_REQUIRED

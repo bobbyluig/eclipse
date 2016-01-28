@@ -1,6 +1,6 @@
 from tools.timer import time_it
 from agility.maestro import Maestro, Servo
-from agility.main import Agility, Leg, LegLocation
+from agility.main import Agility, Leg, LegLocation, Servo
 
 maestro = Maestro()
 

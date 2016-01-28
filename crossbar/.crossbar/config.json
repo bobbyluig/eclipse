@@ -45,7 +45,7 @@
           "paths":{
             "/":{
               "type":"static",
-              "directory":"../../src/zeus"
+              "directory":"../../src/zeus/zeus/build"
             },
             "ws":{
               "type":"websocket",

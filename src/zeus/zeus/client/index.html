@@ -14,11 +14,15 @@
     <div class="grid-frame vertical">
       <div class="grid-content shrink" style="padding: 0;">
         <ul class="primary condense menu-bar">
-          <li><a><strong>Foundation for Apps</strong></a></li>
+          <li><a><strong>Eclipse Technologies</strong></a></li>
         </ul>
       </div>
-      <div ui-view class="grid-content">
-      </div>
+
+      <div ui-view></div>
+    </div>
+
+    <div ng-controller="NoteCtrl">
+      <zf-notification-set id="main-notifications" position="bottom-left"></zf-notification-set>
     </div>
   </body>
 </html>

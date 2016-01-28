@@ -1,6 +1,7 @@
 from agility.pololu.usc import Usc
 from agility.pololu.reader import BytecodeReader
-from agility.maestro import Maestro, Servo
+from agility.maestro import Maestro
+from agility.main import Servo
 from finesse.main import Finesse
 import math, time
 
@@ -9,19 +10,19 @@ import math, time
 # Currently the white one.
 ###########################
 
-usc = Usc()
+# usc = Usc()
 maestro = Maestro()
 
 # Define servos.
-servo1 = Servo(0, -90, 180, 500, 2500, 150, bias=0, direction=-1)
-servo2 = Servo(1, -45, 225, 500, 2500, 150, bias=180, direction=1)
-servo3 = Servo(3, -135, 135, 500, 2500, 150, bias=-2, direction=-1)
-servos = [servo1, servo2, servo3]
+servo4 = Servo(3, -90, 180, 500, 2500, 150, bias=10, direction=-1)
+servo5 = Servo(4, -225, 45, 500, 2500, 150, bias=5, direction=1)
+servo6 = Servo(5, -135, 135, 500, 2500, 150, bias=10, direction=1)
+servos = [servo4, servo5, servo6]
 
 # Configure velocity.
-maestro.set_speed(servo1, servo1.max_vel)
-maestro.set_speed(servo2, servo2.max_vel)
-maestro.set_speed(servo3, servo3.max_vel)
+maestro.set_speed(servo4, servo4.max_vel)
+maestro.set_speed(servo5, servo5.max_vel)
+maestro.set_speed(servo6, servo6.max_vel)
 maestro.flush()
 
 # Go home.
@@ -37,9 +38,9 @@ def moveToEuclidean(position, a3=False):
     angles = Finesse.inverse((7.5, 7.5), position, a3=a3)
 
     if angles is not None:
-        servo1.set_target(angles[0])
-        servo2.set_target(angles[1])
-        servo3.set_target(angles[2])
+        servo4.set_target(angles[0])
+        servo5.set_target(angles[1])
+        servo6.set_target(angles[2])
         maestro.end_together(servos, update=True, time=200)
     else:
         print('Unable to reach position (%s, %s, %s)!' % position)
@@ -85,14 +86,14 @@ BASIC_WALK = [(0, 0, -8), (5, 0, -10), (3, 0, -12), (0, 0, -12.1), (-3, 0, -12)]
 MOTION_RANGE = [(0, 0, -15), (0, -15, 0), (15, 0, 0)]
 UPPER_CUT = [(-2, 0, -5), (13, 0, -2)]
 FORWARD_PUNCH = [(-3, 0, -10), (15, 0, 0)]
-DIG = [(10, 0, -9), (-3, 0, -9), (-3, 0, -8), (10, 0, -8)]
+DIG = [(10, 0, -10), (-3, 0, -10), (-3, 0, -10), (10, 0, -10)]
 
-# goHome()
+goHome()
 
-# time.sleep(3)
+time.sleep(3)
 
-# moveToPoints(servos, MOTION_RANGE)
+# moveToPoints(servos, DIG)
 
-moveToEuclidean((12, 3, 0), a3=True)
+# moveToEuclidean((12, 3, 0), a3=True)
 
-# dig(servos)
+dig(servos)

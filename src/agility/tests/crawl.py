@@ -1,4 +1,5 @@
-from agility.maestro import Maestro, Servo
+from agility.maestro import Maestro
+from agility.main import Servo
 from finesse.main import Finesse
 import math, time, sys
 import collections
@@ -246,3 +247,11 @@ class Agility:
         self.queue.put(0)
         self.t.join()
         self.t = None
+
+
+from queue import Queue
+
+q = Queue()
+a = Agility(q)
+a.home()
+a.walk()

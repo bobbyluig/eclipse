@@ -3,7 +3,18 @@ name: home
 url: /
 ---
 
-<div class="grid-container">
-  <h1>Welcome to Foundation for Apps!</h1>
-  <p class="lead">This is version <strong>1.2 Eiger</strong>.</p>
+<div class="grid-container" ng-controller="BtnCtrl">
+  <h1 class="text-center">Eclipse Technologies</h1>
+  <p class="lead text-center"><strong>R</strong>EVOLUTIONIZE. <strong>E</strong>MPOWER. <strong>D</strong>ESIGN.</p>
+  <div class="grid-block small-up-2">
+    <div class="grid-content">
+      <a class="button expand dark" href="" ng-click="startWAMP()">Initialize Communication</a>
+    </div>
+    <div class="grid-content">
+      <a class="button expand dark" href="" ng-click="startAnnyang()">{{voice}}</a>
+    </div>
+    <div class="grid-content">
+      <a class="button expand dark" href="" ng-click="startAudio()">Register Audio</a>
+    </div>
+  </div>
 </div>
