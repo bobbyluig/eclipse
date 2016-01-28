@@ -133,14 +133,16 @@ make CXXFLAGS="-O3 -mcpu=cortex-a5 -mfloat-abi=hard -mfpu=neon-fp16 -ffast-math"
 ###############
 
 cd ~
-wget http://llvm.org/releases/3.6.2/llvm-3.6.2.src.tar.xz
-tar xf llvm-3.6.2.src.tar.xz
-cd llvm-3.6.2.src
+wget http://llvm.org/releases/3.7.1/llvm-3.7.1.src.tar.xz
+tar xf llvm-3.7.1.src.tar.xz
+cd llvm-3.7.1.src
 mkdir build
 cd build
-cmake -DCMAKE_BUILD_TYPE=Release -DLLVM_TARGETS_TO_BUILD="ARM" ..
+cmake -DCMAKE_BUILD_TYPE=Release -DLLVM_TARGETS_TO_BUILD="ARM" -DPYTHON_EXECUTABLE=/usr/local/bin/python3.5 ..
 make -j4 && make install
-rm -rf llvm-3.6.2.src
+ldconfig
+cd ~
+rm -rf llvm-3.7.1.src
 
 #################
 # MJPEG-Streamer.
