@@ -41,7 +41,7 @@ class Android:
 
 class Crossbar:
     # Crossbar.
-    ip = '127.0.0.1'
+    ip = '192.168.12.18'
     realm = 'lycanthrope'
     authid = 'DOG-1E5'
     secret = 'de2432k,/s-=/8Eu'

@@ -60,14 +60,28 @@ app.controller('NoteCtrl', function ($scope, $wamp, FoundationApi) {
 });
 
 // Button controller (temporary)
-app.controller('BtnCtrl', function ($scope, $wamp, FoundationApi, AnnyangService, SpeechService) {
+app.controller('BtnCtrl', function ($scope, $timeout, $wamp, FoundationApi, AnnyangService, SpeechService, ngAudio) {
   $scope.startWAMP = function () {
     $wamp.open();
+  };
+
+  $scope.stopMusic = function () {
+    $scope.sound.stop();
   };
 
   $scope.voice = 'Enable Voice';
 
   $scope.startAnnyang = function () {
+    AnnyangService.addCommand('DOG tiger', function () {
+      $scope.sound = ngAudio.load('/assets/audio/tiger.mp3');
+      $scope.sound.play();
+      var unregister = $scope.$watch('sound.currentTime', function (time) {
+        if (time >= 9.40) {
+          $wamp.call('dog1.flex');
+          unregister();
+        }
+      });
+    });
     AnnyangService.addCommand('DOG walk (forward)', function () {
       $wamp.call('dog1.walk');
     });
@@ -77,10 +91,10 @@ app.controller('BtnCtrl', function ($scope, $wamp, FoundationApi, AnnyangService
     AnnyangService.addCommand('DOG stop', function () {
       $wamp.call('dog1.stop');
     });
-    AnnyangService.addCommand('DOG go home', function () {
-      $wamp.call('dog1.home');
+    AnnyangService.addCommand('DOG initialize', function () {
+      $wamp.call('dog1.initialize');
     });
-    AnnyangService.addCommand('DOG *phrase', function () {
+    AnnyangService.addCommand('DOG *phrase', function (phrase) {
       $wamp.call('dog1.converse', [phrase])
     });
 
@@ -134,6 +148,7 @@ app.factory('AnnyangService', function ($rootScope) {
 
   service.start = function () {
     annyang.addCommands(service.commands);
+    annyang.debug(true);
     annyang.start();
     service.initialized = true;
   };

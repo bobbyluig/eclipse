@@ -159,6 +159,29 @@ class Agility:
         # Set up virtual COM and TTL ports.
         self.maestro = Maestro()
 
+    def animate_single(self, frame):
+        """
+        Animate a single frame of one leg.
+        :param sequence: The sequence single.
+
+        frame = (index, frame_time, [])
+        """
+
+        index, frame_time, points = frame
+
+        if index is None:
+            time.sleep(frame_time / 1000)
+            return
+
+        t = frame_time / len(points)
+        for point in points:
+            self.target_euclidean(self.robot[index], point)
+            self.maestro.get_multiple_positions(self.robot[index])
+            self.maestro.end_together(self.robot[index], time=t)
+            while self.is_at_target():
+                # Sleep for a short time to drastically save CPU cycles.
+                time.sleep(0.0005)
+
     def animate_synchronized(self, sequence):
         """
         Animate one iteration of a synchronized gait sequence.

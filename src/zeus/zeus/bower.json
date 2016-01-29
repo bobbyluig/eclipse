@@ -24,6 +24,7 @@
   ],
   "dependencies": {
     "foundation-apps": "~1.2.0",
-    "angular-wamp": "~0.1.8"
+    "angular-wamp": "~0.1.8",
+    "angular-audio": "~1.7.1"
   }
 }

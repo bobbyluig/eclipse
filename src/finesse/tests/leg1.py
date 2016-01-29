@@ -96,7 +96,7 @@ def full_analysis(l1, l2, n):
     ax = fig.add_subplot(111, projection='3d')
     ax.set_aspect('equal')
     ax.scatter([-d, d, 0, 0, 0, 0], [0, 0, -d, d, 0, 0], [0, 0, 0, 0, -d, d], alpha=0)
-    # ax.scatter(x_good, y_good, z_good, c='g', alpha=0.7)
+    ax.scatter(x_good, y_good, z_good, c='g', alpha=0.1)
     ax.scatter(x_bad, y_bad, z_bad, c='r')
     ax.set_xlabel('X Axis')
     ax.set_ylabel('Y Axis')

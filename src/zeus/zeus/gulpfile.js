@@ -47,6 +47,7 @@ var paths = {
     'client/assets/js/annyang.js',
     'bower_components/autobahn/autobahn.js',
     'bower_components/angular-wamp/release/angular-wamp.js',
+    'bower_components/angular-audio/app/angular.audio.js',
     'client/assets/js/app.js',
     'client/assets/js/main.js'
   ]

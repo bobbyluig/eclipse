@@ -11,7 +11,8 @@
     'foundation.dynamicRouting.animations',
 
     //custom
-    'vxWamp'
+    'vxWamp',
+    'ngAudio'
   ])
     .config(config)
     .run(run)

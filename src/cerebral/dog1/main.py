@@ -17,12 +17,15 @@ from concurrent.futures import ThreadPoolExecutor
 
 from cerebral.dog1.hippocampus import Crossbar, Conversation, Manager
 from cerebral.dog1.commands import Commands
-from tools.pid import pidfile_exists
+from tools.pid import pid_spawn
 from tools.queue import SharedMemory
 
 
 class Cerebral(ApplicationSession):
     def __init__(self, *args, **kwargs):
+        # Path for dynamic spawning.
+        self.root = os.path.dirname(__file__)
+
         # Create a thread executor for slightly CPU-bound async functions.
         self.executor = ThreadPoolExecutor(10)
 
@@ -58,6 +61,7 @@ class Cerebral(ApplicationSession):
 
         await self.register(self.initialize, 'dog1.initialize')
         await self.register(self.walk, 'dog1.walk')
+        await self.register(self.flex, 'dog1.flex')
         await self.register(self.stop, 'dog1.stop')
         await self.register(self.converse, 'dog1.converse')
 
@@ -80,6 +84,12 @@ class Cerebral(ApplicationSession):
         result = await loop.run_in_executor(self.executor, func)
         return result
 
+    async def coro_spawn(self, name):
+        loop = asyncio.get_event_loop()
+        func = partial(pid_spawn, self.root, name)
+        result = await loop.run_in_executor(self.executor, func)
+        return result
+
     ############
     # Functions.
     ############
@@ -92,47 +102,53 @@ class Cerebral(ApplicationSession):
             self.publish('dog1.info', 'I do not understand that command.')
 
     async def initialize(self):
-        reply = await self.get_queue(self.q_in, timeout=10)
-        if reply == Commands.WORKER_READY:
-            self.publish('dog1.info', 'Worker successfully started.')
+        spawned = await self.coro_spawn('worker1')
+        if not spawned:
+            self.publish('dog1.info', 'Worker 1 is already spawned.')
+            return
+
+        reply = await self.get_queue(self.q_in, timeout=2)
+        if reply == Commands.READY:
+            self.publish('dog1.info', 'Worker started and reports that it is ready.')
         else:
-            self.publish('dog1.info', 'Failed to start worker.')
+            self.publish('dog1.info', 'Worker failed to report. Please consider re-initializing.')
 
     async def walk(self):
         await self.put_queue(self.q_out, Commands.WALK_FORWARD)
 
+        reply = await self.get_queue(self.q_in, timeout=2)
+        if reply == Commands.SUCCESS:
+            self.publish('dog1.info', 'Solid copy.')
+        else:
+            self.publish('dog1.info', 'I am currently performing another physical task.')
+
+    async def flex(self):
+        await self.put_queue(self.q_out, Commands.FLEX)
+
+        reply = await self.get_queue(self.q_in, timeout=2)
+        if reply == Commands.SUCCESS:
+            self.publish('dog1.info', 'Solid copy.')
+        else:
+            self.publish('dog1.info', 'I am currently performing another physical task.')
+
     async def stop(self):
         await self.put_queue(self.q_out, Commands.STOP)
+
+        reply = await self.get_queue(self.q_in, timeout=2)
+        if reply == Commands.SUCCESS:
+            self.publish('dog1.info', 'Solid copy.')
+        else:
+            self.publish('dog1.info', 'I cannot stop doing nothing.')
 
 
 if __name__ == '__main__':
     # Change directory.
     root = os.path.dirname(__file__)
-    os.chdir(root)
 
-    # Check if manager already exists.
-    pid_path = os.path.abspath(os.path.join(root, '..', 'manager.pid'))
-    process_path = os.path.abspath(os.path.join(root, '..', 'manager.py'))
-    if not pidfile_exists(pid_path):
-        process = Popen([sys.executable, process_path])
-        time.sleep(0.5)
-        if not pid_exists(process.pid):
-            raise Exception('Unable to spawn manager process.')
-        else:
-            with open(pid_path, 'w') as f:
-                f.write(str(process.pid))
-
-    # Start worker1.
-    pid_path = os.path.abspath(os.path.join(root, 'worker1.pid'))
-    process_path = os.path.abspath(os.path.join(root, 'worker1.py'))
-    if not pidfile_exists(pid_path):
-        process = Popen([sys.executable, process_path])
-        time.sleep(0.5)
-        if not pid_exists(process.pid):
-            raise Exception('Unable to spawn worker1 process.')
-        else:
-            with open(pid_path, 'w') as f:
-                f.write(str(process.pid))
+    # Spawn manager.
+    success = pid_spawn(os.path.join(root, '..'), 'manager')
+    if not success:
+        print('Warning: Manager failed to spawn properly.')
 
     # Configure SSL.
     context = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
