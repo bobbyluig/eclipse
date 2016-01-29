@@ -4,7 +4,7 @@ var app = angular.module('application');
 // Configure Autobahn.
 var authid = 'Zeus';
 var secret = '+Ew~77XrvW-c<6sZ';
-var url = 'wss://127.0.0.1/ws/';
+var url = 'wss://192.168.12.18/ws/';
 var realm = 'lycanthrope';
 var authmethod = 'wampcra';
 
@@ -59,6 +59,17 @@ app.controller('NoteCtrl', function ($scope, $wamp, FoundationApi) {
   });
 });
 
+function flex($scope, ngAudio, $wamp) {
+  $scope.sound = ngAudio.load('/assets/audio/tiger.mp3');
+  $scope.sound.play();
+  var unregister = $scope.$watch('sound.currentTime', function (time) {
+    if (time >= 9.3) {
+      $wamp.call('dog1.flex');
+      unregister();
+    }
+  });
+}
+
 // Button controller (temporary)
 app.controller('BtnCtrl', function ($scope, $timeout, $wamp, FoundationApi, AnnyangService, SpeechService, ngAudio) {
   $scope.startWAMP = function () {
@@ -73,14 +84,7 @@ app.controller('BtnCtrl', function ($scope, $timeout, $wamp, FoundationApi, Anny
 
   $scope.startAnnyang = function () {
     AnnyangService.addCommand('DOG tiger', function () {
-      $scope.sound = ngAudio.load('/assets/audio/tiger.mp3');
-      $scope.sound.play();
-      var unregister = $scope.$watch('sound.currentTime', function (time) {
-        if (time >= 9.40) {
-          $wamp.call('dog1.flex');
-          unregister();
-        }
-      });
+      flex($scope, ngAudio, $wamp);
     });
     AnnyangService.addCommand('DOG walk (forward)', function () {
       $wamp.call('dog1.walk');
@@ -109,6 +113,23 @@ app.controller('BtnCtrl', function ($scope, $timeout, $wamp, FoundationApi, Anny
 
   $scope.startAudio = function () {
     $wamp.subscribe('dog1.info', SpeechService.speak);
+  };
+
+  // Buttons just in case.
+  $scope.dogWalk = function () {
+    $wamp.call('dog1.walk');
+  };
+  $scope.dogPushup = function () {
+    $wamp.call('dog1.pushup');
+  };
+  $scope.dogStop = function () {
+    $wamp.call('dog1.stop');
+  };
+  $scope.dogInitialize = function () {
+    $wamp.call('dog1.initialize');
+  };
+  $scope.dogFlex = function () {
+    flex($scope, ngAudio, $wamp);
   }
 });
 

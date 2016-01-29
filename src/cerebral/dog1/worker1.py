@@ -37,6 +37,19 @@ class Crawl:
         sequence['leg%s' % i] = list(q)
 
 
+class Pushup:
+    pushup = [
+        (2, 0, -10),
+        (2, 0, -14),
+    ]
+    sequence = {
+        'frame_time': 150,
+        'length': 2
+    }
+    for i in range(4):
+        sequence['leg%s' % i] = list(pushup)
+
+
 # Generate flex single.
 class Flex:
     # Punch.
@@ -134,6 +147,15 @@ while True:
             run = True
             q_out.put(Commands.SUCCESS)
             thread = Thread(target=animate, args=(Crawl.sequence,))
+            thread.start()
+        else:
+            q_out.put(Commands.FAILURE)
+
+    if cmd == Commands.DO_PUSHUPS:
+        if not run:
+            run = True
+            q_out.put(Commands.SUCCESS)
+            thread = Thread(target=animate, args=(Pushup.sequence,))
             thread.start()
         else:
             q_out.put(Commands.FAILURE)

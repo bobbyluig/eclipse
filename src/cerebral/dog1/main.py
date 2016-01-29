@@ -62,6 +62,7 @@ class Cerebral(ApplicationSession):
         await self.register(self.initialize, 'dog1.initialize')
         await self.register(self.walk, 'dog1.walk')
         await self.register(self.flex, 'dog1.flex')
+        await self.register(self.pushup, 'dog1.pushup')
         await self.register(self.stop, 'dog1.stop')
         await self.register(self.converse, 'dog1.converse')
 
@@ -115,6 +116,15 @@ class Cerebral(ApplicationSession):
 
     async def walk(self):
         await self.put_queue(self.q_out, Commands.WALK_FORWARD)
+
+        reply = await self.get_queue(self.q_in, timeout=2)
+        if reply == Commands.SUCCESS:
+            self.publish('dog1.info', 'Solid copy.')
+        else:
+            self.publish('dog1.info', 'I am currently performing another physical task.')
+
+    async def pushup(self):
+        await self.put_queue(self.q_out, Commands.DO_PUSHUPS)
 
         reply = await self.get_queue(self.q_in, timeout=2)
         if reply == Commands.SUCCESS:
