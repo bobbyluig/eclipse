@@ -59,17 +59,6 @@ app.controller('NoteCtrl', function ($scope, $wamp, FoundationApi) {
   });
 });
 
-function flex($scope, ngAudio, $wamp) {
-  $scope.sound = ngAudio.load('/assets/audio/tiger.mp3');
-  $scope.sound.play();
-  var unregister = $scope.$watch('sound.currentTime', function (time) {
-    if (time >= 9.3) {
-      $wamp.call('dog1.flex');
-      unregister();
-    }
-  });
-}
-
 // Button controller (temporary)
 app.controller('BtnCtrl', function ($scope, $timeout, $wamp, FoundationApi, AnnyangService, SpeechService, ngAudio) {
   $scope.startWAMP = function () {
@@ -77,6 +66,10 @@ app.controller('BtnCtrl', function ($scope, $timeout, $wamp, FoundationApi, Anny
   };
 
   $scope.stopMusic = function () {
+    $wamp.call('zeus.stop');
+  };
+
+  $scope.stopMusicMethod = function () {
     $scope.sound.stop();
   };
 
@@ -111,8 +104,27 @@ app.controller('BtnCtrl', function ($scope, $timeout, $wamp, FoundationApi, Anny
     }
   };
 
+  $scope.flex = function () {
+    $scope.sound = ngAudio.load('/assets/audio/tiger.mp3');
+    $scope.sound.play();
+    var unregister = $scope.$watch('sound.currentTime', function (time) {
+      if (time >= 9.3) {
+        $wamp.call('dog1.flex');
+        unregister();
+      }
+    });
+  };
+
   $scope.startAudio = function () {
     $wamp.subscribe('dog1.info', SpeechService.speak);
+    $wamp.register('zeus.flex', $scope.flex);
+    $wamp.register('zeus.stop', $scope.stopMusicMethod);
+    FoundationApi.publish('main-notifications', {
+      title: 'Audio',
+      content: 'Audio registered!',
+      color: 'success',
+      autoclose: '3000'
+    });
   };
 
   // Buttons just in case.
@@ -129,7 +141,7 @@ app.controller('BtnCtrl', function ($scope, $timeout, $wamp, FoundationApi, Anny
     $wamp.call('dog1.initialize');
   };
   $scope.dogFlex = function () {
-    flex($scope, ngAudio, $wamp);
+    $wamp.call('zeus.flex');
   }
 });
 

@@ -13,13 +13,13 @@ from itertools import chain
 maestro = Maestro()
 
 # Leg 1 servos.
-servo1 = Servo(0, -180, 90, 500, 2500, 150, bias=0, direction=1)
+servo1 = Servo(0, -180, 90, 500, 2500, 150, bias=-10, direction=1)
 servo2 = Servo(1, -45, 225, 500, 2500, 150, bias=0, direction=1)
-servo3 = Servo(2, -135, 135, 500, 2500, 150, bias=0, direction=-1)
+servo3 = Servo(2, -135, 135, 500, 2500, 150, bias=-90, direction=-1)
 leg1 = [servo1, servo2, servo3]
 
 # Leg 2 servos.
-servo4 = Servo(3, -90, 180, 500, 2500, 150, bias=0, direction=-1)
+servo4 = Servo(3, -90, 180, 500, 2500, 150, bias=10, direction=-1)
 servo5 = Servo(4, -225, 45, 500, 2500, 150, bias=0, direction=1)
 servo6 = Servo(5, -135, 135, 500, 2500, 150, bias=0, direction=1)
 leg2 = [servo4, servo5, servo6]
@@ -31,9 +31,9 @@ servo9 = Servo(8, -135, 135, 500, 2500, 150, bias=0, direction=-1)
 leg3 = [servo7, servo8, servo9]
 
 # Leg 4 servos.
-servo10 = Servo(9, -180, 90, 500, 2500, 150, bias=0, direction=-1)
+servo10 = Servo(9, -180, 90, 500, 2500, 150, bias=10, direction=-1)
 servo11 = Servo(10, -225, 45, 500, 2500, 150, bias=0, direction=1)
-servo12 = Servo(11, -135, 135, 500, 2500, 150, bias=0, direction=1)
+servo12 = Servo(11, -135, 135, 500, 2500, 150, bias=-10, direction=1)
 leg4 = [servo10, servo11, servo12]
 
 # Testing.
@@ -254,4 +254,4 @@ from queue import Queue
 q = Queue()
 a = Agility(q)
 a.home()
-a.walk()
+# a.walk()
