@@ -207,7 +207,7 @@ class Agility:
         # Begin animation.
         for i in range(sequence['length']):
             for leg in self.robot:
-                self.target_euclidean(leg, sequence['leg%s' % leg.index][i], a3=True)
+                self.target_euclidean(leg, sequence['leg%s' % leg.index][i])
 
             self.maestro.get_multiple_positions(self.robot.servos)
             self.maestro.end_together(self.robot.servos, time=sequence['frame_time'])
