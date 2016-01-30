@@ -15,7 +15,7 @@ maestro = Maestro()
 # Leg 1 servos.
 servo1 = Servo(0, -180, 90, 500, 2500, 150, bias=-10, direction=1)
 servo2 = Servo(1, -45, 225, 500, 2500, 150, bias=0, direction=1)
-servo3 = Servo(2, -135, 135, 500, 2500, 150, bias=-90, direction=-1)
+servo3 = Servo(2, -135, 135, 500, 2500, 150, bias=0, direction=-1)
 leg1 = [servo1, servo2, servo3]
 
 # Leg 2 servos.
