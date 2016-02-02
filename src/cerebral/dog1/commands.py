@@ -7,6 +7,7 @@ class Commands:
     FLEX = 3
     FLEX_PREPARE = 4
     STOP = 5
+    HOME = 6
 
     READY = 10
 

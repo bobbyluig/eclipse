@@ -60,6 +60,7 @@ class Cerebral(ApplicationSession):
         print('Joined "%s" realm.' % self.config.realm)
 
         await self.register(self.initialize, 'dog1.initialize')
+        await self.register(self.home, 'dog1.home')
         await self.register(self.walk, 'dog1.walk')
         await self.register(self.flex, 'dog1.flex')
         await self.register(self.pushup, 'dog1.pushup')
@@ -113,6 +114,16 @@ class Cerebral(ApplicationSession):
             self.publish('dog1.info', 'Worker started and reports that it is ready.')
         else:
             self.publish('dog1.info', 'Worker failed to report. Please consider re-initializing.')
+
+    async def home(self):
+        await self.put_queue(self.q_out, Commands.HOME)
+
+        reply = await self.get_queue(self.q_in, timeout=2)
+        if reply == Commands.SUCCESS:
+            self.publish('dog1.info', 'Solid copy.')
+        else:
+            self.publish('dog1.info', 'I am currently performing another physical task.')
+
 
     async def walk(self):
         await self.put_queue(self.q_out, Commands.WALK_FORWARD)

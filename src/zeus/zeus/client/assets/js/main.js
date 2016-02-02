@@ -142,6 +142,9 @@ app.controller('BtnCtrl', function ($scope, $timeout, $wamp, FoundationApi, Anny
   };
   $scope.dogFlex = function () {
     $wamp.call('zeus.flex');
+  };
+  $scope.dogHome = function () {
+    $wamp.call('dog1.home');
   }
 });
 

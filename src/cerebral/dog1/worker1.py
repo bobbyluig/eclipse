@@ -39,11 +39,11 @@ class Crawl:
 
 class Pushup:
     pushup = [
-        (2, 0, -10),
-        (2, 0, -14),
+        (0, 0, -9),
+        (0, 0, -14),
     ]
     sequence = {
-        'frame_time': 150,
+        'frame_time': 400,
         'length': 2
     }
     for i in range(4):
@@ -131,6 +131,12 @@ def animate_flex(sequence):
         except IndexError:
             run = False
 
+def go_home():
+    global run
+
+    agility.zero()
+    run = False
+
 # Global thread.
 thread = Thread()
 
@@ -151,7 +157,14 @@ while True:
         else:
             q_out.put(Commands.FAILURE)
 
-    if cmd == Commands.DO_PUSHUPS:
+    elif cmd == Commands.HOME:
+        if not run:
+            thread = Thread(target=go_home)
+            thread.start()
+        else:
+            q_out.put(Commands.FAILURE)
+
+    elif cmd == Commands.DO_PUSHUPS:
         if not run:
             run = True
             q_out.put(Commands.SUCCESS)
