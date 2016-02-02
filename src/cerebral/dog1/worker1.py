@@ -18,7 +18,7 @@ agility.zero()
 # Generate crawl gait.
 class Crawl:
     crawl = [
-        (6, 0, -7),         # Top of descent
+        (6, 0, -9),         # Top of descent
         (3, 0, -12),        # Drag 1
         (2, 0, -12.1),      # Drag 2
         (1, 0, -12.2),      # Drag 3
