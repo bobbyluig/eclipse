@@ -498,6 +498,9 @@ def correlation_template_test(camera, start=None, bb=None, sequence=False):
 
         count += 1
 
+        # Make it larger for POC.
+        frame = cv2.resize(frame, (0, 0), fx=2, fy=2)
+
         cv2.imshow('frame', frame)
         k = cv2.waitKey(1)
         k = chr(k & 255)
@@ -694,6 +697,6 @@ def makeBB(array):
 
 
 # correlation_template_test('C:\\Users\\bobbyluig\\Desktop\\Eclipse Large\\k.mp4', 209, (529, 102, 159, 249))
-correlation_template_test(1)
+correlation_template_test(0)
 # correlation_template_test('C:/users/bobbyluig/desktop/vot2015/tunnel/%08d.jpg', bb=makeBB([328.000,339.000,350.000,339.000,350.000,308.000,328.000,308.000]), sequence=True)
 # kenneth()
