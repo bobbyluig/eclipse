@@ -253,5 +253,4 @@ from queue import Queue
 
 q = Queue()
 a = Agility(q)
-a.home()
 # a.walk()

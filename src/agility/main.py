@@ -257,7 +257,7 @@ class Agility:
         for leg in self.robot:
             for servo in leg:
                 servo.set_target(0)
-                self.maestro.set_speed(servo, 0)
+                self.maestro.set_speed(servo, 20)
                 self.maestro.set_target(servo)
 
         self.maestro.flush()

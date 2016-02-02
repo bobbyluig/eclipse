@@ -3,11 +3,17 @@ name: home
 url: /
 ---
 
-<div class="grid-container" ng-controller="BtnCtrl">
+<div class="grid-container" ng-controller="MainCtrl">
   <h1 class="text-center">Eclipse Technologies</h1>
   <p class="lead text-center"><strong>R</strong>EVOLUTIONIZE. <strong>E</strong>MPOWER. <strong>D</strong>ESIGN.</p>
-  <div class="grid-block small-up-2">
-    <div class="grid-content">
+
+  <hr>
+
+  <h3 class="subheader text-center">Button Commands</h3>
+  <br>
+
+  <div class="grid-block small-up-1 medium-up-2">
+        <div class="grid-content">
       <a class="button expand dark" href="" ng-click="startWAMP()">Initialize Communication</a>
     </div>
     <div class="grid-content">
@@ -36,6 +42,47 @@ url: /
     </div>
     <div class="grid-content">
       <a class="button expand dark" href="" ng-click="dogHome()">DOG: Home</a>
+    </div>
+  </div>
+
+  <hr>
+
+  <h3 class="subheader text-center">Direct Speech Control</h3>
+  <br>
+
+  <div class="grid-block small-up-1">
+    <div class="grid-content">
+      <form ng-submit="callConverse()">
+            <label for="topicSelect">Select Conversation Topic: </label>
+            <select name="topicelect" id="topicSelect" ng-options="topic for topic in convTopics"
+                    ng-model="selectedTopic"></select>
+            <input type="submit" class="button expand success" value="DOG: Converse">
+      </form>
+    </div>
+  </div>
+
+  <div class="grid-block small-up-1">
+    <div class="grid-content">
+      <form ng-submit="saySomething()">
+        <label for="sayIt">Say The Following: </label>
+        <input type="text" id="sayIt" name="sayIt" ng-model="sayItText" required>
+        <input type="submit" class="button expand success" value="Say It!">
+      </form>
+    </div>
+  </div>
+
+  <hr>
+
+  <h3 class="subheader text-center">Speech Synthesis Configuration</h3>
+  <br>
+
+  <div class="grid-block small-up-1">
+    <div class="grid-content">
+      <form>
+        <label for="voiceSelect">Select Voice: </label>
+        <select name="voiceSelect" id="voiceSelect" ng-options="voice.name for voice in voices" ng-model="selectedVoice"
+                ng-change="setVoice()"></select>
+      </form>
     </div>
   </div>
 </div>

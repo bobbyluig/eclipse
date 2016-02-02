@@ -13,12 +13,12 @@ q_in = memory.get_queue(1)      # From main
 
 # Define agility.
 agility = Agility(Android.robot)
-
+agility.zero()
 
 # Generate crawl gait.
 class Crawl:
     crawl = [
-        (6, 0, -9),         # Top of descent
+        (6, 0, -7),         # Top of descent
         (3, 0, -12),        # Drag 1
         (2, 0, -12.1),      # Drag 2
         (1, 0, -12.2),      # Drag 3
@@ -131,6 +131,7 @@ def animate_flex(sequence):
         except IndexError:
             run = False
 
+
 def go_home():
     global run
 
@@ -159,6 +160,7 @@ while True:
 
     elif cmd == Commands.HOME:
         if not run:
+            q_out.put(Commands.SUCCESS)
             thread = Thread(target=go_home)
             thread.start()
         else:

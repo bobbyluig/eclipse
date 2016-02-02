@@ -124,7 +124,6 @@ class Cerebral(ApplicationSession):
         else:
             self.publish('dog1.info', 'I am currently performing another physical task.')
 
-
     async def walk(self):
         await self.put_queue(self.q_out, Commands.WALK_FORWARD)
 

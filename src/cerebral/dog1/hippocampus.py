@@ -71,7 +71,9 @@ class Conversation:
         'hello': "Hello World!",
         'identify': "Hello. I am DOG-1E5, Eclipse Technology's first generation quadruped. "
                     "I am designed for Project Lycanthrope by E D D Red Team 2016. "
-                    "Rawr."
+                    "Rawr.",
+        'introduce': "Hello. I am DOG-1E5 from Eclipse Technologies. Welcome to our Proof of Concept.",
+        'how are you': "I am very nervous. I hope I am doing everything correctly."
     }
 
 

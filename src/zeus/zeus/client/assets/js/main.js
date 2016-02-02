@@ -59,8 +59,37 @@ app.controller('NoteCtrl', function ($scope, $wamp, FoundationApi) {
   });
 });
 
-// Button controller (temporary)
-app.controller('BtnCtrl', function ($scope, $timeout, $wamp, FoundationApi, AnnyangService, SpeechService, ngAudio) {
+// Main controller (temporary)
+app.controller('MainCtrl', function ($scope, $timeout, $wamp, FoundationApi, AnnyangService, SpeechService, ngAudio) {
+  $scope.convTopics = [
+    'Hello',
+    'Identify',
+    'How are you',
+    'Introduce'
+  ];
+
+  $scope.callConverse = function () {
+    $wamp.call('dog1.converse', [$scope.selectedTopic]);
+  };
+
+  $scope.saySomething = function () {
+    // Just in case for POC everything screws up. At least it can talk.
+    if ($scope.audioIsRegistered) {
+      SpeechService.speak($scope.sayItText);
+    }
+    else {
+      $wamp.publish('dog1.info', [$scope.sayItText]);
+    }
+  };
+
+  window.speechSynthesis.onvoiceschanged = function(e) {
+    $scope.voices = SpeechService.getVoices();
+  };
+
+  $scope.setVoice = function () {
+    SpeechService.setVoice($scope.selectedVoice.name);
+  };
+
   $scope.startWAMP = function () {
     $wamp.open();
   };
@@ -79,6 +108,9 @@ app.controller('BtnCtrl', function ($scope, $timeout, $wamp, FoundationApi, Anny
     AnnyangService.addCommand('DOG tiger', function () {
       flex($scope, ngAudio, $wamp);
     });
+    AnnyangService.addCommand('DOG go home', function () {
+      $wamp.call('dog1.home');
+    });
     AnnyangService.addCommand('DOG walk (forward)', function () {
       $wamp.call('dog1.walk');
     });
@@ -92,7 +124,7 @@ app.controller('BtnCtrl', function ($scope, $timeout, $wamp, FoundationApi, Anny
       $wamp.call('dog1.initialize');
     });
     AnnyangService.addCommand('DOG *phrase', function (phrase) {
-      $wamp.call('dog1.converse', [phrase])
+      $wamp.call('dog1.converse', [phrase]);
     });
 
     if (AnnyangService.isListening()) {
@@ -115,16 +147,29 @@ app.controller('BtnCtrl', function ($scope, $timeout, $wamp, FoundationApi, Anny
     });
   };
 
+  $scope.audioIsRegistered = false;
+
   $scope.startAudio = function () {
-    $wamp.subscribe('dog1.info', SpeechService.speak);
-    $wamp.register('zeus.flex', $scope.flex);
-    $wamp.register('zeus.stop', $scope.stopMusicMethod);
-    FoundationApi.publish('main-notifications', {
-      title: 'Audio',
-      content: 'Audio registered!',
-      color: 'success',
-      autoclose: '3000'
-    });
+    if (!$scope.audioIsRegistered) {
+      $scope.audioIsRegistered = true;
+      $wamp.subscribe('dog1.info', SpeechService.speak);
+      $wamp.register('zeus.flex', $scope.flex);
+      $wamp.register('zeus.stop', $scope.stopMusicMethod);
+      FoundationApi.publish('main-notifications', {
+        title: 'Audio',
+        content: 'Audio registered!',
+        color: 'success',
+        autoclose: '3000'
+      });
+    }
+    else {
+      FoundationApi.publish('main-notifications', {
+        title: 'Audio',
+        content: 'Audio already registered!',
+        color: 'warning',
+        autoclose: '3000'
+      });
+    }
   };
 
   // Buttons just in case.
@@ -196,13 +241,29 @@ app.factory('AnnyangService', function ($rootScope) {
 app.factory('SpeechService', function ($rootScope) {
   var service = [];
 
+  var msg = new SpeechSynthesisUtterance();
+
+  service.getVoices = function () {
+    return window.speechSynthesis.getVoices();
+  };
+
+  service.setVoice = function (voiceName) {
+    service.voice = service.getVoices().filter(function (voice) {
+      return voice.name == voiceName;
+    })[0];
+  };
+
   service.speak = function (text) {
     if (text.constructor === Array) {
       text = text[0];
     }
 
-    var msg = new SpeechSynthesisUtterance();
-    msg.lang = 'en-US';
+    var voices = service.getVoices();
+
+    msg.voice = service.voice ? service.voice : voices[0];
+    msg.volume = 1;
+    msg.rate = 1;
+    msg.pitch = 1;
     msg.text = text;
     window.speechSynthesis.speak(msg);
   };
