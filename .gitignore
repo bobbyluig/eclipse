@@ -29,3 +29,10 @@ bld/
 
 # Custom pid
 *.pid
+
+# Other
+*.tar
+*.gz
+*.7z
+*.zip
+*.rar
