@@ -2,6 +2,7 @@ from cerebral.dog1.hippocampus import Android
 import numpy as np
 from finesse.main import Finesse
 import bisect
+import time
 
 # Robot by reference.
 robot = Android.robot
@@ -39,33 +40,51 @@ air *= t_air
 times = np.concatenate((ground, air))
 cumulative = np.cumsum(times)
 
-# Locate starting intervals using bisection.
-start = [bisect.bisect(cumulative, i * 250) for i in range(4)]
-
 # Convert points to angles for legs, assuming all are the same length.
 angles = [np.array(Finesse.inverse(robot[0].lengths, point)) for point in sequence]
 
+
+# Function to explicitly find angles using linear interpolation.
+def interpolate(angles, times, t, offset=0):
+    mod = len(angles)
+
+    # Wrap around for time with given offset. >= allows 1000 to be 0.
+    if t + offset >= tau:
+        t += offset - tau
+    else:
+        t += offset
+
+    i = bisect.bisect(times, t)
+    j = (i + 1) % mod
+    prev_t = times[i - 1] if i > 0 else 0
+    return angles[i] + (angles[j] - angles[i]) * (t - prev_t) / times[i]
+
+
 # Get starting positions.
-mod = len(sequence)
 start_pos = []
 for leg in range(4):
-    i = start[leg]
-    j = (i + 1) % mod
-    prev_t = cumulative[i - 1] if i > 0 else 0
-    pos = angles[i] + (angles[j] - angles[i]) * (tau / 4 * leg - prev_t) / times[i]
+    pos = interpolate(angles, cumulative, tau / 4 * leg)
     start_pos.append(pos)
 
-# Compute animation key frames.
-cumulative = np.roll(cumulative, 1)
-cumulative[0] = 0   # 1000 == 0
+"""
+for pos in start_pos:
+    print(Finesse.forward_dog(robot[0].lengths, np.radians(pos))[2])
+"""
 
+# Compute animation key frames.
 key_frames = np.array([
     cumulative,
     cumulative - tau / 4,
     cumulative - tau / 4 * 2,
     cumulative - tau / 4 * 3
 ])
-key_frames[key_frames < 0] += 1000
+key_frames[key_frames < 0] += tau
+key_frames[key_frames >= tau] -= tau
 
 # Only keep unique key frames.
 unique_kf = np.unique(key_frames)
+
+# Iterate through sequence and build instructions.
+for frame in list(unique_kf):
+    pass
+
