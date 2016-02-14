@@ -6,9 +6,7 @@
 # Copyright (c) Eclipse Technologies 2015-2016.
 # Use only with Debian 8 ("Jessie") ARMv7. Script must be executed as root.
 # Requires at least 4GB of free space for installation.
-# Designed for MINIBIAN/ODROID Minimal Debian.
-# MINIBIAN: https://minibianpi.wordpress.com/
-# ODROID Debian: http://forum.odroid.com/viewtopic.php?f=114&t=8084
+# Designed for ARMv7 Debian Distributions.
 ###########################################################################
 
 #############
@@ -38,6 +36,11 @@ sed -i "s/$hostn/$newhost/g" /etc/hostname
 # Update and get prerequisites.
 ###############################ss
 
+# Get newest stuff.
+# echo 'deb http://ftp.us.debian.org/debian stretch main' > custom.list
+# cp custom.list /etc/apt/sources.list.d/
+# rm custom.list
+
 # Update and upgrade.
 apt-get -y update && apt-get -y upgrade
 
@@ -62,18 +65,30 @@ git clone https://bobbyluig:$password@github.com/bobbyluig/Eclipse.git
 # Get Python 3.5.
 cd ~
 apt-get -y install build-essential libssl-dev
-wget https://www.python.org/ftp/python/3.5.0/Python-3.5.0.tgz
-tar zxvf Python-3.5.0.tgz
-cd Python-3.5.0
+wget https://www.python.org/ftp/python/3.5.1/Python-3.5.1.tgz
+tar zxvf Python-3.5.1.tgz
+cd Python-3.5.1
 ./configure --enable-shared
 make -j4 && make install
+ldconfig
 cd ~
-rm -rf Python-3.5.0
-rm -f Python-3.5.0.tgz
+rm -rf Python-3.5.1
+rm -f Python-3.5.1.tgz
+
+# Get port audio.
+cd ~
+apt-get -y install libasound-dev libav-tools
+wget http://www.portaudio.com/archives/pa_stable_v19_20140130.tgz
+tar zxvf pa_stable_v19_20140130.tgz
+cd portaudio
+./configure
+make -j4 && make install
+ldconfig
+cd ~
+rm -rf pa_stable_v19_20140130.tgz portaudio
 
 # Get Python libraries.
 pip3 install numpy pyserial autobahn[accelerate] pyusb psutil
-apt-get -y install libportaudio0 libportaudio2 libportaudiocpp0 portaudio19-dev libav-tools
 pip3 install pyaudio pydub
 
 ####################
@@ -101,16 +116,16 @@ cd opencv-3.1.0
 mkdir build
 cd build
 cmake -D CMAKE_BUILD_TYPE=RELEASE \
-	-D ENABLE_VFPV3=ON \
-	-D ENABLE_NEON=ON \ 
-	-D CMAKE_INSTALL_PREFIX=/usr/local \
-	-D PYTHON3_LIBRARY=/usr/local/lib/libpython3.5m.so \
-	-D INSTALL_C_EXAMPLES=OFF \
-	-D INSTALL_PYTHON_EXAMPLES=OFF \
-	-D OPENCV_EXTRA_MODULES_PATH=~/opencv_contrib/modules \
-	-D BUILD_PERF_TESTS=OFF \
-	-D BUILD_TESTS=OFF \
-	-D BUILD_EXAMPLES=OFF ..
+-D ENABLE_VFPV3=ON \
+-D ENABLE_NEON=ON \
+-D CMAKE_INSTALL_PREFIX=/usr/local \
+-D PYTHON3_LIBRARY=/usr/local/lib/libpython3.5m.so \
+-D INSTALL_C_EXAMPLES=OFF \
+-D INSTALL_PYTHON_EXAMPLES=OFF \
+-D OPENCV_EXTRA_MODULES_PATH=~/opencv_contrib/modules \
+-D BUILD_PERF_TESTS=OFF \
+-D BUILD_TESTS=OFF \
+-D BUILD_EXAMPLES=OFF ..
 make CXXFLAGS="-O3 -mcpu=cortex-a5 -mfloat-abi=hard -mfpu=neon-fp16 -ffast-math" -j4 && make install
 ldconfig
 
@@ -122,27 +137,12 @@ rm -rf opencv-3.1.0 opencv_contrib
 # Install oculus.
 #################
 
+apt-get -y install libboost-all-dev
 cd ~/Eclipse/src/theia/oculus
 mkdir build
 cd build
-cmake ..
+cmake -D  PYTHON3_NUMPY_INCLUDE_DIRS=/usr/local/lib/python3.5/site-packages/numpy/core/include ..
 make CXXFLAGS="-O3 -mcpu=cortex-a5 -mfloat-abi=hard -mfpu=neon-fp16 -ffast-math" && make install
-
-###############
-# LLVM + Numba.
-###############
-
-cd ~
-wget http://llvm.org/releases/3.7.1/llvm-3.7.1.src.tar.xz
-tar xf llvm-3.7.1.src.tar.xz
-cd llvm-3.7.1.src
-mkdir build
-cd build
-cmake -DCMAKE_BUILD_TYPE=Release -DLLVM_TARGETS_TO_BUILD="ARM" -DPYTHON_EXECUTABLE=/usr/local/bin/python3.5 ..
-make -j4 && make install
-ldconfig
-cd ~
-rm -rf llvm-3.7.1.src
 
 #################
 # MJPEG-Streamer.
