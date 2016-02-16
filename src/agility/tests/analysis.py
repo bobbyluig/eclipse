@@ -49,15 +49,18 @@ cumulative[0] = 0
 angles = [np.array(Finesse.inverse(robot[0].lengths, point)) for point in sequence]
 
 
+# Wrap-around function.
+def wrap(value, low, high):
+    delta = high - low
+    return value - ((value - low) // delta) * delta
+
+
 # Function to explicitly find angles using linear interpolation.
 def interpolate(angles, times, t, offset=0):
     mod = len(angles)
 
     # Wrap around for time with given offset. >= allows 1000 to be 0.
-    if t + offset >= tau:
-        t += offset - tau
-    else:
-        t += offset
+    t = wrap(t + offset, 0, tau)
 
     i = bisect.bisect(times, t)
 
@@ -69,10 +72,7 @@ def inter_ref(angles, times, t, offset=0):
     mod = len(angles)
 
     # Wrap around for time with given offset. >= allows 1000 to be 0.
-    if t + offset >= tau:
-        t += offset - tau
-    else:
-        t += offset
+    t = wrap(t + offset, 0, tau)
 
     i = bisect.bisect(times, t)
 
@@ -167,10 +167,9 @@ for i in range(len(unique_kf)):
 
     for i in range(len(active[0])):
         leg = active[0][i]
-        point = sequence[(active[1][i] + 1) % length]
+        ang = angles[(active[1][i] + 1) % length]
         t = times[active[1][i]]
 
-        move.append((leg, point, t))
+        move.append((leg, ang, t))
 
     instructions.append((ByteCode.MOVE, move))
-
