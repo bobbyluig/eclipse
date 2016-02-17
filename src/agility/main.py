@@ -175,12 +175,12 @@ class Agility:
         self.robot = robot
 
         # Set up Usc.
-        # self.usc = Usc()
-        # self.settings = self.usc.getUscSettings()
-        # self.configure()
+        self.usc = Usc()
+        self.settings = self.usc.getUscSettings()
+        self.configure()
 
         # Set up virtual COM and TTL ports.
-        # self.maestro = Maestro()
+        self.maestro = Maestro()
 
     def generate_crawl(self, tau, beta):
         """
