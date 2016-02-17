@@ -2,6 +2,9 @@ from agility.maestro import Maestro
 from agility.pololu.enumeration import uscSerialMode, ChannelMode, HomeMode
 from agility.pololu.usc import Usc
 from finesse.main import Finesse
+from enum import IntEnum
+from bisect import bisect
+import numpy as np
 import time
 import logging
 
@@ -69,6 +72,18 @@ class Servo:
         """
 
         return self.target == self.pwm
+
+    def passed_target(self, greater):
+        """
+        Checks if a servo has passed its target.
+        :param greater: True to check >=, else <=.
+        :return: True if test is true, else False.
+        """
+
+        if greater:
+            return self.target >= self.pwm
+        else:
+            return self.target <= self.pwm
 
     def deg_to_maestro(self, deg):
         """
@@ -146,23 +161,213 @@ class Robot:
         self.gait = gait
 
 
+class IR(IntEnum):
+    WAIT_ALL = 1
+    WAIT_GE = 2
+    WAIT_LE = 3
+    WAIT_FIN = 4
+    MOVE = 5
+
+
 class Agility:
     def __init__(self, robot):
         # Set up robot.
         self.robot = robot
 
         # Set up Usc.
-        self.usc = Usc()
-        self.settings = self.usc.getUscSettings()
-        self.configure()
+        # self.usc = Usc()
+        # self.settings = self.usc.getUscSettings()
+        # self.configure()
 
         # Set up virtual COM and TTL ports.
-        self.maestro = Maestro()
+        # self.maestro = Maestro()
+
+    def generate_crawl(self, tau, beta):
+        """
+        Generate a crawl gait from a base sequence.
+        Output has to be parsed by IR generator before execution.
+        :param tau: The time to run through the entire sequence.
+        :param beta: The percent of time each leg is on the ground. Usually >= 0.75.
+        :return: A tuple of (angles, key_frames). The number of cols match the rows of the sequence.
+        """
+
+        # Points in the gait.
+        sequence = np.array([
+            (4, 0, -12),
+            (0, 0, -12),
+            (-4, 0, -12),
+            (-4, 0, -9),
+            (2, 0, -9)
+        ])
+
+        # Compute length.
+        length = len(sequence)
+
+        # Compute distances.
+        shifted = np.roll(sequence, -1, axis=0)
+        distances = np.linalg.norm(sequence - shifted, axis=1)
+
+        # Normalize time for each segment.
+        ground = distances[:2]
+        ground = ground / np.sum(ground)
+        air = distances[2:]
+        air = air / np.sum(air)
+
+        # Scale using constants.
+        t_ground = tau * beta
+        t_air = tau - t_ground
+        ground *= t_ground
+        air *= t_air
+
+        # Compute combined and cumulative.
+        times = np.concatenate((ground, air))
+        cumulative = np.cumsum(times)
+        cumulative = np.roll(cumulative, 1)
+        cumulative[0] = 0
+
+        # Compute angles semi-efficiently. Needs improvement using numpy vectorization.
+        if all(leg.lengths == self.robot[0].lengths for leg in self.robot):
+            angle = [np.array(Finesse.inverse(self.robot[0].lengths, point)) for point in sequence]
+            angles = np.array([angle, angle, angle, angle])
+        else:
+            angles = np.array([
+                [np.array(Finesse.inverse(self.robot[0].lengths, point)) for point in sequence],
+                [np.array(Finesse.inverse(self.robot[1].lengths, point)) for point in sequence],
+                [np.array(Finesse.inverse(self.robot[2].lengths, point)) for point in sequence],
+                [np.array(Finesse.inverse(self.robot[3].lengths, point)) for point in sequence]
+            ])
+
+        # Get starting positions.
+        start_pos = []
+        for leg in range(4):
+            t = tau / 4 * leg
+            i = bisect(cumulative, t)
+            pos = angles[i - 1] + (angles[i % length] - angles[i - 1]) * (t - cumulative[i - 1]) / cumulative[i]
+            start_pos.append(pos)
+
+        # Compute animation key frames.
+        key_frames = np.array([
+            cumulative,
+            cumulative - tau / 4,
+            cumulative - tau / 4 * 2,
+            cumulative - tau / 4 * 3
+        ])
+
+        key_frames[key_frames < 0] += tau
+        key_frames[key_frames >= tau] -= tau
+
+        return angles, key_frames
+
+    def generate_ir(self, tau, angles, key_frames, ref=0):
+        """
+        Generate an intermediate representation for a continuous and non-synchronized gait sequence.
+        It automatically handles non-synchronized gaits very efficiently.
+        This function does not actually execute the gait.
+        It legs do not have the same number of points, angles and key_frames must be padded with nans at the end.
+        :param tau: The time to run through the entire sequence.
+        :param angles: A numpy array or target angles for each leg. NxM shape must match that of key_frames'.
+        :param key_frames: A numpy array of times for each set of angles. NxM shape must match that of angles'.
+        :param ref: Reference leg. This is usually leg 0 for whichever gait.
+        :return An instruction array with IR instructions for execution or further compilation.
+        """
+
+        # Check dimensions.
+        assert(angles.shape[:2] == key_frames.shape[:2])
+
+        # Get length of initial sequence.
+        length = angles.shape[1]
+
+        # Get unique key frames to iterate over. Discard nans (padding).
+        unique_kf = np.unique(key_frames)
+        unique_kf = unique_kf[~np.isnan(unique_kf)]
+
+        # Pre-compute reference leg order. Discard nans (padding).
+        ref_kf = key_frames[ref]
+        ref_kf = ref_kf[~np.isnan(ref_kf)]
+
+        # Get an array that would sort the key_frame for the reference leg.
+        sort = np.argsort(ref_kf)
+
+        # Sort the reference leg key frames.
+        sorted_kf = np.take(ref_kf, sort)
+
+        # Get sorted angles.
+        ref_ang = np.take(angles[ref], sort, axis=0)
+
+        # Instruction array.
+        instructions = []
+
+        # Iterate through sequence and build instructions.
+        for k in range(len(unique_kf)):
+            # Easier definition.
+            frame = unique_kf[k]
+
+            # Identify which legs are active.
+            active = np.where(key_frames == frame)
+
+            # Determine when the frame should begin.
+            if len(active[0]) == 4:
+                # All legs begin together.
+                instructions.append((IR.WAIT_ALL,))
+            else:
+                # Check if leg is in the middle of a sequence or at the end.
+                if ref in active[0]:
+                    # Leg is at end. Wait until leg reaches previous target.
+                    instructions.append((IR.WAIT_FIN, ref))
+                else:
+                    # Interpolate by doing a bisection or a sorted key_frame.
+                    i = bisect(sorted_kf, frame)
+
+                    # Compute a delta.
+                    delta = ref_ang[i % length] - ref_ang[i - 1]
+
+                    # Find max angle change.
+                    best = np.argmax(np.abs(delta))
+
+                    # Interpolate angle for the best one of three.
+                    angle = ref_ang[i - 1][best] + delta[best] * (frame - sorted_kf[i - 1]) / sorted_kf[i % length]
+
+                    # Wait until angle is greater? (or less if false)
+                    greater = delta[best] > 0
+
+                    # Convert servo relative to leg to channel.
+                    channel = self.robot[ref][best].channel
+
+                    # Create instruction.
+                    ctrl = IR.WAIT_GE if greater else IR.WAIT_LE
+                    ins = (ctrl, channel, angle)
+
+                    # Append instruction.
+                    instructions.append(ins)
+
+            # Create instructions to move servos.
+            for l in range(len(active[0])):
+                leg = active[0][l]
+
+                # Get column.
+                col = active[1][l]
+
+                # Make indexing easier.
+                x = (col + 1) % length
+
+                # Get the target set of angles (the next one).
+                ang = angles[leg][x]
+
+                # Get time. Either at end of sequence of not.
+                if key_frames[leg][x] < key_frames[leg][col]:
+                    t = tau - key_frames[leg][col]
+                else:
+                    t = key_frames[leg][x] - key_frames[leg][col]
+
+                # Append instruction.
+                instructions.append((IR.MOVE, leg, ang, t))
+
+        return instructions
 
     def animate_single(self, frame):
         """
         Animate a single frame of one leg.
-        :param sequence: The sequence single.
+        :param frame: The sequence single.
 
         frame = (index, frame_time, [])
         """

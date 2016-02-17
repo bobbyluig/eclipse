@@ -331,7 +331,7 @@ class Maestro:
     # Begin implementation of complex helper functions.
     ###################################################
 
-    def end_together(self, servos, time=1000, update=False):
+    def end_together(self, servos, time=0, update=False):
         """
         Move all servos to their respective targets such that they arrive together.
         This will reset all accelerations to 0 and flush buffer.

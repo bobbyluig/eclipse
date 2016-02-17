@@ -2,10 +2,13 @@ from cerebral.dog1.hippocampus import Android
 import numpy as np
 from finesse.main import Finesse
 import bisect
+from agility.main import Agility
 from enum import IntEnum
 
 # Robot by reference.
 robot = Android.robot
+
+agility = Agility(robot)
 
 # Points in the gait.
 sequence = np.array([
@@ -26,6 +29,10 @@ distances = np.linalg.norm(sequence - shifted, axis=1)
 # Constants.
 beta = 0.75     # Percent of time each leg is on the ground.
 tau = 1000      # Time (in ms) for an entire frame of all 4 legs.
+
+x, y = agility.generate_crawl(tau, beta)
+instructions2 = agility.generate_ir(tau, x, y)
+print(instructions2)
 
 # Normalize time for each segment.
 ground = distances[:2]
@@ -64,8 +71,7 @@ def interpolate(angles, times, t, offset=0):
 
     i = bisect.bisect(times, t)
 
-    return angles[i - 1] + (angles[i % mod] - angles[i - 1]) * (t - times[i - 1]) / times[i]
-
+    return angles[i - 1] + (angles[i % mod] - angles[i - 1]) * (t - times[i - 1]) / times[i % mod]
 
 # Function to explicitly find interpolate a reference leg, returning best servo to check.
 def inter_ref(angles, times, t, offset=0):
@@ -83,7 +89,7 @@ def inter_ref(angles, times, t, offset=0):
     best = np.argmax(np.abs(delta))
 
     # Interpolate angle for the best one of three.
-    angle = angles[i - 1][best] + delta[best] * (t - times[i - 1]) / times[i]
+    angle = angles[i - 1][best] + delta[best] * (t - times[i - 1]) / times[i % mod]
 
     # Wait until angle is greater? (or less if false)
     greater = delta[best] > 0
@@ -119,12 +125,12 @@ unique_kf = np.unique(key_frames)
 
 
 # Instruction enum.
-class ByteCode(IntEnum):
+class IR(IntEnum):
     WAIT_ALL = 1
-    WAIT_GR = 2
+    WAIT_GE = 2
     WAIT_LE = 3
-    MOVE = 4
-
+    WAIT_FIN = 4
+    MOVE = 5
 
 # Instruction array.
 instructions = []
@@ -140,36 +146,37 @@ for i in range(len(unique_kf)):
     # Determine when the frame should begin.
     if len(active[0]) == 4:
         # All legs begin together.
-        instructions.append((ByteCode.WAIT_ALL,))
+        instructions.append((IR.WAIT_ALL,))
     else:
-        inactive = np.delete(np.arange(4), active[0])
-
         # Assume all legs are moving, choose lowest index to check.
         # This is not optimal, but should suffice.
-        reference = inactive[0]
+        reference = 0
 
-        # Interpolate that leg's position.
-        out = inter_ref(angles, cumulative, frame, offset=tau / 4 * reference)
+        # Check if leg is in the middle of a sequence or at the end.
+        if reference in active[0]:
+            # Leg is at end. Wait until leg reaches previous target.
+            instructions.append((IR.WAIT_FIN, reference))
+        else:
+            # Interpolate that leg's position.
+            out = inter_ref(angles, cumulative, frame, offset=tau / 4 * reference)
 
-        # Convert servo relative to leg to channel.
-        best = out[0]
-        channel = robot[reference][best].channel
+            # Convert servo relative to leg to channel.
+            best = out[0]
+            channel = robot[reference][best].channel
 
-        # Create instruction.
-        ctrl = ByteCode.WAIT_GR if out[2] else ByteCode.WAIT_LE
-        ins = (ctrl, channel, out[1])
+            # Create instruction.
+            ctrl = IR.WAIT_GE if out[2] else IR.WAIT_LE
+            ins = (ctrl, channel, out[1])
 
-        # Append instruction.
-        instructions.append(ins)
+            # Append instruction.
+            instructions.append(ins)
 
     # Create instructions to move servos.
-    move = []
-
     for i in range(len(active[0])):
         leg = active[0][i]
         ang = angles[(active[1][i] + 1) % length]
         t = times[active[1][i]]
 
-        move.append((leg, ang, t))
+        instructions.append((IR.MOVE, leg, ang, t))
 
-    instructions.append((ByteCode.MOVE, move))
+print(instructions)
