@@ -83,17 +83,14 @@ def dig(servos):
 
 
 BASIC_WALK = [(0, 0, -8), (5, 0, -10), (3, 0, -12), (0, 0, -12.1), (-3, 0, -12)]
-MOTION_RANGE = [(0, 0, -15), (0, -15, 0), (15, 0, 0)]
+MOTION_RANGE = [(0, 0, -15), (15, 0, 0)]
 UPPER_CUT = [(-2, 0, -5), (13, 0, -2)]
 FORWARD_PUNCH = [(-3, 0, -10), (15, 0, 0)]
 DIG = [(10, 0, -10), (-3, 0, -10), (-3, 0, -10), (10, 0, -10)]
 
-goHome()
 
-time.sleep(3)
-
-# moveToPoints(servos, DIG)
+moveToPoints(servos, MOTION_RANGE)
 
 # moveToEuclidean((12, 3, 0), a3=True)
 
-dig(servos)
+# dig(servos)

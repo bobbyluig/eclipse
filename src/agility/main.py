@@ -51,6 +51,16 @@ class Servo:
         :param deg: The input degrees.
         """
 
+        deg = self.normalize(deg)
+        self.target = self.deg_to_maestro(deg)
+
+    def normalize(self, deg):
+        """
+        Normalize a degree for the servo, taking into account direction and bias.
+        :param deg: Input degrees.
+        :return: Output degrees.
+        """
+
         # Account for direction and bias.
         deg = deg * self.direction + self.bias
 
@@ -63,7 +73,7 @@ class Servo:
         if deg > self.max_deg or deg < self.min_deg:
             raise Exception('Target out of range!')
 
-        self.target = self.deg_to_maestro(deg)
+        return deg
 
     def at_target(self):
         """
@@ -73,17 +83,19 @@ class Servo:
 
         return self.target == self.pwm
 
-    def passed_target(self, greater):
+    def passed_target(self, deg, greater):
         """
         Checks if a servo has passed its target.
         :param greater: True to check >=, else <=.
         :return: True if test is true, else False.
         """
 
+        deg = self.normalize(deg)
+
         if greater:
-            return self.target >= self.pwm
+            return self.deg_to_maestro(deg) <= self.pwm
         else:
-            return self.target <= self.pwm
+            return self.deg_to_maestro(deg) >= self.pwm
 
     def deg_to_maestro(self, deg):
         """
@@ -176,8 +188,6 @@ class Agility:
 
         # Set up Usc.
         self.usc = Usc()
-        self.settings = self.usc.getUscSettings()
-        self.configure()
 
         # Set up virtual COM and TTL ports.
         self.maestro = Maestro()
@@ -258,7 +268,27 @@ class Agility:
 
         return angles, key_frames
 
-    def generate_ir(self, tau, angles, key_frames, ref=0):
+    @staticmethod
+    def dual_sort(a, b):
+        """
+        Sort a and b but first sorting a and then using that order to sort b.
+        Sorting is done in place.
+        :param a: A numpy array.
+        :param b: A numpy array whose first two dimensions must match a.
+        :return (a, b)
+        """
+
+        # Perform sorting.
+        args = np.argsort(a)
+
+        # Pre-generate "axis" for sorting 2D arrays.
+        axis = np.arange(a.shape[0])[:, np.newaxis]
+
+        # Sorting 2D array using another 2D array.
+        return a[axis, args], b[axis, args]
+
+    @staticmethod
+    def generate_ir(tau, angles, key_frames, ref=0):
         """
         Generate an intermediate representation for a continuous and non-synchronized gait sequence.
         It automatically handles non-synchronized gaits very efficiently.
@@ -271,8 +301,12 @@ class Agility:
         :return An instruction array with IR instructions for execution or further compilation.
         """
 
-        # Check dimensions.
+        # Debugging checks.
         assert(angles.shape[:2] == key_frames.shape[:2])
+        assert(0 <= ref < 4)
+
+        # Sort.
+        key_frames, angles = Agility.dual_sort(key_frames, angles)
 
         # Get length of initial sequence.
         length = angles.shape[1]
@@ -280,19 +314,6 @@ class Agility:
         # Get unique key frames to iterate over. Discard nans (padding).
         unique_kf = np.unique(key_frames)
         unique_kf = unique_kf[~np.isnan(unique_kf)]
-
-        # Pre-compute reference leg order. Discard nans (padding).
-        ref_kf = key_frames[ref]
-        ref_kf = ref_kf[~np.isnan(ref_kf)]
-
-        # Get an array that would sort the key_frame for the reference leg.
-        sort = np.argsort(ref_kf)
-
-        # Sort the reference leg key frames.
-        sorted_kf = np.take(ref_kf, sort)
-
-        # Get sorted angles.
-        ref_ang = np.take(angles[ref], sort, axis=0)
 
         # Instruction array.
         instructions = []
@@ -316,26 +337,24 @@ class Agility:
                     instructions.append((IR.WAIT_FIN, ref))
                 else:
                     # Interpolate by doing a bisection or a sorted key_frame.
-                    i = bisect(sorted_kf, frame)
+                    i = bisect(key_frames[ref], frame)
 
                     # Compute a delta.
-                    delta = ref_ang[i % length] - ref_ang[i - 1]
+                    delta = angles[ref][i % length] - angles[ref][i - 1]
 
                     # Find max angle change.
                     best = np.argmax(np.abs(delta))
 
                     # Interpolate angle for the best one of three.
-                    angle = ref_ang[i - 1][best] + delta[best] * (frame - sorted_kf[i - 1]) / sorted_kf[i % length]
+                    angle = (angles[ref][i - 1][best] + delta[best] * (frame - key_frames[ref][i - 1])
+                             / key_frames[ref][i % length])
 
                     # Wait until angle is greater? (or less if false)
                     greater = delta[best] > 0
 
-                    # Convert servo relative to leg to channel.
-                    channel = self.robot[ref][best].channel
-
                     # Create instruction.
                     ctrl = IR.WAIT_GE if greater else IR.WAIT_LE
-                    ins = (ctrl, channel, angle)
+                    ins = (ctrl, ref, best, angle)
 
                     # Append instruction.
                     instructions.append(ins)
@@ -354,7 +373,7 @@ class Agility:
                 ang = angles[leg][x]
 
                 # Get time. Either at end of sequence of not.
-                if key_frames[leg][x] < key_frames[leg][col]:
+                if x == 0:
                     t = tau - key_frames[leg][col]
                 else:
                     t = key_frames[leg][x] - key_frames[leg][col]
@@ -362,7 +381,68 @@ class Agility:
                 # Append instruction.
                 instructions.append((IR.MOVE, leg, ang, t))
 
-        return instructions
+        # Create intro array.
+        intro = []
+
+        # Define some constants.
+        zero_time = 500
+
+        # Place all legs in start position.
+        for leg in range(4):
+            intro.append((IR.MOVE, leg, angles[leg][0], zero_time))
+
+        return intro, instructions
+
+    def execute_ir(self, ir):
+        """
+        Execute a generated IR sequence.
+        :param ir: An array of IR commands.
+        """
+
+        for frame in ir:
+            ins = frame[0]
+
+            if ins == IR.WAIT_ALL:
+                while not self.is_at_target():
+                    time.sleep(0.0005)
+
+            elif ins == IR.WAIT_FIN:
+                leg = frame[1]
+
+                while not self.is_at_target(servos=self.robot[leg]):
+                    time.sleep(0.0005)
+
+            elif ins == IR.MOVE:
+                leg = frame[1]
+                angles = frame[2]
+                t = frame[3]
+
+                self.robot[leg][0].set_target(float(angles[0]))
+                self.robot[leg][1].set_target(float(angles[1]))
+                self.robot[leg][2].set_target(float(angles[2]))
+                self.maestro.end_together(self.robot[leg], time=t, update=True)
+
+            elif ins == IR.WAIT_GE:
+                leg = frame[1]
+                servo = frame[2]
+                deg = frame[3]
+
+                self.maestro.get_position(self.robot[leg][servo])
+
+                while not self.robot[leg][servo].passed_target(deg, True):
+                    self.maestro.get_position(self.robot[leg][servo])
+                    time.sleep(0.0005)
+
+            elif ins == IR.WAIT_LE:
+                leg = frame[1]
+                servo = frame[2]
+                deg = frame[3]
+
+                self.maestro.get_position(self.robot[leg][servo])
+
+                while not self.robot[leg][servo].passed_target(deg, False):
+                    self.maestro.get_position(self.robot[leg][servo])
+                    time.sleep(0.0005)
 
     def animate_single(self, frame):
         """
@@ -383,7 +463,7 @@ class Agility:
             self.target_euclidean(self.robot[index], point)
             self.maestro.get_multiple_positions(self.robot[index])
             self.maestro.end_together(self.robot[index], time=t)
-            while self.is_at_target():
+            while not self.is_at_target():
                 # Sleep for a short time to drastically save CPU cycles.
                 time.sleep(0.0005)
 
@@ -417,12 +497,20 @@ class Agility:
             self.maestro.get_multiple_positions(self.robot.servos)
             self.maestro.end_together(self.robot.servos, time=sequence['frame_time'])
 
-            while self.is_at_target():
+            while not self.is_at_target():
                 # Sleep for a short time to drastically save CPU cycles.
                 time.sleep(0.0005)
 
     @staticmethod
     def target_euclidean(leg, position, a2=False, a3=False):
+        """
+        Set a leg to a point.
+        :param leg: The leg object.
+        :param position: The target position.
+        :param a2: True to find alternate solution for theta2.
+        :param a3: True to find alternate solution for theta3.
+        """
+
         angles = Finesse.inverse(leg.lengths, position, a2=a2, a3=a3)
 
         if angles is not None:
@@ -433,19 +521,24 @@ class Agility:
             logger.warn('Unable to reach position (%s, %s, %s).' % position)
 
     def configure(self):
-        self.settings.serialMode = uscSerialMode.SERIAL_MODE_USB_DUAL_PORT
+        """
+        Configure the Maestro by writing home positions and other configuration data to the device.
+        """
+
+        settings = self.usc.getUscSettings()
+        settings.serialMode = uscSerialMode.SERIAL_MODE_USB_DUAL_PORT
 
         for leg in self.robot:
             for servo in leg:
                 servo.set_target(0)
-                channel = self.settings.channelSettings[servo.channel]
+                channel = settings.channelSettings[servo.channel]
                 channel.mode = ChannelMode.Servo
                 channel.homeMode = HomeMode.Goto
                 channel.home = servo.target
                 channel.minimum = servo.min_pwm
                 channel.maximum = servo.max_pwm
 
-        self.usc.setUscSettings(self.settings, False)
+        self.usc.setUscSettings(settings, False)
 
     def go_home(self):
         """
@@ -475,7 +568,7 @@ class Agility:
         """
 
         if servos is None:
-            return self.maestro.get_moving_state()
+            return not self.maestro.get_moving_state()
         else:
             for servo in servos:
                 self.maestro.get_position(servo)

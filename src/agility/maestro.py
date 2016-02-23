@@ -280,7 +280,7 @@ class Maestro:
         Return all servos to their home positions.
         """
         # Send command.
-        self.usb.write(chr(0xA2))
+        self.usb.write((0xA2,))
 
     ############################################
     # Begin implementation of script operations.
