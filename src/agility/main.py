@@ -152,7 +152,7 @@ class Robot:
         return self.legs[key]
 
     def set_gait(self, gait):
-        self.legs = sorted(self.legs, key=lambda leg: int(leg.index))
+        self.legs = sorted(self.legs, key=lambda leg: leg.index)
 
         if gait == '1243-creeping':
             self.legs = [self.legs[0], self.legs[1], self.legs[3], self.legs[2]]
@@ -174,11 +174,11 @@ class Robot:
 
 
 class IR(IntEnum):
-    WAIT_ALL = 1
-    WAIT_GE = 2
-    WAIT_LE = 3
-    WAIT_FIN = 4
-    MOVE = 5
+    WAIT_ALL = 1        # (Ins)
+    WAIT_GE = 2         # (Ins, Leg, Servo, Deg)
+    WAIT_LE = 3         # (Ins, Leg, Servo, Deg)
+    WAIT_FIN = 4        # (Ins, Leg)
+    MOVE = 5            # (Ins, Leg, (theta1, theta2, theta3), Time)
 
 
 class Agility:

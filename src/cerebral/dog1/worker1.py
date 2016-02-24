@@ -1,8 +1,8 @@
 from tools.queue import SharedMemory
 from cerebral.dog1.hippocampus import Manager, Android
 from cerebral.dog1.commands import Commands
-from agility.main import Agility
-from collections import deque
+from agility.main import Agility, IR
+from finesse.main import Finesse
 from threading import Thread
 import time
 
@@ -12,131 +12,70 @@ q_out = memory.get_queue(2)     # To main
 q_in = memory.get_queue(1)      # From main
 
 # Define agility.
-agility = Agility(Android.robot)
-agility.zero()
-
-# Generate crawl gait.
-class Crawl:
-    crawl = [
-        (6, 0, -9),         # Top of descent
-        (3, 0, -12),        # Drag 1
-        (2, 0, -12.1),      # Drag 2
-        (1, 0, -12.2),      # Drag 3
-        (0, 0, -12.2),      # Drag 4
-        (-1, 0, -12.2),     # Drag 5
-        (-2, 0, -12.1),     # Drag 6
-        (-3, 0, -12),       # Drag 7
-    ]
-    sequence = {
-        'frame_time': 150,
-        'length': 8
-    }
-    for i in range(4):
-        q = deque(crawl)
-        q.rotate(-2 * i)
-        sequence['leg%s' % i] = list(q)
-
-
-class Pushup:
-    pushup = [
-        (0, 0, -9),
-        (0, 0, -14),
-    ]
-    sequence = {
-        'frame_time': 400,
-        'length': 2
-    }
-    for i in range(4):
-        sequence['leg%s' % i] = list(pushup)
-
-
-# Generate flex single.
-class Flex:
-    # Punch.
-    punch = [(0, 0, -15), (0, 0, -7)]
-
-    # Sequence single.
-    QUARTER = 552
-    EIGHTH = 276
-    SIXTEENTH = 138
-
-    sequence1 = [
-        (1, EIGHTH, punch),
-        (None, EIGHTH + QUARTER, None),
-        (1, SIXTEENTH, punch),
-        (None, EIGHTH, None),
-        (1, SIXTEENTH, punch),
-        (None, EIGHTH, None),
-        (1, EIGHTH, punch),
-        (None, QUARTER * 2, None),
-        (1, SIXTEENTH, punch),
-        (None, EIGHTH, None),
-        (1, SIXTEENTH, punch),
-        (None, EIGHTH, None),
-        (1, EIGHTH, punch),
-        (None, QUARTER * 2, None),
-        (1, SIXTEENTH, punch),
-        (None, EIGHTH, None),
-        (1, SIXTEENTH, punch),
-        (None, EIGHTH, None),
-        (1, EIGHTH + QUARTER * 4, punch),
-        (None, 80, None),
-    ]
-
-    sequence2 = [
-        (1, EIGHTH, punch),
-        (None, EIGHTH + QUARTER, None),
-        (1, SIXTEENTH, punch),
-        (None, EIGHTH, None),
-        (1, SIXTEENTH, punch),
-        (None, EIGHTH, None),
-        (1, EIGHTH, punch),
-        (None, QUARTER * 2 + EIGHTH, None),
-        (1, SIXTEENTH, punch),
-        (None, EIGHTH, None),
-        (1, SIXTEENTH, punch),
-        (None, EIGHTH, None),
-        (1, EIGHTH, punch),
-        (None, EIGHTH + QUARTER, None),
-        (1, SIXTEENTH, punch),
-        (None, EIGHTH, None),
-        (1, SIXTEENTH, punch),
-        (None, EIGHTH, None),
-        (1, EIGHTH + QUARTER * 4, punch),
-        (None, 80, None),
-    ]
-
-    sequence = sequence1 + sequence2 + sequence1 * 2
-    sequence = deque(sequence)
+robot = Android.robot
+robot.set_gait('crawl')
+agility = Agility(robot)
 
 # Threading variables.
 run = False
 
 
-# Thread functions.
-def animate(sequence):
-    global run
+class Target:
+    @staticmethod
+    def crawl():
+        global run
 
-    while run:
-        agility.animate_synchronized(sequence)
+        tau = 1500
+        beta = 0.75
+        x, y = agility.generate_crawl(tau, beta)
+        intro, main = agility.generate_ir(tau, x, y)
+        agility.execute_ir(intro)
 
+        while run:
+            agility.execute_ir(main)
 
-def animate_flex(sequence):
-    global run
-    sequence = sequence.copy()
+    @staticmethod
+    def pushup():
+        global run
 
-    while run:
-        try:
-            agility.animate_single(sequence.popleft())
-        except IndexError:
-            run = False
+        instructions = []
+        targets = [
+            (0, 0, -9),
+            (0, 0, -14)
+        ]
+        tau = 2000
 
+        for target in targets:
+            for leg in range(4):
+                angles = Finesse.inverse(robot[leg].lengths, target)
+                instructions.append((IR.MOVE, leg, angles, tau/len(targets)))
+            instructions.append((IR.WAIT_ALL,))
 
-def go_home():
-    global run
+        while run:
+            agility.execute_ir(instructions)
 
-    agility.zero()
-    run = False
+    @staticmethod
+    def transform():
+        global run
+
+        instructions = []
+        target = (-15, 0, 0)
+
+        for leg in range(4):
+            angles = Finesse.inverse(robot[leg].lengths, target)
+            instructions.append((IR.MOVE, leg, angles, 0))
+
+        instructions.append((IR.WAIT_ALL,))
+        agility.execute_ir(instructions)
+
+        run = False
+
+    @staticmethod
+    def go_home():
+        global run
+
+        agility.zero()
+        run = False
 
 # Global thread.
 thread = Thread()
@@ -153,15 +92,16 @@ while True:
         if not run:
             run = True
             q_out.put(Commands.SUCCESS)
-            thread = Thread(target=animate, args=(Crawl.sequence,))
+            thread = Thread(target=Target.crawl())
             thread.start()
         else:
             q_out.put(Commands.FAILURE)
 
     elif cmd == Commands.HOME:
         if not run:
+            run = True
             q_out.put(Commands.SUCCESS)
-            thread = Thread(target=go_home)
+            thread = Thread(target=Target.go_home())
             thread.start()
         else:
             q_out.put(Commands.FAILURE)
@@ -170,16 +110,16 @@ while True:
         if not run:
             run = True
             q_out.put(Commands.SUCCESS)
-            thread = Thread(target=animate, args=(Pushup.sequence,))
+            thread = Thread(target=Target.pushup())
             thread.start()
         else:
             q_out.put(Commands.FAILURE)
 
-    elif cmd == Commands.FLEX:
+    elif cmd == Commands.STAND_UP:
         if not run:
             run = True
             q_out.put(Commands.SUCCESS)
-            thread = Thread(target=animate_flex, args=(Flex.sequence,))
+            thread = Thread(target=Target.transform())
             thread.start()
         else:
             q_out.put(Commands.FAILURE)

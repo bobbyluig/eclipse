@@ -94,28 +94,20 @@ app.controller('MainCtrl', function ($scope, $timeout, $wamp, FoundationApi, Ann
     $wamp.open();
   };
 
-  $scope.stopMusic = function () {
-    $wamp.call('zeus.stop');
-  };
-
-  $scope.stopMusicMethod = function () {
-    $scope.sound.stop();
-  };
-
   $scope.voice = 'Enable Voice';
 
   $scope.startAnnyang = function () {
-    AnnyangService.addCommand('DOG tiger', function () {
-      flex($scope, ngAudio, $wamp);
-    });
-    AnnyangService.addCommand('DOG go home', function () {
+    AnnyangService.addCommand('DOG (go) home', function () {
       $wamp.call('dog1.home');
     });
     AnnyangService.addCommand('DOG walk (forward)', function () {
       $wamp.call('dog1.walk');
     });
-    AnnyangService.addCommand('DOG do pushups', function () {
+    AnnyangService.addCommand('DOG (do) pushups', function () {
       $wamp.call('dog1.pushup');
+    });
+    AnnyangService.addCommand('DOG stand (up)', function () {
+      $wamp.call('dog1.stand');
     });
     AnnyangService.addCommand('DOG stop', function () {
       $wamp.call('dog1.stop');
@@ -136,25 +128,12 @@ app.controller('MainCtrl', function ($scope, $timeout, $wamp, FoundationApi, Ann
     }
   };
 
-  $scope.flex = function () {
-    $scope.sound = ngAudio.load('/assets/audio/tiger.mp3');
-    $scope.sound.play();
-    var unregister = $scope.$watch('sound.currentTime', function (time) {
-      if (time >= 9.3) {
-        $wamp.call('dog1.flex');
-        unregister();
-      }
-    });
-  };
-
   $scope.audioIsRegistered = false;
 
   $scope.startAudio = function () {
     if (!$scope.audioIsRegistered) {
       $scope.audioIsRegistered = true;
       $wamp.subscribe('dog1.info', SpeechService.speak);
-      $wamp.register('zeus.flex', $scope.flex);
-      $wamp.register('zeus.stop', $scope.stopMusicMethod);
       FoundationApi.publish('main-notifications', {
         title: 'Audio',
         content: 'Audio registered!',
@@ -179,14 +158,14 @@ app.controller('MainCtrl', function ($scope, $timeout, $wamp, FoundationApi, Ann
   $scope.dogPushup = function () {
     $wamp.call('dog1.pushup');
   };
+  $scope.dogStand = function () {
+    $wamp.call('dog1.stand');
+  };
   $scope.dogStop = function () {
     $wamp.call('dog1.stop');
   };
   $scope.dogInitialize = function () {
     $wamp.call('dog1.initialize');
-  };
-  $scope.dogFlex = function () {
-    $wamp.call('zeus.flex');
   };
   $scope.dogHome = function () {
     $wamp.call('dog1.home');

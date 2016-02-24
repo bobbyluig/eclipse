@@ -4,8 +4,8 @@ from enum import IntEnum
 class Commands:
     WALK_FORWARD = 1
     DO_PUSHUPS = 2
-    FLEX = 3
-    FLEX_PREPARE = 4
+    STAND_UP = 3
+
     STOP = 5
     HOME = 6
 

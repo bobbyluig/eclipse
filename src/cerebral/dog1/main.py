@@ -62,8 +62,8 @@ class Cerebral(ApplicationSession):
         await self.register(self.initialize, 'dog1.initialize')
         await self.register(self.home, 'dog1.home')
         await self.register(self.walk, 'dog1.walk')
-        await self.register(self.flex, 'dog1.flex')
         await self.register(self.pushup, 'dog1.pushup')
+        await self.register(self.stand, 'dog1.stand')
         await self.register(self.stop, 'dog1.stop')
         await self.register(self.converse, 'dog1.converse')
 
@@ -142,8 +142,8 @@ class Cerebral(ApplicationSession):
         else:
             self.publish('dog1.info', 'I am currently performing another physical task.')
 
-    async def flex(self):
-        await self.put_queue(self.q_out, Commands.FLEX)
+    async def stand(self):
+        await self.put_queue(self.q_out, Commands.STAND_UP)
 
         reply = await self.get_queue(self.q_in, timeout=2)
         if reply == Commands.SUCCESS:
@@ -159,7 +159,6 @@ class Cerebral(ApplicationSession):
             self.publish('dog1.info', 'Solid copy.')
         else:
             self.publish('dog1.info', 'I cannot stop doing nothing.')
-
 
 if __name__ == '__main__':
     # Change directory.
