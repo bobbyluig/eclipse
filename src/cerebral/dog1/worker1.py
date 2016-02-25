@@ -43,7 +43,7 @@ class Target:
             (0, 0, -9),
             (0, 0, -14)
         ]
-        tau = 2000
+        tau = 1500
 
         for target in targets:
             for leg in range(4):
@@ -93,7 +93,7 @@ while True:
         if not run:
             run = True
             q_out.put(Commands.SUCCESS)
-            thread = Thread(target=Target.crawl())
+            thread = Thread(target=Target.crawl)
             thread.start()
         else:
             q_out.put(Commands.FAILURE)
@@ -102,7 +102,7 @@ while True:
         if not run:
             run = True
             q_out.put(Commands.SUCCESS)
-            thread = Thread(target=Target.go_home())
+            thread = Thread(target=Target.go_home)
             thread.start()
         else:
             q_out.put(Commands.FAILURE)
@@ -111,7 +111,7 @@ while True:
         if not run:
             run = True
             q_out.put(Commands.SUCCESS)
-            thread = Thread(target=Target.pushup())
+            thread = Thread(target=Target.pushup)
             thread.start()
         else:
             q_out.put(Commands.FAILURE)
@@ -120,7 +120,7 @@ while True:
         if not run:
             run = True
             q_out.put(Commands.SUCCESS)
-            thread = Thread(target=Target.transform())
+            thread = Thread(target=Target.transform)
             thread.start()
         else:
             q_out.put(Commands.FAILURE)

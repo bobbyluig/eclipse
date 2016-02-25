@@ -42,4 +42,4 @@ def transform():
     agility.execute_ir(instructions)
 
 
-crawl()
+agility.zero()
