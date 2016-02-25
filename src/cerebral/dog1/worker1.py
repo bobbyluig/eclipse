@@ -66,6 +66,7 @@ class Target:
             instructions.append((IR.MOVE, leg, angles, 0))
 
         instructions.append((IR.WAIT_ALL,))
+
         agility.execute_ir(instructions)
 
         run = False

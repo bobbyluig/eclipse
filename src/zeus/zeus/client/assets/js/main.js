@@ -4,7 +4,7 @@ var app = angular.module('application');
 // Configure Autobahn.
 var authid = 'Zeus';
 var secret = '+Ew~77XrvW-c<6sZ';
-var url = 'wss://192.168.12.18/ws/';
+var url = 'wss://192.168.193.1/ws/';
 var realm = 'lycanthrope';
 var authmethod = 'wampcra';
 

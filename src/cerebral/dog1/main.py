@@ -6,6 +6,7 @@ import ssl
 import time
 import os
 import sys
+import queue
 from psutil import pid_exists
 from subprocess import Popen
 from functools import partial
@@ -77,20 +78,26 @@ class Cerebral(ApplicationSession):
     async def get_queue(self, queue, block=True, timeout=None):
         loop = asyncio.get_event_loop()
         func = partial(queue.get, block=block, timeout=timeout)
-        result = await loop.run_in_executor(self.executor, func)
-        return result
+        try:
+            result = await loop.run_in_executor(self.executor, func)
+            return result
+        except:
+            return None
 
     async def put_queue(self, queue, item, block=True, timeout=None):
         loop = asyncio.get_event_loop()
         func = partial(queue.put, item, block=block, timeout=timeout)
-        result = await loop.run_in_executor(self.executor, func)
-        return result
+        await loop.run_in_executor(self.executor, func)
 
     async def coro_spawn(self, name):
         loop = asyncio.get_event_loop()
         func = partial(pid_spawn, self.root, name)
-        result = await loop.run_in_executor(self.executor, func)
-        return result
+        try:
+            result = await loop.run_in_executor(self.executor, func)
+            return result
+        except:
+            return None
+
 
     ############
     # Functions.
@@ -105,8 +112,8 @@ class Cerebral(ApplicationSession):
 
     async def initialize(self):
         spawned = await self.coro_spawn('worker1')
-        if not spawned:
-            self.publish('dog1.info', 'Worker 1 is already spawned.')
+        if spawned is not True:
+            self.publish('dog1.info', 'Worker 1 could not be spawned.')
             return
 
         reply = await self.get_queue(self.q_in, timeout=2)
@@ -119,7 +126,8 @@ class Cerebral(ApplicationSession):
         await self.put_queue(self.q_out, Commands.HOME)
 
         reply = await self.get_queue(self.q_in, timeout=2)
-        if reply == Commands.SUCCESS:
+        if reply is None:
+            self.publish('dog1.info', 'Fatal error.')
             self.publish('dog1.info', 'Solid copy.')
         else:
             self.publish('dog1.info', 'I am currently performing another physical task.')
@@ -128,7 +136,9 @@ class Cerebral(ApplicationSession):
         await self.put_queue(self.q_out, Commands.WALK_FORWARD)
 
         reply = await self.get_queue(self.q_in, timeout=2)
-        if reply == Commands.SUCCESS:
+        if reply is None:
+            self.publish('dog1.info', 'Fatal error.')
+        elif reply == Commands.SUCCESS:
             self.publish('dog1.info', 'Solid copy.')
         else:
             self.publish('dog1.info', 'I am currently performing another physical task.')
@@ -137,7 +147,9 @@ class Cerebral(ApplicationSession):
         await self.put_queue(self.q_out, Commands.DO_PUSHUPS)
 
         reply = await self.get_queue(self.q_in, timeout=2)
-        if reply == Commands.SUCCESS:
+        if reply is None:
+            self.publish('dog1.info', 'Fatal error.')
+        elif reply == Commands.SUCCESS:
             self.publish('dog1.info', 'Solid copy.')
         else:
             self.publish('dog1.info', 'I am currently performing another physical task.')
@@ -146,7 +158,9 @@ class Cerebral(ApplicationSession):
         await self.put_queue(self.q_out, Commands.STAND_UP)
 
         reply = await self.get_queue(self.q_in, timeout=2)
-        if reply == Commands.SUCCESS:
+        if reply is None:
+            self.publish('dog1.info', 'Fatal error.')
+        elif reply == Commands.SUCCESS:
             self.publish('dog1.info', 'Solid copy.')
         else:
             self.publish('dog1.info', 'I am currently performing another physical task.')
@@ -155,7 +169,9 @@ class Cerebral(ApplicationSession):
         await self.put_queue(self.q_out, Commands.STOP)
 
         reply = await self.get_queue(self.q_in, timeout=2)
-        if reply == Commands.SUCCESS:
+        if reply is None:
+            self.publish('dog1.info', 'Fatal error.')
+        elif reply == Commands.SUCCESS:
             self.publish('dog1.info', 'Solid copy.')
         else:
             self.publish('dog1.info', 'I cannot stop doing nothing.')

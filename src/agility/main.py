@@ -555,10 +555,15 @@ class Agility:
         for leg in self.robot:
             for servo in leg:
                 servo.set_target(0)
-                self.maestro.set_speed(servo, 20)
+                self.maestro.set_speed(servo, 30)
                 self.maestro.set_target(servo)
 
         self.maestro.flush()
+
+        # Wait until completion.
+        while not self.is_at_target():
+            # Sleep for a short time to drastically save CPU cycles.
+            time.sleep(0.0005)
 
     def is_at_target(self, servos=None):
         """
