@@ -6,7 +6,6 @@ import ssl
 import time
 import os
 import sys
-import queue
 from psutil import pid_exists
 from subprocess import Popen
 from functools import partial
