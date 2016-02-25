@@ -27,7 +27,7 @@ class Android:
 
     # Leg 4 .
     servo10 = Servo(9, -180, 90, 500, 2500, 150, bias=9, direction=-1)
-    servo11 = Servo(10, -225, 45, 500, 2500, 150, bias=5, direction=1)
+    servo11 = Servo(10, -225, 45, 500, 2500, 150, bias=0, direction=1)
     servo12 = Servo(11, -135, 135, 500, 2500, 150, bias=1, direction=1)
     leg4 = Leg(servo10, servo11, servo12, (7.5, 7.5), 3)
 
