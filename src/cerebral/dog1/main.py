@@ -127,6 +127,7 @@ class Cerebral(ApplicationSession):
         reply = await self.get_queue(self.q_in, timeout=2)
         if reply is None:
             self.publish('dog1.info', 'Fatal error.')
+        elif reply is None:
             self.publish('dog1.info', 'Solid copy.')
         else:
             self.publish('dog1.info', 'I am currently performing another physical task.')
