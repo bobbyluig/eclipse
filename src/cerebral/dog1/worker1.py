@@ -25,7 +25,7 @@ class Target:
     def crawl():
         global run
 
-        tau = 1500
+        tau = 1000
         beta = 0.75
         x, y = agility.generate_crawl(tau, beta)
         intro, main = agility.generate_ir(tau, x, y)
