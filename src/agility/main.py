@@ -86,12 +86,15 @@ class Servo:
     def passed_target(self, deg, greater):
         """
         Checks if a servo has passed its target.
+        :param deg: The desired degrees to check.
         :param greater: True to check >=, else <=.
         :return: True if test is true, else False.
         """
 
         deg = self.normalize(deg)
 
+        # Due to clockwise being defined as negative by Finesse, PWM checks should be inverted.
+        # This is due to the fact that higher PWM in servos is clockwise.
         if greater:
             return self.deg_to_maestro(deg) <= self.pwm
         else:
@@ -125,7 +128,7 @@ class Leg:
         :param servo2: The second hip servo object.
         :param servo3: The knee servo object.
         :param lengths: The leg segment lengths l1 and l2.
-        :param index: THe leg index (1 - 4).
+        :param index: The leg index (1 - 4).
         """
 
         self.servos = [servo1, servo2, servo3]
@@ -142,35 +145,24 @@ class Leg:
         return other + self.servos
 
 
+class Head:
+    def __init__(self, servo1, servo2):
+        """
+        Create a head object.
+        :param servo1: Servo object controlling left and right head turns.
+        :param servo2: Servo object controlling up and down head turns.
+        """
+
+        self.servos = [servo1, servo2]
+
+    def __getitem__(self, item):
+        return self.servos[item]
+
+
 class Robot:
-    def __init__(self, leg1, leg2, leg3, leg4):
+    def __init__(self, leg1, leg2, leg3, leg4, head=None):
         self.legs = [leg1, leg2, leg3, leg4]
-        self.servos = leg1 + leg2 + leg3 + leg4
-        self.gait = None
-
-    def __getitem__(self, key):
-        return self.legs[key]
-
-    def set_gait(self, gait):
-        self.legs = sorted(self.legs, key=lambda leg: leg.index)
-
-        if gait == '1243-creeping':
-            self.legs = [self.legs[0], self.legs[1], self.legs[3], self.legs[2]]
-        elif gait == '1342-creeping':
-            self.legs = [self.legs[0], self.legs[2], self.legs[3], self.legs[1]]
-        elif gait == '1234-creeping' or gait == 'bound':
-            self.legs = [self.legs[0], self.legs[1], self.legs[2], self.legs[3]]
-        elif gait == '1324-creeping' or gait == 'pace':
-            self.legs = [self.legs[0], self.legs[2], self.legs[1], self.legs[3]]
-        elif gait == '1423-creeping' or gait == 'trot':
-            self.legs = [self.legs[0], self.legs[3], self.legs[1], self.legs[2]]
-        elif gait == 'crawl':
-            self.legs = [self.legs[0], self.legs[3], self.legs[1], self.legs[2]]
-        else:
-            logger.error('Unknown gait. Assuming 1234-creeping.')
-            gait = '1234-creeping'
-
-        self.gait = gait
+        self.head = head
 
 
 class IR(IntEnum):
@@ -192,15 +184,7 @@ class Agility:
         # Set up virtual COM and TTL ports.
         self.maestro = Maestro()
 
-    def generate_crawl(self, tau, beta):
-        """
-        Generate a crawl gait from a base sequence.
-        Output has to be parsed by IR generator before execution.
-        :param tau: The time to run through the entire sequence.
-        :param beta: The percent of time each leg is on the ground. Usually >= 0.75.
-        :return: A tuple of (angles, key_frames). The number of cols match the rows of the sequence.
-        """
-
+    def generate_turn(self, tau, beta):
         # Points in the gait.
         sequence = np.array([
             (4, 0, -12),
@@ -209,6 +193,16 @@ class Agility:
             (-4, 0, -9),
             (2, 0, -9)
         ])
+        minor = np.array([
+            (2, 0, -12),
+            (0, 0, -12),
+            (-2, 0, -12),
+            (-2, 0, -9),
+            (1, 0, -9)
+        ])
+
+        # Order of legs.
+        order = [0, 3, 1, 2]
 
         # Compute length.
         length = len(sequence)
@@ -236,24 +230,12 @@ class Agility:
         cumulative[0] = 0
 
         # Compute angles semi-efficiently. Needs improvement using numpy vectorization.
-        if all(leg.lengths == self.robot[0].lengths for leg in self.robot):
-            angle = [np.array(Finesse.inverse(self.robot[0].lengths, point)) for point in sequence]
-            angles = np.array([angle, angle, angle, angle])
-        else:
-            angles = np.array([
-                [np.array(Finesse.inverse(self.robot[0].lengths, point)) for point in sequence],
-                [np.array(Finesse.inverse(self.robot[1].lengths, point)) for point in sequence],
-                [np.array(Finesse.inverse(self.robot[2].lengths, point)) for point in sequence],
-                [np.array(Finesse.inverse(self.robot[3].lengths, point)) for point in sequence]
-            ])
-
-        # Get starting positions.
-        start_pos = []
-        for leg in range(4):
-            t = tau / 4 * leg
-            i = bisect(cumulative, t)
-            pos = angles[i - 1] + (angles[i % length] - angles[i - 1]) * (t - cumulative[i - 1]) / cumulative[i]
-            start_pos.append(pos)
+        angles = np.array([
+            [np.array(Finesse.inverse(self.robot.legs[0].lengths, point)) for point in sequence],
+            [np.array(Finesse.inverse(self.robot.legs[1].lengths, point)) for point in minor],
+            [np.array(Finesse.inverse(self.robot.legs[2].lengths, point)) for point in sequence],
+            [np.array(Finesse.inverse(self.robot.legs[3].lengths, point)) for point in minor]
+        ])
 
         # Compute animation key frames.
         key_frames = np.array([
@@ -265,6 +247,84 @@ class Agility:
 
         key_frames[key_frames < 0] += tau
         key_frames[key_frames >= tau] -= tau
+
+        # Sort key_frames and angles.
+        angles = angles[order]
+        key_frames = key_frames[order]
+
+        return angles, key_frames
+
+    def generate_crawl(self, tau, beta):
+        """
+        Generate a crawl gait from a base sequence.
+        Output has to be parsed by IR generator before execution.
+        :param tau: The time to run through the entire sequence.
+        :param beta: The percent of time each leg is on the ground. Usually >= 0.75.
+        :return: A tuple of (angles, key_frames). The number of cols match the rows of the sequence.
+        """
+
+        # Points in the gait.
+        sequence = np.array([
+            (4, 0, -12),
+            (0, 0, -12),
+            (-4, 0, -12),
+            (-4, 0, -9),
+            (2, 0, -9)
+        ])
+
+        # Order of legs.
+        order = [0, 3, 1, 2]
+
+        # Compute length.
+        length = len(sequence)
+
+        # Compute distances.
+        shifted = np.roll(sequence, -1, axis=0)
+        distances = np.linalg.norm(sequence - shifted, axis=1)
+
+        # Normalize time for each segment.
+        ground = distances[:2]
+        ground = ground / np.sum(ground)
+        air = distances[2:]
+        air = air / np.sum(air)
+
+        # Scale using constants.
+        t_ground = tau * beta
+        t_air = tau - t_ground
+        ground *= t_ground
+        air *= t_air
+
+        # Compute combined and cumulative.
+        times = np.concatenate((ground, air))
+        cumulative = np.cumsum(times)
+        cumulative = np.roll(cumulative, 1)
+        cumulative[0] = 0
+
+        # Compute angles semi-efficiently. Needs improvement using numpy vectorization.
+        if all(leg.lengths == self.robot.legs[0].lengths for leg in self.robot):
+            angle = [np.array(Finesse.inverse(self.robot.legs[0].lengths, point)) for point in sequence]
+            angles = np.array([angle, angle, angle, angle])
+        else:
+            angles = np.array([
+                [np.array(Finesse.inverse(self.robot.legs[order[0]].lengths, point)) for point in sequence],
+                [np.array(Finesse.inverse(self.robot.legs[order[1]].lengths, point)) for point in sequence],
+                [np.array(Finesse.inverse(self.robot.legs[order[2]].lengths, point)) for point in sequence],
+                [np.array(Finesse.inverse(self.robot.legs[order[3]].lengths, point)) for point in sequence]
+            ])
+
+        # Compute animation key frames.
+        key_frames = np.array([
+            cumulative,
+            cumulative - tau / 4,
+            cumulative - tau / 4 * 2,
+            cumulative - tau / 4 * 3
+        ])
+
+        key_frames[key_frames < 0] += tau
+        key_frames[key_frames >= tau] -= tau
+
+        # Sort key_frames.
+        key_frames = key_frames[order]
 
         return angles, key_frames
 
@@ -287,10 +347,26 @@ class Agility:
         # Sorting 2D array using another 2D array.
         return a[axis, args], b[axis, args]
 
+    def unwind(self, sequence):
+        """
+        Unwind a sequence to angles and key frames.
+        This is essentially a pre-IR function for custom sequences.
+        :param sequence: A sequence array of [leg1, leg2, leg3, leg4] where leg1 is [(target, time), ...].
+        :return: A tuple of (angles, key_frames).
+        """
+
+        angles = []
+        key_frames = []
+
+        for i in range(len(sequence)):
+            x, y = zip(*sequence[i])
+            x = [Finesse.inverse(self.robot.legs[i])]
+
+
     @staticmethod
     def generate_ir(tau, angles, key_frames, ref=0):
         """
-        Generate an intermediate representation for a continuous and non-synchronized gait sequence.
+        Generate an intermediate representation for a continuous gait sequence.
         It automatically handles non-synchronized gaits very efficiently.
         This function does not actually execute the gait.
         It legs do not have the same number of points, angles and key_frames must be padded with nans at the end.
@@ -409,7 +485,7 @@ class Agility:
             elif ins == IR.WAIT_FIN:
                 leg = frame[1]
 
-                while not self.is_at_target(servos=self.robot[leg]):
+                while not self.is_at_target(servos=self.robot.legs[leg]):
                     time.sleep(0.0005)
 
             elif ins == IR.MOVE:
@@ -417,20 +493,20 @@ class Agility:
                 angles = frame[2]
                 t = frame[3]
 
-                self.robot[leg][0].set_target(float(angles[0]))
-                self.robot[leg][1].set_target(float(angles[1]))
-                self.robot[leg][2].set_target(float(angles[2]))
-                self.maestro.end_together(self.robot[leg], time=t, update=True)
+                self.robot.legs[leg][0].set_target(float(angles[0]))
+                self.robot.legs[leg][1].set_target(float(angles[1]))
+                self.robot.legs[leg][2].set_target(float(angles[2]))
+                self.maestro.end_together(self.robot.legs[leg], time=t, update=True)
 
             elif ins == IR.WAIT_GE:
                 leg = frame[1]
                 servo = frame[2]
                 deg = frame[3]
 
-                self.maestro.get_position(self.robot[leg][servo])
+                self.maestro.get_position(self.robot.legs[leg][servo])
 
-                while not self.robot[leg][servo].passed_target(deg, True):
-                    self.maestro.get_position(self.robot[leg][servo])
+                while not self.robot.legs[leg][servo].passed_target(deg, True):
+                    self.maestro.get_position(self.robot.legs[leg][servo])
                     time.sleep(0.0005)
 
             elif ins == IR.WAIT_LE:
@@ -438,10 +514,10 @@ class Agility:
                 servo = frame[2]
                 deg = frame[3]
 
-                self.maestro.get_position(self.robot[leg][servo])
+                self.maestro.get_position(self.robot.legs[leg][servo])
 
-                while not self.robot[leg][servo].passed_target(deg, False):
-                    self.maestro.get_position(self.robot[leg][servo])
+                while not self.robot.legs[leg][servo].passed_target(deg, False):
+                    self.maestro.get_position(self.robot.legs[leg][servo])
                     time.sleep(0.0005)
 
     def animate_single(self, frame):
@@ -460,9 +536,9 @@ class Agility:
 
         t = frame_time / len(points)
         for point in points:
-            self.target_euclidean(self.robot[index], point)
-            self.maestro.get_multiple_positions(self.robot[index])
-            self.maestro.end_together(self.robot[index], time=t)
+            self.target_euclidean(self.robot.legs[index], point)
+            self.maestro.get_multiple_positions(self.robot.legs[index])
+            self.maestro.end_together(self.robot.legs[index], time=t)
             while not self.is_at_target():
                 # Sleep for a short time to drastically save CPU cycles.
                 time.sleep(0.0005)

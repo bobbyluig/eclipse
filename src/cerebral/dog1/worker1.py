@@ -13,7 +13,6 @@ q_in = memory.get_queue(1)      # From main
 
 # Define agility.
 robot = Android.robot
-robot.set_gait('crawl')
 agility = Agility(robot)
 
 # Threading variables.

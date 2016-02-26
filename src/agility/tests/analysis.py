@@ -5,16 +5,32 @@ import time
 
 # Robot by reference.
 robot = Android.robot
-robot.set_gait('crawl')
 agility = Agility(robot)
 
 
 def crawl():
     # Constants.
     beta = 0.75     # Percent of time each leg is on the ground.
-    tau = 100      # Time (in ms) for an entire frame of all 4 legs.
+    tau = 1000      # Time (in ms) for an entire frame of all 4 legs.
 
     x, y = agility.generate_crawl(tau, beta)
+    intro, main = agility.generate_ir(tau, x, y)
+
+    agility.zero()
+    time.sleep(3)
+
+    agility.execute_ir(intro)
+
+    while True:
+        agility.execute_ir(main)
+
+
+def turn():
+    # Constants.
+    beta = 0.75     # Percent of time each leg is on the ground.
+    tau = 1000      # Time (in ms) for an entire frame of all 4 legs.
+
+    x, y = agility.generate_turn(tau, beta)
     intro, main = agility.generate_ir(tau, x, y)
 
     agility.zero()
@@ -41,5 +57,5 @@ def transform():
 
     agility.execute_ir(instructions)
 
-
-agility.zero()
+if __name__ == '__main__':
+    turn()
