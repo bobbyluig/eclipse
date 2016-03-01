@@ -9,14 +9,27 @@ agility = Agility(robot)
 
 
 def test():
-    # Constants.
-    beta = 0.75     # Percent of time each leg is on the ground.
-    tau = 1000      # Time (in ms) for an entire frame of all 4 legs.
+    points = [
+        (7.5, 0, -7.5),
+        (-7.5, 0, -7.5)
+    ]
+    sequence = [
+        [(points[0], 0), (points[1], 500)],
+        [(points[0], 0), (points[1], 250), (points[0], 500), (points[1], 750)],
+        [(points[0], 0), (points[1], 500)],
+        [(points[0], 0), (points[1], 250), (points[0], 500), (points[1], 750)]
+    ]
 
-    x, y = agility.generate_crawl(tau, beta)
-    intro, main = agility.generate_ir(tau, x, y)
+    a, b = agility.unwind(sequence)
+    intro, main = agility.generate_ir(1000, a, b)
 
-    print(main)
+    for ir in intro:
+        print(ir)
+
+    print('-' * 100)
+
+    for ir in main:
+        print(ir)
 
 
 def test1():
@@ -122,4 +135,4 @@ def jump():
     agility.execute_ir(instructions)
 
 if __name__ == '__main__':
-    test1()
+    test()

@@ -288,19 +288,21 @@ class Agility:
         angles = []
         key_frames = []
 
+        # Search for max length.
+        lengths = [len(s) for s in sequence]
+        length = max(lengths)
+
         for i in range(len(sequence)):
             x, y = zip(*sequence[i])
+
             x = [Finesse.inverse(self.robot.legs[i].lengths, x[j]) for j in range(len(x))]
-            angles.append(x)
-            key_frames.append(y)
 
-        angles = np.array(angles)
-        key_frames = np.array(key_frames)
+            padding = length - len(x)
+            angles.append(x + [(None, None, None)] * padding)
+            key_frames.append(y + (None,) * padding)
 
-        key_frames[key_frames < 0] += 1000
-        key_frames[key_frames >= 1000] -= 1000
-
-        key_frames, angles = Agility.dual_sort(key_frames, angles)
+        angles = np.array(angles, dtype=float)
+        key_frames = np.array(key_frames, dtype=float)
 
         return angles, key_frames
 
@@ -325,8 +327,8 @@ class Agility:
         # Sort.
         key_frames, angles = Agility.dual_sort(key_frames, angles)
 
-        # Get length of initial sequence.
-        length = angles.shape[1]
+        # Lengths of each (discount padding).
+        lengths = (~np.isnan(key_frames)).sum(1)
 
         # Get unique key frames to iterate over. Discard nans (padding).
         unique_kf = np.unique(key_frames)
@@ -341,7 +343,7 @@ class Agility:
             frame = unique_kf[k]
 
             # Identify which legs are active.
-            active = np.where(key_frames == frame)
+            active = np.where((key_frames == frame) & (~np.isnan(key_frames)))
 
             # Determine when the frame should begin.
             if len(active[0]) == 4:
@@ -353,8 +355,11 @@ class Agility:
                     # Leg is at end. Wait until leg reaches previous target.
                     instructions.append((IR.WAIT_FIN, ref))
                 else:
-                    # Interpolate by doing a bisection or a sorted key_frame.
-                    i = bisect(key_frames[ref], frame)
+                    # Define length.
+                    length = lengths[ref]
+
+                    # Interpolate by performing a right bisection on a sorted key_frame.
+                    i = np.searchsorted(key_frames[ref], frame, side='right')
 
                     # Compute a delta.
                     delta = angles[ref][i % length] - angles[ref][i - 1]
@@ -363,8 +368,8 @@ class Agility:
                     best = np.argmax(np.abs(delta))
 
                     # Interpolate angle for the best one of three.
-                    angle = (angles[ref][i - 1][best] + delta[best] * (frame - key_frames[ref][i - 1])
-                             / (key_frames[ref][i % length] - key_frames[ref][i - 1]))
+                    angle = (angles[ref][i - 1][best] + delta[best] * abs(frame - key_frames[ref][i - 1])
+                             / abs(key_frames[ref][i % length] - key_frames[ref][i - 1]))
 
                     # Wait until angle is greater? (or less if false)
                     greater = delta[best] > 0
@@ -379,6 +384,9 @@ class Agility:
             # Create instructions to move servos.
             for l in range(len(active[0])):
                 leg = active[0][l]
+
+                # Define length.
+                length = lengths[leg]
 
                 # Get column.
                 col = active[1][l]

@@ -64,6 +64,9 @@ class Finesse:
         :return: (theta1, theta2, theta3)
         """
 
+        if lengths is None or target is None:
+            return None
+
         l1, l2 = lengths
         x, y, z = target
         dist = norm(target)
