@@ -179,25 +179,26 @@ class Agility:
         self.robot = robot
 
         # Set up Usc.
-        self.usc = Usc()
+        # self.usc = Usc()
 
         # Set up virtual COM and TTL ports.
-        self.maestro = Maestro()
+        # self.maestro = Maestro()
 
-    def generate_turn(self, tau, beta):
+    def generate_crawl(self, tau, beta):
+        """
+        Generate a crawl gait from a base sequence.
+        Output has to be parsed by IR generator before execution.
+        :param tau: The time to run through the entire sequence.
+        :param beta: The percent of time each leg is on the ground. Usually >= 0.75.
+        :return: A tuple of (angles, key_frames). The number of cols match the rows of the sequence.
+        """
+
         # Points in the gait.
         sequence = np.array([
-            (4, 0, -12),
-            (0, 0, -12),
-            (-4, 0, -12),
-            (-4, 0, -9),
-            (2, 0, -9)
-        ])
-        minor = np.array([
-            (2, 0, -12),
-            (0, 0, -12),
-            (-2, 0, -12),
-            (-2, 0, -9),
+            (5, 0, -12),
+            (1, 0, -12),
+            (-3, 0, -12),
+            (-3, 0, -9),
             (1, 0, -9)
         ])
 
@@ -230,78 +231,7 @@ class Agility:
         cumulative[0] = 0
 
         # Compute angles semi-efficiently. Needs improvement using numpy vectorization.
-        angles = np.array([
-            [np.array(Finesse.inverse(self.robot.legs[0].lengths, point)) for point in sequence],
-            [np.array(Finesse.inverse(self.robot.legs[1].lengths, point)) for point in minor],
-            [np.array(Finesse.inverse(self.robot.legs[2].lengths, point)) for point in sequence],
-            [np.array(Finesse.inverse(self.robot.legs[3].lengths, point)) for point in minor]
-        ])
-
-        # Compute animation key frames.
-        key_frames = np.array([
-            cumulative,
-            cumulative - tau / 4,
-            cumulative - tau / 4 * 2,
-            cumulative - tau / 4 * 3
-        ])
-
-        key_frames[key_frames < 0] += tau
-        key_frames[key_frames >= tau] -= tau
-
-        # Sort key_frames and angles.
-        angles = angles[order]
-        key_frames = key_frames[order]
-
-        return angles, key_frames
-
-    def generate_crawl(self, tau, beta):
-        """
-        Generate a crawl gait from a base sequence.
-        Output has to be parsed by IR generator before execution.
-        :param tau: The time to run through the entire sequence.
-        :param beta: The percent of time each leg is on the ground. Usually >= 0.75.
-        :return: A tuple of (angles, key_frames). The number of cols match the rows of the sequence.
-        """
-
-        # Points in the gait.
-        sequence = np.array([
-            (4, 0, -12),
-            (0, 0, -12),
-            (-4, 0, -12),
-            (-4, 0, -9),
-            (2, 0, -9)
-        ])
-
-        # Order of legs.
-        order = [0, 3, 1, 2]
-
-        # Compute length.
-        length = len(sequence)
-
-        # Compute distances.
-        shifted = np.roll(sequence, -1, axis=0)
-        distances = np.linalg.norm(sequence - shifted, axis=1)
-
-        # Normalize time for each segment.
-        ground = distances[:2]
-        ground = ground / np.sum(ground)
-        air = distances[2:]
-        air = air / np.sum(air)
-
-        # Scale using constants.
-        t_ground = tau * beta
-        t_air = tau - t_ground
-        ground *= t_ground
-        air *= t_air
-
-        # Compute combined and cumulative.
-        times = np.concatenate((ground, air))
-        cumulative = np.cumsum(times)
-        cumulative = np.roll(cumulative, 1)
-        cumulative[0] = 0
-
-        # Compute angles semi-efficiently. Needs improvement using numpy vectorization.
-        if all(leg.lengths == self.robot.legs[0].lengths for leg in self.robot):
+        if all(leg.lengths == self.robot.legs[0].lengths for leg in self.robot.legs):
             angle = [np.array(Finesse.inverse(self.robot.legs[0].lengths, point)) for point in sequence]
             angles = np.array([angle, angle, angle, angle])
         else:
@@ -360,8 +290,19 @@ class Agility:
 
         for i in range(len(sequence)):
             x, y = zip(*sequence[i])
-            x = [Finesse.inverse(self.robot.legs[i])]
+            x = [Finesse.inverse(self.robot.legs[i].lengths, x[j]) for j in range(len(x))]
+            angles.append(x)
+            key_frames.append(y)
 
+        angles = np.array(angles)
+        key_frames = np.array(key_frames)
+
+        key_frames[key_frames < 0] += 1000
+        key_frames[key_frames >= 1000] -= 1000
+
+        key_frames, angles = Agility.dual_sort(key_frames, angles)
+
+        return angles, key_frames
 
     @staticmethod
     def generate_ir(tau, angles, key_frames, ref=0):
@@ -423,7 +364,7 @@ class Agility:
 
                     # Interpolate angle for the best one of three.
                     angle = (angles[ref][i - 1][best] + delta[best] * (frame - key_frames[ref][i - 1])
-                             / key_frames[ref][i % length])
+                             / (key_frames[ref][i % length] - key_frames[ref][i - 1]))
 
                     # Wait until angle is greater? (or less if false)
                     greater = delta[best] > 0
@@ -489,6 +430,8 @@ class Agility:
                     time.sleep(0.0005)
 
             elif ins == IR.MOVE:
+                if frame[1] == 2:
+                    print(frame)
                 leg = frame[1]
                 angles = frame[2]
                 t = frame[3]
@@ -628,7 +571,7 @@ class Agility:
         Manual return home by resetting all servo targets.
         """
 
-        for leg in self.robot:
+        for leg in self.robot.legs:
             for servo in leg:
                 servo.set_target(0)
                 self.maestro.set_speed(servo, 30)
