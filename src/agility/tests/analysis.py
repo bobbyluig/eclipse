@@ -31,6 +31,14 @@ def test():
     for ir in main:
         print(ir)
 
+    agility.zero()
+    time.sleep(3)
+
+    agility.execute_ir(intro)
+
+    while True:
+        agility.execute_ir(main)
+
 
 def test1():
     points = [
@@ -61,7 +69,7 @@ def test1():
 def crawl():
     # Constants.
     beta = 0.75     # Percent of time each leg is on the ground.
-    tau = 1000      # Time (in ms) for an entire frame of all 4 legs.
+    tau = 2000      # Time (in ms) for an entire frame of all 4 legs.
 
     x, y = agility.generate_crawl(tau, beta)
     intro, main = agility.generate_ir(tau, x, y)
@@ -135,4 +143,4 @@ def jump():
     agility.execute_ir(instructions)
 
 if __name__ == '__main__':
-    test()
+    crawl()

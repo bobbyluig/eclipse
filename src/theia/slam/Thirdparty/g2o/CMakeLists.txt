@@ -82,8 +82,8 @@ IF(UNIX)
 ENDIF(UNIX)
 
 # For building the CHOLMOD / CSPARSE solvers
-FIND_PACKAGE(BLAS REQUIRED)
-FIND_PACKAGE(LAPACK REQUIRED)
+# FIND_PACKAGE(BLAS REQUIRED)
+# FIND_PACKAGE(LAPACK REQUIRED)
 
 # Eigen library parallelise itself, though, presumably due to performance issues
 # OPENMP is experimental. We experienced some slowdown with it

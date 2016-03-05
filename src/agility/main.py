@@ -179,10 +179,10 @@ class Agility:
         self.robot = robot
 
         # Set up Usc.
-        # self.usc = Usc()
+        self.usc = Usc()
 
         # Set up virtual COM and TTL ports.
-        # self.maestro = Maestro()
+        self.maestro = Maestro()
 
     def generate_crawl(self, tau, beta):
         """
@@ -204,9 +204,6 @@ class Agility:
 
         # Order of legs.
         order = [0, 3, 1, 2]
-
-        # Compute length.
-        length = len(sequence)
 
         # Compute distances.
         shifted = np.roll(sequence, -1, axis=0)
@@ -368,8 +365,8 @@ class Agility:
                     best = np.argmax(np.abs(delta))
 
                     # Interpolate angle for the best one of three.
-                    angle = (angles[ref][i - 1][best] + delta[best] * abs(frame - key_frames[ref][i - 1])
-                             / abs(key_frames[ref][i % length] - key_frames[ref][i - 1]))
+                    angle = (angles[ref][i - 1][best] + delta[best] * abs(frame - key_frames[ref][i - 1]) /
+                             abs(key_frames[ref][i % length] - key_frames[ref][i - 1]))
 
                     # Wait until angle is greater? (or less if false)
                     greater = delta[best] > 0
