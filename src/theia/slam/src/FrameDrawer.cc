@@ -24,7 +24,7 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
-#include<mutex>
+#include <boost/thread.hpp>
 
 namespace ORB_SLAM2
 {
@@ -46,7 +46,7 @@ cv::Mat FrameDrawer::DrawFrame()
 
     //Copy variables within scoped mutex
     {
-        unique_lock<mutex> lock(mMutex);
+        boost::unique_lock<boost::mutex> lock(mMutex);
         state=mState;
         if(mState==Tracking::SYSTEM_NOT_READY)
             mState=Tracking::NO_IMAGES_YET;
@@ -165,7 +165,7 @@ void FrameDrawer::DrawTextInfo(cv::Mat &im, int nState, cv::Mat &imText)
 
 void FrameDrawer::Update(Tracking *pTracker)
 {
-    unique_lock<mutex> lock(mMutex);
+    boost::unique_lock<boost::mutex> lock(mMutex);
     pTracker->mImGray.copyTo(mIm);
     mvCurrentKeys=pTracker->mCurrentFrame.mvKeys;
     N = mvCurrentKeys.size();

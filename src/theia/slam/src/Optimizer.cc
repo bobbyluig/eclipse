@@ -277,7 +277,7 @@ int Optimizer::PoseOptimization(Frame *pFrame)
 
 
     {
-    unique_lock<mutex> lock(MapPoint::mGlobalMutex);
+    boost::unique_lock<boost::mutex> lock(MapPoint::mGlobalMutex);
 
     for(int i=0; i<N; i++)
     {
@@ -745,7 +745,7 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag, Map* pMap
     }
 
     // Get Map Mutex
-    unique_lock<mutex> lock(pMap->mMutexMapUpdate);
+    boost::unique_lock<boost::mutex> lock(pMap->mMutexMapUpdate);
 
     if(!vToErase.empty())
     {
@@ -988,7 +988,7 @@ void Optimizer::OptimizeEssentialGraph(Map* pMap, KeyFrame* pLoopKF, KeyFrame* p
     optimizer.initializeOptimization();
     optimizer.optimize(20);
 
-    unique_lock<mutex> lock(pMap->mMutexMapUpdate);
+    boost::unique_lock<boost::mutex> lock(pMap->mMutexMapUpdate);
 
     // SE3 Pose Recovering. Sim3:[sR t;0 1] -> SE3:[R t/s;0 1]
     for(size_t i=0;i<vpKFs.size();i++)

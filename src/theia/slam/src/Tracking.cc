@@ -274,7 +274,7 @@ void Tracking::Track()
     mLastProcessedState=mState;
 
     // Get Map Mutex -> Map cannot be changed
-    unique_lock<mutex> lock(mpMap->mMutexMapUpdate);
+    boost::unique_lock<boost::mutex> lock(mpMap->mMutexMapUpdate);
 
     if(mState==NOT_INITIALIZED)
     {
@@ -1521,7 +1521,7 @@ void Tracking::Reset()
     cout << "System Reseting" << endl;
 	while (!mpViewer->isStopped()) {
 		//usleep(3000);
-		std::this_thread::sleep_for(std::chrono::milliseconds(3));
+		boost::this_thread::sleep_for(boost::chrono::milliseconds(3));
 	}
 
     // Reset Local Mapping

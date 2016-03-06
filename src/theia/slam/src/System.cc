@@ -89,16 +89,16 @@ System::System(const string &strVocFile, const string &strSettingsFile, const eS
 
     //Initialize the Local Mapping thread and launch
     mpLocalMapper = new LocalMapping(mpMap, mSensor==MONOCULAR);
-    mptLocalMapping = new thread(&ORB_SLAM2::LocalMapping::Run,mpLocalMapper);
+    mptLocalMapping = new boost::thread(&ORB_SLAM2::LocalMapping::Run,mpLocalMapper);
 
     //Initialize the Loop Closing thread and launch
     mpLoopCloser = new LoopClosing(mpMap, mpKeyFrameDatabase, mpVocabulary, mSensor!=MONOCULAR);
-    mptLoopClosing = new thread(&ORB_SLAM2::LoopClosing::Run, mpLoopCloser);
+    mptLoopClosing = new boost::thread(&ORB_SLAM2::LoopClosing::Run, mpLoopCloser);
 
     //Initialize the Viewer thread and launch
     mpViewer = new Viewer(this, mpFrameDrawer,mpMapDrawer,mpTracker,strSettingsFile);
     if(bUseViewer)
-        mptViewer = new thread(&Viewer::Run, mpViewer);
+        mptViewer = new boost::thread(&Viewer::Run, mpViewer);
 
     mpTracker->SetViewer(mpViewer);
 
@@ -123,7 +123,7 @@ cv::Mat System::TrackStereo(const cv::Mat &imLeft, const cv::Mat &imRight, const
 
     // Check mode change
     {
-        unique_lock<mutex> lock(mMutexMode);
+        boost::unique_lock<boost::mutex> lock(mMutexMode);
         if(mbActivateLocalizationMode)
         {
             mpLocalMapper->RequestStop();
@@ -148,7 +148,7 @@ cv::Mat System::TrackStereo(const cv::Mat &imLeft, const cv::Mat &imRight, const
 
     // Check reset
     {
-    unique_lock<mutex> lock(mMutexReset);
+    boost::unique_lock<boost::mutex> lock(mMutexReset);
     if(mbReset)
     {
         mpTracker->Reset();
@@ -169,7 +169,7 @@ cv::Mat System::TrackRGBD(const cv::Mat &im, const cv::Mat &depthmap, const doub
 
     // Check mode change
     {
-        unique_lock<mutex> lock(mMutexMode);
+        boost::unique_lock<boost::mutex> lock(mMutexMode);
         if(mbActivateLocalizationMode)
         {
             mpLocalMapper->RequestStop();
@@ -194,7 +194,7 @@ cv::Mat System::TrackRGBD(const cv::Mat &im, const cv::Mat &depthmap, const doub
 
     // Check reset
     {
-    unique_lock<mutex> lock(mMutexReset);
+    boost::unique_lock<boost::mutex> lock(mMutexReset);
     if(mbReset)
     {
         mpTracker->Reset();
@@ -215,7 +215,7 @@ cv::Mat System::TrackMonocular(const cv::Mat &im, const double &timestamp)
 
     // Check mode change
     {
-        unique_lock<mutex> lock(mMutexMode);
+        boost::unique_lock<boost::mutex> lock(mMutexMode);
         if(mbActivateLocalizationMode)
         {
             mpLocalMapper->RequestStop();
@@ -240,7 +240,7 @@ cv::Mat System::TrackMonocular(const cv::Mat &im, const double &timestamp)
 
     // Check reset
     {
-    unique_lock<mutex> lock(mMutexReset);
+    boost::unique_lock<boost::mutex> lock(mMutexReset);
     if(mbReset)
     {
         mpTracker->Reset();
@@ -253,19 +253,19 @@ cv::Mat System::TrackMonocular(const cv::Mat &im, const double &timestamp)
 
 void System::ActivateLocalizationMode()
 {
-    unique_lock<mutex> lock(mMutexMode);
+    boost::unique_lock<boost::mutex> lock(mMutexMode);
     mbActivateLocalizationMode = true;
 }
 
 void System::DeactivateLocalizationMode()
 {
-    unique_lock<mutex> lock(mMutexMode);
+    boost::unique_lock<boost::mutex> lock(mMutexMode);
     mbDeactivateLocalizationMode = true;
 }
 
 void System::Reset()
 {
-    unique_lock<mutex> lock(mMutexReset);
+    boost::unique_lock<boost::mutex> lock(mMutexReset);
     mbReset = true;
 }
 

@@ -26,7 +26,7 @@
 #include"KeyFrame.h"
 #include<pangolin/pangolin.h>
 
-#include<mutex>
+#include <boost/thread.hpp>
 
 namespace ORB_SLAM2
 {
@@ -56,7 +56,7 @@ private:
 
     cv::Mat mCameraPose;
 
-    std::mutex mMutexCamera;
+    boost::mutex mMutexCamera;
 };
 
 } //namespace ORB_SLAM

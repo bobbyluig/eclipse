@@ -25,7 +25,7 @@
 #include "KeyFrame.h"
 #include <set>
 
-#include <mutex>
+#include <boost/thread.hpp>
 
 
 
@@ -59,10 +59,10 @@ public:
 
     vector<KeyFrame*> mvpKeyFrameOrigins;
 
-    std::mutex mMutexMapUpdate;
+    boost::mutex mMutexMapUpdate;
 
     // This avoid that two points are created simultaneously in separate threads (id conflict)
-    std::mutex mMutexPointCreation;
+    boost::mutex mMutexPointCreation;
 
 protected:
     std::set<MapPoint*> mspMapPoints;
@@ -72,7 +72,7 @@ protected:
 
     long unsigned int mnMaxKFid;
 
-    std::mutex mMutexMap;
+    boost::mutex mMutexMap;
 };
 
 } //namespace ORB_SLAM

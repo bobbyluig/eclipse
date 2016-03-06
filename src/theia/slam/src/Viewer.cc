@@ -157,8 +157,7 @@ void Viewer::Run()
             while(isStopped())
             {
 				//usleep(3000);
-				std::this_thread::sleep_for(std::chrono::milliseconds(3));
-
+				boost::this_thread::sleep_for(boost::chrono::milliseconds(3));
             }
         }
 
@@ -171,45 +170,45 @@ void Viewer::Run()
 
 void Viewer::RequestFinish()
 {
-    unique_lock<mutex> lock(mMutexFinish);
+    boost::unique_lock<boost::mutex> lock(mMutexFinish);
     mbFinishRequested = true;
 }
 
 bool Viewer::CheckFinish()
 {
-    unique_lock<mutex> lock(mMutexFinish);
+    boost::unique_lock<boost::mutex> lock(mMutexFinish);
     return mbFinishRequested;
 }
 
 void Viewer::SetFinish()
 {
-    unique_lock<mutex> lock(mMutexFinish);
+    boost::unique_lock<boost::mutex> lock(mMutexFinish);
     mbFinished = true;
 }
 
 bool Viewer::isFinished()
 {
-    unique_lock<mutex> lock(mMutexFinish);
+    boost::unique_lock<boost::mutex> lock(mMutexFinish);
     return mbFinished;
 }
 
 void Viewer::RequestStop()
 {
-    unique_lock<mutex> lock(mMutexStop);
+    boost::unique_lock<boost::mutex> lock(mMutexStop);
     if(!mbStopped)
         mbStopRequested = true;
 }
 
 bool Viewer::isStopped()
 {
-    unique_lock<mutex> lock(mMutexStop);
+    boost::unique_lock<boost::mutex> lock(mMutexStop);
     return mbStopped;
 }
 
 bool Viewer::Stop()
 {
-    unique_lock<mutex> lock(mMutexStop);
-    unique_lock<mutex> lock2(mMutexFinish);
+    boost::unique_lock<boost::mutex> lock(mMutexStop);
+    boost::unique_lock<boost::mutex> lock2(mMutexFinish);
 
     if(mbFinishRequested)
         return false;
@@ -226,7 +225,7 @@ bool Viewer::Stop()
 
 void Viewer::Release()
 {
-    unique_lock<mutex> lock(mMutexStop);
+    boost::unique_lock<boost::mutex> lock(mMutexStop);
     mbStopped = false;
 }
 

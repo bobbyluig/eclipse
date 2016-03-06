@@ -22,9 +22,9 @@
 #ifndef SYSTEM_H
 #define SYSTEM_H
 
-#include<string>
-#include<thread>
-#include<opencv2/core/core.hpp>
+#include <string>
+#include <boost/thread.hpp>
+#include <opencv2/core/core.hpp>
 
 #include "Tracking.h"
 #include "FrameDrawer.h"
@@ -165,16 +165,16 @@ private:
 
     // System threads: Local Mapping, Loop Closing, Viewer.
     // The Tracking thread "lives" in the main execution thread that creates the System object.
-    std::thread* mptLocalMapping;
-    std::thread* mptLoopClosing;
-    std::thread* mptViewer;
+    boost::thread* mptLocalMapping;
+    boost::thread* mptLoopClosing;
+    boost::thread* mptViewer;
 
     // Reset flag
-    std::mutex mMutexReset;
+    boost::mutex mMutexReset;
     bool mbReset;
 
     // Change mode flags
-    std::mutex mMutexMode;
+    boost::mutex mMutexMode;
     bool mbActivateLocalizationMode;
     bool mbDeactivateLocalizationMode;
 };

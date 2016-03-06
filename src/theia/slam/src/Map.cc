@@ -31,7 +31,7 @@ Map::Map():mnMaxKFid(0)
 
 void Map::AddKeyFrame(KeyFrame *pKF)
 {
-    unique_lock<mutex> lock(mMutexMap);
+    boost::unique_lock<boost::mutex> lock(mMutexMap);
     mspKeyFrames.insert(pKF);
     if(pKF->mnId>mnMaxKFid)
         mnMaxKFid=pKF->mnId;
@@ -39,13 +39,13 @@ void Map::AddKeyFrame(KeyFrame *pKF)
 
 void Map::AddMapPoint(MapPoint *pMP)
 {
-    unique_lock<mutex> lock(mMutexMap);
+    boost::unique_lock<boost::mutex> lock(mMutexMap);
     mspMapPoints.insert(pMP);
 }
 
 void Map::EraseMapPoint(MapPoint *pMP)
 {
-    unique_lock<mutex> lock(mMutexMap);
+    boost::unique_lock<boost::mutex> lock(mMutexMap);
     mspMapPoints.erase(pMP);
 
     // TODO: This only erase the pointer.
@@ -54,7 +54,7 @@ void Map::EraseMapPoint(MapPoint *pMP)
 
 void Map::EraseKeyFrame(KeyFrame *pKF)
 {
-    unique_lock<mutex> lock(mMutexMap);
+    boost::unique_lock<boost::mutex> lock(mMutexMap);
     mspKeyFrames.erase(pKF);
 
     // TODO: This only erase the pointer.
@@ -63,43 +63,43 @@ void Map::EraseKeyFrame(KeyFrame *pKF)
 
 void Map::SetReferenceMapPoints(const vector<MapPoint *> &vpMPs)
 {
-    unique_lock<mutex> lock(mMutexMap);
+    boost::unique_lock<boost::mutex> lock(mMutexMap);
     mvpReferenceMapPoints = vpMPs;
 }
 
 vector<KeyFrame*> Map::GetAllKeyFrames()
 {
-    unique_lock<mutex> lock(mMutexMap);
+    boost::unique_lock<boost::mutex> lock(mMutexMap);
     return vector<KeyFrame*>(mspKeyFrames.begin(),mspKeyFrames.end());
 }
 
 vector<MapPoint*> Map::GetAllMapPoints()
 {
-    unique_lock<mutex> lock(mMutexMap);
+    boost::unique_lock<boost::mutex> lock(mMutexMap);
     return vector<MapPoint*>(mspMapPoints.begin(),mspMapPoints.end());
 }
 
 long unsigned int Map::MapPointsInMap()
 {
-    unique_lock<mutex> lock(mMutexMap);
+    boost::unique_lock<boost::mutex> lock(mMutexMap);
     return mspMapPoints.size();
 }
 
 long unsigned int Map::KeyFramesInMap()
 {
-    unique_lock<mutex> lock(mMutexMap);
+    boost::unique_lock<boost::mutex> lock(mMutexMap);
     return mspKeyFrames.size();
 }
 
 vector<MapPoint*> Map::GetReferenceMapPoints()
 {
-    unique_lock<mutex> lock(mMutexMap);
+    boost::unique_lock<boost::mutex> lock(mMutexMap);
     return mvpReferenceMapPoints;
 }
 
 long unsigned int Map::GetMaxKFid()
 {
-    unique_lock<mutex> lock(mMutexMap);
+    boost::unique_lock<boost::mutex> lock(mMutexMap);
     return mnMaxKFid;
 }
 
