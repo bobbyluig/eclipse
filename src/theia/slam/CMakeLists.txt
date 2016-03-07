@@ -18,14 +18,16 @@ IF(WIN32)
 	add_definitions("-DNOMINMAX")
 	add_definitions("-DWINDOWS")
 	add_definitions("-DORBSLAM_EXPORT")
+	add_definitions("-DBOOST_ALL_NO_LIB")
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 ENDIF()
 
 set(OpenCV_STATIC OFF)
+set(Boost_USE_STATIC_LIBS OFF)
 find_package(OpenCV 3.0.0 REQUIRED)
 find_package(Eigen3 3.1.0 REQUIRED)
 find_package(Pangolin REQUIRED)
-find_package(Boost COMPONENTS thread REQUIRED)
+find_package(Boost COMPONENTS thread system chrono REQUIRED)
 
 include_directories(
 ${PROJECT_SOURCE_DIR}
@@ -53,6 +55,7 @@ link_directories(${Boost_LIBRARY_DIRS})
 target_link_libraries(${PROJECT_NAME}
 ${OpenCV_LIBS}
 ${EIGEN3_LIBS}
+${Boost_LIBRARIES}
 #${PYTHON_LIBRARY}
 ${Pangolin_LIBRARIES}
 ${PROJECT_SOURCE_DIR}/Thirdparty/DBoW2/bin/Release/dbow2.lib

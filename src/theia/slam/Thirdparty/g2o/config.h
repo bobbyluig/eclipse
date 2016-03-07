@@ -1,7 +1,7 @@
 #ifndef G2O_CONFIG_H
 #define G2O_CONFIG_H
 
-#define G2O_OPENMP 1
+/* #undef G2O_OPENMP */
 /* #undef G2O_SHARED_LIBS */
 
 // give a warning if Eigen defaults to row-major matrices.

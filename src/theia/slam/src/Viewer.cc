@@ -21,8 +21,6 @@
 #include "Viewer.h"
 #include <pangolin/pangolin.h>
 
-#include <mutex>
-
 namespace ORB_SLAM2
 {
 

@@ -28,9 +28,6 @@
 
 #include "ORBmatcher.h"
 
-#include<mutex>
-#include<thread>
-
 
 namespace ORB_SLAM2
 {
@@ -83,7 +80,7 @@ void LoopClosing::Run()
             break;
 
         //usleep(5000);
-		std::this_thread::sleep_for(std::chrono::milliseconds(5));
+		boost::this_thread::sleep_for(boost::chrono::milliseconds(5));
 
 	}
 
@@ -417,7 +414,7 @@ void LoopClosing::CorrectLoop()
 
 		while (!isFinishedGBA()) {
 			//usleep(5000);
-			std::this_thread::sleep_for(std::chrono::milliseconds(5));
+			boost::this_thread::sleep_for(boost::chrono::milliseconds(5));
 		}
 
         mpThreadGBA->join();
@@ -428,7 +425,7 @@ void LoopClosing::CorrectLoop()
     while(!mpLocalMapper->isStopped())
     {
 		//usleep(1000);
-		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+		boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
 
     }
 
@@ -632,7 +629,7 @@ void LoopClosing::RequestReset()
             break;
         }
 		//usleep(5000);
-		std::this_thread::sleep_for(std::chrono::milliseconds(5));
+		boost::this_thread::sleep_for(boost::chrono::milliseconds(5));
 
     }
 }
@@ -672,7 +669,7 @@ void LoopClosing::RunGlobalBundleAdjustment(unsigned long nLoopKF)
             while(!mpLocalMapper->isStopped() && !mpLocalMapper->isFinished())
             {
 				//usleep(1000);
-				std::this_thread::sleep_for(std::chrono::milliseconds(1));
+				boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
 			}
 
             // Get Map Mutex
