@@ -42,7 +42,7 @@ find_package(OpenCV 3.0.0 REQUIRED)
 find_package(Eigen3 3.1.0 REQUIRED)
 find_package(PythonInterp 3.4 REQUIRED)
 find_package(PythonLibs 3.4 REQUIRED)
-find_package(Boost COMPONENTS thread system chrono python REQUIRED)
+find_package(Boost COMPONENTS python REQUIRED)
 
 # Locate Python3, Numpy, and all libraries / includes.
 find_python(PYTHON3_LIBRARY PYTHON3_INCLUDE_DIR

@@ -21,16 +21,16 @@
 
 #include "Tracking.h"
 
-#include<opencv2/core/core.hpp>
-#include<opencv2/features2d/features2d.hpp>
+#include <opencv2/core/core.hpp>
+#include <opencv2/features2d/features2d.hpp>
 
-#include"ORBmatcher.h"
-#include"Converter.h"
-#include"Map.h"
-#include"Initializer.h"
-
-#include"Optimizer.h"
-#include"PnPsolver.h"
+#include "ORBmatcher.h"
+#include "Converter.h"
+#include "Map.h"
+#include "Initializer.h"
+		 
+#include "Optimizer.h"
+#include "PnPsolver.h"
 
 #include <iostream>
 #include <string>
@@ -248,7 +248,7 @@ namespace ORB_SLAM2
 		mLastProcessedState = mState;
 
 		// Get shared Map Mutex -> Map cannot be changed
-		boost::shared_lock<boost::shared_mutex> lock(mpMap->mMutexMapUpdate);
+		std::shared_lock<std::shared_timed_mutex> lock(mpMap->mMutexMapUpdate);
 
 		if (mState == NOT_INITIALIZED)
 		{
@@ -1498,7 +1498,7 @@ namespace ORB_SLAM2
 		/*
 		while (!mpViewer->isStopped()) {
 			//usleep(3000);
-			boost::this_thread::sleep_for(boost::chrono::milliseconds(3));
+			std::this_thread::sleep_for(std::chrono::milliseconds(3));
 		}
 		*/
 
@@ -1573,13 +1573,13 @@ namespace ORB_SLAM2
 
 	void Tracking::RequestFinish()
 	{
-		boost::unique_lock<boost::mutex> lock(mMutexFinish);
+		std::unique_lock<std::mutex> lock(mMutexFinish);
 		mbFinishRequested = true;
 	}
 
 	bool Tracking::CheckFinish()
 	{
-		boost::unique_lock<boost::mutex> lock(mMutexFinish);
+		std::unique_lock<std::mutex> lock(mMutexFinish);
 		return mbFinishRequested;
 	}
 

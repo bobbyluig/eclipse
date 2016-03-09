@@ -71,8 +71,8 @@ namespace ORB_SLAM2
 			return false;
 
 		// Run threads.
-		mptLocalMapping = new boost::thread(&ORB_SLAM2::LocalMapping::Run, mpLocalMapper);
-		mptLoopClosing = new boost::thread(&ORB_SLAM2::LoopClosing::Run, mpLoopCloser);
+		mptLocalMapping = new std::thread(&ORB_SLAM2::LocalMapping::Run, mpLocalMapper);
+		mptLoopClosing = new std::thread(&ORB_SLAM2::LoopClosing::Run, mpLoopCloser);
 
 		// Have threads reference each other.
 		mpLocalMapper->SetLoopCloser(mpLoopCloser);
@@ -98,7 +98,7 @@ namespace ORB_SLAM2
 		// Check mode change
 	{
 		/*
-		boost::unique_lock<boost::mutex> lock(mMutexMode);
+		std::unique_lock<std::mutex> lock(mMutexMode);
 		if (mbActivateLocalizationMode)
 		{
 			mpLocalMapper->RequestStop();
@@ -107,7 +107,7 @@ namespace ORB_SLAM2
 			while (!mpLocalMapper->isStopped())
 			{
 				//usleep(1000);
-				boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
+				std::this_thread::sleep_for(std::chrono::milliseconds(1));
 			}
 
 			mpTrackers[0]->InformOnlyTracking(true);
@@ -125,7 +125,7 @@ namespace ORB_SLAM2
 	// Check reset
 	{
 		/*
-		boost::unique_lock<boost::mutex> lock(mMutexReset);
+		std::unique_lock<std::mutex> lock(mMutexReset);
 		if (mbReset)
 		{
 			mpTrackers[0]->Reset();
@@ -145,7 +145,7 @@ namespace ORB_SLAM2
 
 		// Wait until all thread have effectively stopped
 		while (!mpLocalMapper->isFinished() || !mpLoopCloser->isFinished() || mpLoopCloser->isRunningGBA())
-			boost::this_thread::sleep_for(boost::chrono::milliseconds(5));
+			std::this_thread::sleep_for(std::chrono::milliseconds(5));
 		
 		isRunning = false;
 	}

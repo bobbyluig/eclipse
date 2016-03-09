@@ -277,7 +277,7 @@ namespace ORB_SLAM2
 
 
 		{
-			boost::unique_lock<boost::mutex> lock(MapPoint::mGlobalMutex);
+			std::unique_lock<std::mutex> lock(MapPoint::mGlobalMutex);
 
 			for (int i = 0; i < N; i++)
 			{
@@ -745,7 +745,7 @@ namespace ORB_SLAM2
 		}
 
 		// Get Map Mutex
-		boost::unique_lock<boost::shared_mutex> lock(pMap->mMutexMapUpdate);
+		std::unique_lock<std::shared_timed_mutex> lock(pMap->mMutexMapUpdate);
 
 		if (!vToErase.empty())
 		{
@@ -988,7 +988,7 @@ namespace ORB_SLAM2
 		optimizer.initializeOptimization();
 		optimizer.optimize(20);
 
-		boost::unique_lock<boost::shared_mutex> lock(pMap->mMutexMapUpdate);
+		std::unique_lock<std::shared_timed_mutex> lock(pMap->mMutexMapUpdate);
 
 		// SE3 Pose Recovering. Sim3:[sR t;0 1] -> SE3:[R t/s;0 1]
 		for (size_t i = 0; i < vpKFs.size(); i++)

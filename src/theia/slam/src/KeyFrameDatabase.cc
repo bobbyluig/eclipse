@@ -39,7 +39,7 @@ namespace ORB_SLAM2
 
 	void KeyFrameDatabase::add(KeyFrame *pKF)
 	{
-		boost::unique_lock<boost::mutex> lock(mMutex);
+		std::unique_lock<std::mutex> lock(mMutex);
 
 		for (DBoW2::BowVector::const_iterator vit = pKF->mBowVec.begin(), vend = pKF->mBowVec.end(); vit != vend; vit++)
 			mvInvertedFile[vit->first].push_back(pKF);
@@ -47,7 +47,7 @@ namespace ORB_SLAM2
 
 	void KeyFrameDatabase::erase(KeyFrame* pKF)
 	{
-		boost::unique_lock<boost::mutex> lock(mMutex);
+		std::unique_lock<std::mutex> lock(mMutex);
 
 		// Erase elements in the Inverse File for the entry
 		for (DBoW2::BowVector::const_iterator vit = pKF->mBowVec.begin(), vend = pKF->mBowVec.end(); vit != vend; vit++)
@@ -81,7 +81,7 @@ namespace ORB_SLAM2
 		// Search all keyframes that share a word with current keyframes
 		// Discard keyframes connected to the query keyframe
 		{
-			boost::unique_lock<boost::mutex> lock(mMutex);
+			std::unique_lock<std::mutex> lock(mMutex);
 
 			for (DBoW2::BowVector::const_iterator vit = pKF->mBowVec.begin(), vend = pKF->mBowVec.end(); vit != vend; vit++)
 			{
@@ -202,7 +202,7 @@ namespace ORB_SLAM2
 
 		// Search all keyframes that share a word with current frame
 		{
-			boost::unique_lock<boost::mutex> lock(mMutex);
+			std::unique_lock<std::mutex> lock(mMutex);
 
 			for (DBoW2::BowVector::const_iterator vit = F->mBowVec.begin(), vend = F->mBowVec.end(); vit != vend; vit++)
 			{

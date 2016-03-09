@@ -25,6 +25,9 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/features2d/features2d.hpp>
 
+#include <mutex>
+#include <shared_mutex>
+
 #include "Map.h"
 #include "LocalMapping.h"
 #include "LoopClosing.h"
@@ -34,6 +37,7 @@
 #include "ORBextractor.h"
 #include "Initializer.h"
 #include "System.h"
+
 
 namespace ORB_SLAM2
 {
@@ -237,7 +241,7 @@ namespace ORB_SLAM2
 		// Threading
 		bool CheckFinish();
 		bool mbFinishRequested;
-		boost::mutex mMutexFinish;
+		std::mutex mMutexFinish;
 
 		list<MapPoint*> mlpTemporalPoints;
 	};

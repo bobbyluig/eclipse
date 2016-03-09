@@ -20,8 +20,8 @@ params.rgb = False
 print('Starting system.')
 
 system = System()
-success2 = system.start()
 success1 = system.load('voc.txt')
+success2 = system.start()
 
 if not success1 or not success2:
 	print('Failed to load vocabulary!')

@@ -87,7 +87,7 @@ namespace ORB_SLAM2
 				while (isStopped() && !CheckFinish())
 				{
 					// usleep(3000);
-					boost::this_thread::sleep_for(boost::chrono::milliseconds(3));
+					std::this_thread::sleep_for(std::chrono::milliseconds(3));
 				}
 				if (CheckFinish())
 					break;
@@ -102,7 +102,7 @@ namespace ORB_SLAM2
 				break;
 
 			//usleep(3000);
-			boost::this_thread::sleep_for(boost::chrono::milliseconds(3));
+			std::this_thread::sleep_for(std::chrono::milliseconds(3));
 
 		}
 
@@ -111,7 +111,7 @@ namespace ORB_SLAM2
 
 	void LocalMapping::InsertKeyFrame(KeyFrame *pKF)
 	{
-		boost::unique_lock<boost::mutex> lock(mMutexNewKFs);
+		std::unique_lock<std::mutex> lock(mMutexNewKFs);
 		mlNewKeyFrames.push_back(pKF);
 		mbAbortBA = true;
 	}
@@ -119,14 +119,14 @@ namespace ORB_SLAM2
 
 	bool LocalMapping::CheckNewKeyFrames()
 	{
-		boost::unique_lock<boost::mutex> lock(mMutexNewKFs);
+		std::unique_lock<std::mutex> lock(mMutexNewKFs);
 		return(!mlNewKeyFrames.empty());
 	}
 
 	void LocalMapping::ProcessNewKeyFrame()
 	{
 		{
-			boost::unique_lock<boost::mutex> lock(mMutexNewKFs);
+			std::unique_lock<std::mutex> lock(mMutexNewKFs);
 			mpCurrentKeyFrame = mlNewKeyFrames.front();
 			mlNewKeyFrames.pop_front();
 		}
@@ -552,15 +552,15 @@ namespace ORB_SLAM2
 
 	void LocalMapping::RequestStop()
 	{
-		boost::unique_lock<boost::mutex> lock(mMutexStop);
+		std::unique_lock<std::mutex> lock(mMutexStop);
 		mbStopRequested = true;
-		boost::unique_lock<boost::mutex> lock2(mMutexNewKFs);
+		std::unique_lock<std::mutex> lock2(mMutexNewKFs);
 		mbAbortBA = true;
 	}
 
 	bool LocalMapping::Stop()
 	{
-		boost::unique_lock<boost::mutex> lock(mMutexStop);
+		std::unique_lock<std::mutex> lock(mMutexStop);
 		if (mbStopRequested && !mbNotStop)
 		{
 			mbStopped = true;
@@ -573,20 +573,20 @@ namespace ORB_SLAM2
 
 	bool LocalMapping::isStopped()
 	{
-		boost::unique_lock<boost::mutex> lock(mMutexStop);
+		std::unique_lock<std::mutex> lock(mMutexStop);
 		return mbStopped;
 	}
 
 	bool LocalMapping::stopRequested()
 	{
-		boost::unique_lock<boost::mutex> lock(mMutexStop);
+		std::unique_lock<std::mutex> lock(mMutexStop);
 		return mbStopRequested;
 	}
 
 	void LocalMapping::Release()
 	{
-		boost::unique_lock<boost::mutex> lock(mMutexStop);
-		boost::unique_lock<boost::mutex> lock2(mMutexFinish);
+		std::unique_lock<std::mutex> lock(mMutexStop);
+		std::unique_lock<std::mutex> lock2(mMutexFinish);
 		if (mbFinished)
 			return;
 		mbStopped = false;
@@ -600,19 +600,19 @@ namespace ORB_SLAM2
 
 	bool LocalMapping::AcceptKeyFrames()
 	{
-		boost::unique_lock<boost::mutex> lock(mMutexAccept);
+		std::unique_lock<std::mutex> lock(mMutexAccept);
 		return mbAcceptKeyFrames;
 	}
 
 	void LocalMapping::SetAcceptKeyFrames(bool flag)
 	{
-		boost::unique_lock<boost::mutex> lock(mMutexAccept);
+		std::unique_lock<std::mutex> lock(mMutexAccept);
 		mbAcceptKeyFrames = flag;
 	}
 
 	bool LocalMapping::SetNotStop(bool flag)
 	{
-		boost::unique_lock<boost::mutex> lock(mMutexStop);
+		std::unique_lock<std::mutex> lock(mMutexStop);
 
 		if (flag && mbStopped)
 			return false;
@@ -705,26 +705,26 @@ namespace ORB_SLAM2
 	void LocalMapping::RequestReset()
 	{
 		{
-			boost::unique_lock<boost::mutex> lock(mMutexReset);
+			std::unique_lock<std::mutex> lock(mMutexReset);
 			mbResetRequested = true;
 		}
 
 		while (1)
 		{
 			{
-				boost::unique_lock<boost::mutex> lock2(mMutexReset);
+				std::unique_lock<std::mutex> lock2(mMutexReset);
 				if (!mbResetRequested)
 					break;
 			}
 			//usleep(3000);
-			boost::this_thread::sleep_for(boost::chrono::milliseconds(3));
+			std::this_thread::sleep_for(std::chrono::milliseconds(3));
 
 		}
 	}
 
 	void LocalMapping::ResetIfRequested()
 	{
-		boost::unique_lock<boost::mutex> lock(mMutexReset);
+		std::unique_lock<std::mutex> lock(mMutexReset);
 		if (mbResetRequested)
 		{
 			mlNewKeyFrames.clear();
@@ -735,27 +735,27 @@ namespace ORB_SLAM2
 
 	void LocalMapping::RequestFinish()
 	{
-		boost::unique_lock<boost::mutex> lock(mMutexFinish);
+		std::unique_lock<std::mutex> lock(mMutexFinish);
 		mbFinishRequested = true;
 	}
 
 	bool LocalMapping::CheckFinish()
 	{
-		boost::unique_lock<boost::mutex> lock(mMutexFinish);
+		std::unique_lock<std::mutex> lock(mMutexFinish);
 		return mbFinishRequested;
 	}
 
 	void LocalMapping::SetFinish()
 	{
-		boost::unique_lock<boost::mutex> lock(mMutexFinish);
+		std::unique_lock<std::mutex> lock(mMutexFinish);
 		mbFinished = true;
-		boost::unique_lock<boost::mutex> lock2(mMutexStop);
+		std::unique_lock<std::mutex> lock2(mMutexStop);
 		mbStopped = true;
 	}
 
 	bool LocalMapping::isFinished()
 	{
-		boost::unique_lock<boost::mutex> lock(mMutexFinish);
+		std::unique_lock<std::mutex> lock(mMutexFinish);
 		return mbFinished;
 	}
 

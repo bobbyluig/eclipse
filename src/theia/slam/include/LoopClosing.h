@@ -29,7 +29,7 @@
 
 #include "KeyFrameDatabase.h"
 
-#include <boost/thread.hpp>
+#include <mutex>
 #include "Thirdparty/g2o/g2o/types/types_seven_dof_expmap.h"
 
 namespace ORB_SLAM2
@@ -45,7 +45,7 @@ namespace ORB_SLAM2
 	public:
 		EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-			typedef pair<set<KeyFrame*>, int> ConsistentGroup;
+		typedef pair<set<KeyFrame*>, int> ConsistentGroup;
 		typedef map < KeyFrame*, g2o::Sim3, std::less<KeyFrame*>,
 			Eigen::aligned_allocator<std::pair<const KeyFrame*, g2o::Sim3> > > KeyFrameAndPose;
 
@@ -66,11 +66,11 @@ namespace ORB_SLAM2
 		void RunGlobalBundleAdjustment(unsigned long nLoopKF);
 
 		bool isRunningGBA(){
-			boost::unique_lock<boost::mutex> lock(mMutexGBA);
+			std::unique_lock<std::mutex> lock(mMutexGBA);
 			return mbRunningGBA;
 		}
 		bool isFinishedGBA(){
-			boost::unique_lock<boost::mutex> lock(mMutexGBA);
+			std::unique_lock<std::mutex> lock(mMutexGBA);
 			return mbFinishedGBA;
 		}
 
@@ -92,13 +92,13 @@ namespace ORB_SLAM2
 
 		void ResetIfRequested();
 		bool mbResetRequested;
-		boost::mutex mMutexReset;
+		std::mutex mMutexReset;
 
 		bool CheckFinish();
 		void SetFinish();
 		bool mbFinishRequested;
 		bool mbFinished;
-		boost::mutex mMutexFinish;
+		std::mutex mMutexFinish;
 
 		Map* mpMap;
 
@@ -109,7 +109,7 @@ namespace ORB_SLAM2
 
 		std::list<KeyFrame*> mlpLoopKeyFrameQueue;
 
-		boost::mutex mMutexLoopQueue;
+		std::mutex mMutexLoopQueue;
 
 		// Loop detector parameters
 		float mnCovisibilityConsistencyTh;
@@ -131,8 +131,8 @@ namespace ORB_SLAM2
 		bool mbRunningGBA;
 		bool mbFinishedGBA;
 		bool mbStopGBA;
-		boost::mutex mMutexGBA;
-		boost::thread* mpThreadGBA;
+		std::mutex mMutexGBA;
+		std::thread* mpThreadGBA;
 
 		// Fix scale in the stereo/RGB-D case
 		bool mbFixScale;

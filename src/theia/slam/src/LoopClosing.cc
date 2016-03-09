@@ -74,7 +74,7 @@ namespace ORB_SLAM2
 				break;
 
 			//usleep(5000);
-			boost::this_thread::sleep_for(boost::chrono::milliseconds(5));
+			std::this_thread::sleep_for(std::chrono::milliseconds(5));
 
 		}
 
@@ -83,21 +83,21 @@ namespace ORB_SLAM2
 
 	void LoopClosing::InsertKeyFrame(KeyFrame *pKF)
 	{
-		boost::unique_lock<boost::mutex> lock(mMutexLoopQueue);
+		std::unique_lock<std::mutex> lock(mMutexLoopQueue);
 		if (pKF->mnId != 0)
 			mlpLoopKeyFrameQueue.push_back(pKF);
 	}
 
 	bool LoopClosing::CheckNewKeyFrames()
 	{
-		boost::unique_lock<boost::mutex> lock(mMutexLoopQueue);
+		std::unique_lock<std::mutex> lock(mMutexLoopQueue);
 		return(!mlpLoopKeyFrameQueue.empty());
 	}
 
 	bool LoopClosing::DetectLoop()
 	{
 		{
-			boost::unique_lock<boost::mutex> lock(mMutexLoopQueue);
+			std::unique_lock<std::mutex> lock(mMutexLoopQueue);
 			mpCurrentKF = mlpLoopKeyFrameQueue.front();
 			mlpLoopKeyFrameQueue.pop_front();
 			// Avoid that a keyframe can be erased while it is being process by this thread
@@ -408,7 +408,7 @@ namespace ORB_SLAM2
 
 			while (!isFinishedGBA()) {
 				//usleep(5000);
-				boost::this_thread::sleep_for(boost::chrono::milliseconds(5));
+				std::this_thread::sleep_for(std::chrono::milliseconds(5));
 			}
 
 			mpThreadGBA->join();
@@ -419,7 +419,7 @@ namespace ORB_SLAM2
 		while (!mpLocalMapper->isStopped())
 		{
 			//usleep(1000);
-			boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
+			std::this_thread::sleep_for(std::chrono::milliseconds(1));
 
 		}
 
@@ -437,7 +437,7 @@ namespace ORB_SLAM2
 
 		{
 			// Get Map Mutex
-			boost::unique_lock<boost::shared_mutex> lock(mpMap->mMutexMapUpdate);
+			std::unique_lock<std::shared_timed_mutex> lock(mpMap->mMutexMapUpdate);
 
 			for (vector<KeyFrame*>::iterator vit = mvpCurrentConnectedKFs.begin(), vend = mvpCurrentConnectedKFs.end(); vit != vend; vit++)
 			{
@@ -569,7 +569,7 @@ namespace ORB_SLAM2
 		mbRunningGBA = true;
 		mbFinishedGBA = false;
 		mbStopGBA = false;
-		mpThreadGBA = new boost::thread(&LoopClosing::RunGlobalBundleAdjustment, this, mpCurrentKF->mnId);
+		mpThreadGBA = new std::thread(&LoopClosing::RunGlobalBundleAdjustment, this, mpCurrentKF->mnId);
 
 		// Loop closed. Release Local Mapping.
 		mpLocalMapper->Release();
@@ -594,7 +594,7 @@ namespace ORB_SLAM2
 			matcher.Fuse(pKF, cvScw, mvpLoopMapPoints, 4, vpReplacePoints);
 
 			// Get Map Mutex
-			boost::unique_lock<boost::shared_mutex> lock(mpMap->mMutexMapUpdate);
+			std::unique_lock<std::shared_timed_mutex> lock(mpMap->mMutexMapUpdate);
 			const int nLP = mvpLoopMapPoints.size();
 			for (int i = 0; i < nLP; i++)
 			{
@@ -611,26 +611,26 @@ namespace ORB_SLAM2
 	void LoopClosing::RequestReset()
 	{
 		{
-			boost::unique_lock<boost::mutex> lock(mMutexReset);
+			std::unique_lock<std::mutex> lock(mMutexReset);
 			mbResetRequested = true;
 		}
 
 		while (1)
 		{
 			{
-				boost::unique_lock<boost::mutex> lock2(mMutexReset);
+				std::unique_lock<std::mutex> lock2(mMutexReset);
 				if (!mbResetRequested)
 					break;
 			}
 			//usleep(5000);
-			boost::this_thread::sleep_for(boost::chrono::milliseconds(5));
+			std::this_thread::sleep_for(std::chrono::milliseconds(5));
 
 		}
 	}
 
 	void LoopClosing::ResetIfRequested()
 	{
-		boost::unique_lock<boost::mutex> lock(mMutexReset);
+		std::unique_lock<std::mutex> lock(mMutexReset);
 		if (mbResetRequested)
 		{
 			mlpLoopKeyFrameQueue.clear();
@@ -650,7 +650,7 @@ namespace ORB_SLAM2
 		// not included in the Global BA and they are not consistent with the updated map.
 		// We need to propagate the correction through the spanning tree
 		{
-			boost::unique_lock<boost::mutex> lock(mMutexGBA);
+			std::unique_lock<std::mutex> lock(mMutexGBA);
 
 
 			if (!mbStopGBA)
@@ -663,11 +663,11 @@ namespace ORB_SLAM2
 				while (!mpLocalMapper->isStopped() && !mpLocalMapper->isFinished())
 				{
 					//usleep(1000);
-					boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
+					std::this_thread::sleep_for(std::chrono::milliseconds(1));
 				}
 
 				// Get Map Mutex
-				boost::unique_lock<boost::shared_mutex> lock(mpMap->mMutexMapUpdate);
+				std::unique_lock<std::shared_timed_mutex> lock(mpMap->mMutexMapUpdate);
 
 				// Correct keyframes starting at map first keyframe
 				list<KeyFrame*> lpKFtoCheck(mpMap->mvpKeyFrameOrigins.begin(), mpMap->mvpKeyFrameOrigins.end());
@@ -744,25 +744,25 @@ namespace ORB_SLAM2
 
 	void LoopClosing::RequestFinish()
 	{
-		boost::unique_lock<boost::mutex> lock(mMutexFinish);
+		std::unique_lock<std::mutex> lock(mMutexFinish);
 		mbFinishRequested = true;
 	}
 
 	bool LoopClosing::CheckFinish()
 	{
-		boost::unique_lock<boost::mutex> lock(mMutexFinish);
+		std::unique_lock<std::mutex> lock(mMutexFinish);
 		return mbFinishRequested;
 	}
 
 	void LoopClosing::SetFinish()
 	{
-		boost::unique_lock<boost::mutex> lock(mMutexFinish);
+		std::unique_lock<std::mutex> lock(mMutexFinish);
 		mbFinished = true;
 	}
 
 	bool LoopClosing::isFinished()
 	{
-		boost::unique_lock<boost::mutex> lock(mMutexFinish);
+		std::unique_lock<std::mutex> lock(mMutexFinish);
 		return mbFinished;
 	}
 

@@ -27,7 +27,8 @@
 #include "Tracking.h"
 #include "KeyFrameDatabase.h"
 
-#include <boost/thread.hpp>
+#include <mutex>
+#include <shared_mutex>
 
 
 namespace ORB_SLAM2
@@ -66,7 +67,7 @@ namespace ORB_SLAM2
 		bool isFinished();
 
 		int KeyframesInQueue(){
-			boost::unique_lock<boost::mutex> lock(mMutexNewKFs);
+			std::unique_lock<std::mutex> lock(mMutexNewKFs);
 			return mlNewKeyFrames.size();
 		}
 
@@ -89,13 +90,13 @@ namespace ORB_SLAM2
 
 		void ResetIfRequested();
 		bool mbResetRequested;
-		boost::mutex mMutexReset;
+		std::mutex mMutexReset;
 
 		bool CheckFinish();
 		void SetFinish();
 		bool mbFinishRequested;
 		bool mbFinished;
-		boost::mutex mMutexFinish;
+		std::mutex mMutexFinish;
 
 		Map* mpMap;
 
@@ -107,17 +108,17 @@ namespace ORB_SLAM2
 
 		std::list<MapPoint*> mlpRecentAddedMapPoints;
 
-		boost::mutex mMutexNewKFs;
+		std::mutex mMutexNewKFs;
 
 		bool mbAbortBA;
 
 		bool mbStopped;
 		bool mbStopRequested;
 		bool mbNotStop;
-		boost::mutex mMutexStop;
+		std::mutex mMutexStop;
 
 		bool mbAcceptKeyFrames;
-		boost::mutex mMutexAccept;
+		std::mutex mMutexAccept;
 	};
 
 } //namespace ORB_SLAM

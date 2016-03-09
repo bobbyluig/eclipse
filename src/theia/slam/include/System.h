@@ -23,10 +23,9 @@
 #define SYSTEM_H
 
 #include <string>
-#include <vector>
-#include <map>
-#include <utility>
-#include <boost/thread.hpp>
+#include <chrono>
+#include <mutex>
+#include <thread>
 #include <opencv2/core/core.hpp>
 
 #include "Tracking.h"
@@ -93,11 +92,6 @@ namespace ORB_SLAM2
 		// Map structure that stores the pointers to all KeyFrames and MapPoints.
 		Map* mpMap;
 
-		// Tracker. It receives a frame and computes the associated camera pose.
-		// It also decides when to insert a new keyframe, create some new MapPoints and
-		// performs relocalization if tracking fails.
-		map< int, pair<Tracking*, boost::thread*> > mpTrackers;
-
 		// Local Mapper. It manages the local map and performs local bundle adjustment.
 		LocalMapping* mpLocalMapper;
 
@@ -107,8 +101,8 @@ namespace ORB_SLAM2
 
 		// System threads: Local Mapping, Loop Closing, Viewer.
 		// The Tracking thread "lives" in the main execution thread that creates the System object.
-		boost::thread* mptLocalMapping;
-		boost::thread* mptLoopClosing;
+		std::thread* mptLocalMapping;
+		std::thread* mptLoopClosing;
 	};
 
 }// namespace ORB_SLAM
