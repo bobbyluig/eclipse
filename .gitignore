@@ -36,3 +36,6 @@ bld/
 *.7z
 *.zip
 *.rar
+
+# Large file
+voc.txt

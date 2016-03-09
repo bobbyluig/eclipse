@@ -32,48 +32,48 @@
 namespace ORB_SLAM2
 {
 
-class MapPoint;
-class KeyFrame;
+	class MapPoint;
+	class KeyFrame;
 
-class Map
-{
-public:
-    Map();
+	class Map
+	{
+	public:
+		Map();
 
-    void AddKeyFrame(KeyFrame* pKF);
-    void AddMapPoint(MapPoint* pMP);
-    void EraseMapPoint(MapPoint* pMP);
-    void EraseKeyFrame(KeyFrame* pKF);
-    void SetReferenceMapPoints(const std::vector<MapPoint*> &vpMPs);
+		void AddKeyFrame(KeyFrame* pKF);
+		void AddMapPoint(MapPoint* pMP);
+		void EraseMapPoint(MapPoint* pMP);
+		void EraseKeyFrame(KeyFrame* pKF);
+		void SetReferenceMapPoints(const std::vector<MapPoint*> &vpMPs);
 
-    std::vector<KeyFrame*> GetAllKeyFrames();
-    std::vector<MapPoint*> GetAllMapPoints();
-    std::vector<MapPoint*> GetReferenceMapPoints();
+		std::vector<KeyFrame*> GetAllKeyFrames();
+		std::vector<MapPoint*> GetAllMapPoints();
+		std::vector<MapPoint*> GetReferenceMapPoints();
 
-    long unsigned int MapPointsInMap();
-    long unsigned  KeyFramesInMap();
+		long unsigned int MapPointsInMap();
+		long unsigned  KeyFramesInMap();
 
-    long unsigned int GetMaxKFid();
+		long unsigned int GetMaxKFid();
 
-    void clear();
+		void clear();
 
-    vector<KeyFrame*> mvpKeyFrameOrigins;
+		vector<KeyFrame*> mvpKeyFrameOrigins;
 
-    boost::mutex mMutexMapUpdate;
+		boost::shared_mutex mMutexMapUpdate;
 
-    // This avoid that two points are created simultaneously in separate threads (id conflict)
-    boost::mutex mMutexPointCreation;
+		// This avoid that two points are created simultaneously in separate threads (id conflict)
+		boost::mutex mMutexPointCreation;
 
-protected:
-    std::set<MapPoint*> mspMapPoints;
-    std::set<KeyFrame*> mspKeyFrames;
+	protected:
+		std::set<MapPoint*> mspMapPoints;
+		std::set<KeyFrame*> mspKeyFrames;
 
-    std::vector<MapPoint*> mvpReferenceMapPoints;
+		std::vector<MapPoint*> mvpReferenceMapPoints;
 
-    long unsigned int mnMaxKFid;
+		long unsigned int mnMaxKFid;
 
-    boost::mutex mMutexMap;
-};
+		boost::mutex mMutexMap;
+	};
 
 } //namespace ORB_SLAM
 
