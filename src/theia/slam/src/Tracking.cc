@@ -194,8 +194,8 @@ namespace ORB_SLAM2
 				cvtColor(mImGray, mImGray, CV_BGRA2GRAY);
 		}
 
-		if (mDepthMapFactor != 1 || imDepth.type() != CV_32F);
-		imDepth.convertTo(imDepth, CV_32F, mDepthMapFactor);
+		if (mDepthMapFactor != 1 || imDepth.type() != CV_32F)
+			imDepth.convertTo(imDepth, CV_32F, mDepthMapFactor);
 
 		mCurrentFrame = Frame(mImGray, imDepth, timestamp, mpORBextractorLeft, mpORBVocabulary, mK, mDistCoef, mbf, mThDepth);
 
