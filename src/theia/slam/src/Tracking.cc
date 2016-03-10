@@ -231,7 +231,7 @@ namespace ORB_SLAM2
 
 		Track();
 
-		return mCurrentFrame.mTcw.clone();
+		return mCurrentFrame.GetCameraCenter();
 	}
 
 	void Tracking::Track()
@@ -401,7 +401,7 @@ namespace ORB_SLAM2
 				else
 					mVelocity = cv::Mat();
 
-				cout << mCurrentFrame.GetCameraCenter() << endl;
+				// cout << mCurrentFrame.GetCameraCenter() << endl;
 				// mpMapDrawer->SetCurrentCameraPose(mCurrentFrame.mTcw);
 
 				// Clean temporal point matches
@@ -1487,17 +1487,6 @@ namespace ORB_SLAM2
 
 	void Tracking::Reset()
 	{
-		// mpViewer->RequestStop();
-
-		cout << "System Resetting." << endl;
-
-		/*
-		while (!mpViewer->isStopped()) {
-			//usleep(3000);
-			std::this_thread::sleep_for(std::chrono::milliseconds(3));
-		}
-		*/
-
 		// Reset Local Mapping
 		cout << "Resetting Local Mapper...";
 		mpLocalMapper->RequestReset();

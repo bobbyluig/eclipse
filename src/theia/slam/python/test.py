@@ -2,8 +2,10 @@ from pyslam import *
 import cv2
 import time
 import sys
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 
-# cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(0)
 
 mSensor = eSensor.MONOCULAR
 
@@ -49,8 +51,20 @@ print('Starting modules.')
 mpLocalMapper.run()
 mpLoopCloser.run()
 
+# Create 3D plotter.
+fig = plt.figure()
+ax = fig.add_subplot(111)
+ax.set_xlabel('X Label')
+ax.set_ylabel('Y Label')
+
 # Main loop.
-while True:
-    _, frame = cap.read()
-    mpTracker.grab_one(frame, time.time())
-    print(mpTracker.get_state())
+i = 0
+while i < 500:
+	_, frame = cap.read()
+	p = mpTracker.grab_one(frame, time.time())
+	if p is not None:
+		print(i, p.ravel())
+		ax.scatter(p[2], -p[0])
+		i += 1
+
+plt.show()

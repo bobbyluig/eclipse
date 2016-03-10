@@ -60,19 +60,24 @@ void export_all()
 		.def("load2", &ORBVocabulary::loadFromTextFile2);
 
 	class_<KeyFrameDatabase, boost::noncopyable>("KeyFrameDatabase", 
-		init<ORBVocabulary&>());
+		init<ORBVocabulary&>())
+		.def("clear", &KeyFrameDatabase::clear);
 
-	class_<Map, boost::noncopyable>("Map");
+	class_<Map, boost::noncopyable>("Map")
+		.def("clear", &Map::clear);
 
 	class_<LocalMapping, boost::noncopyable>("LocalMapping", 
 		init<Map&, bool>())
 		.def("run", &LocalMapping::Run)
-		.def("request_finish", &LocalMapping::RequestFinish)
+		.def("finish", &LocalMapping::RequestFinish)
+		.def("reset", &LocalMapping::RequestReset)
 		.def("set_loop_closer", &LocalMapping::SetLoopCloser);
 
 	class_<LoopClosing, boost::noncopyable>("LoopClosing", 
 		init<Map&, KeyFrameDatabase&, ORBVocabulary&, bool>())
 		.def("run", &LoopClosing::Run)
+		.def("finish", &LoopClosing::RequestFinish)
+		.def("reset", &LoopClosing::RequestReset)
 		.def("set_local_mapper", &LoopClosing::SetLocalMapper);
 
 	enum_<System::eSensor>("eSensor")
