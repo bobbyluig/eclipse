@@ -30,6 +30,8 @@
 #include "KeyFrameDatabase.h"
 
 #include <mutex>
+#include <atomic>
+#include <thread>
 #include "Thirdparty/g2o/g2o/types/types_seven_dof_expmap.h"
 
 namespace ORB_SLAM2
@@ -50,12 +52,15 @@ namespace ORB_SLAM2
 			Eigen::aligned_allocator<std::pair<const KeyFrame*, g2o::Sim3> > > KeyFrameAndPose;
 
 	public:
+		LoopClosing(Map& pMap, KeyFrameDatabase& pDB, ORBVocabulary& pVoc, const bool bFixScale);
+		~LoopClosing();
 
-		LoopClosing(Map* pMap, KeyFrameDatabase* pDB, ORBVocabulary* pVoc, const bool bFixScale);
-
-		void SetLocalMapper(LocalMapping* pLocalMapper);
+		void SetLocalMapper(LocalMapping& pLocalMapper);
 
 		// Main function
+		void Main();
+
+		// Function to detach main into thread
 		void Run();
 
 		void InsertKeyFrame(KeyFrame *pKF);
@@ -91,14 +96,12 @@ namespace ORB_SLAM2
 		void CorrectLoop();
 
 		void ResetIfRequested();
-		bool mbResetRequested;
-		std::mutex mMutexReset;
+		std::atomic<bool> mbResetRequested;
 
 		bool CheckFinish();
 		void SetFinish();
-		bool mbFinishRequested;
-		bool mbFinished;
-		std::mutex mMutexFinish;
+		std::atomic<bool> mbFinishRequested;
+		std::atomic<bool> mbFinished;
 
 		Map* mpMap;
 
@@ -136,6 +139,9 @@ namespace ORB_SLAM2
 
 		// Fix scale in the stereo/RGB-D case
 		bool mbFixScale;
+
+		// Thread
+		std::thread mainThread;
 	};
 
 } //namespace ORB_SLAM

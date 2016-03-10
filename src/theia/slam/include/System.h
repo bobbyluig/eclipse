@@ -22,30 +22,8 @@
 #ifndef SYSTEM_H
 #define SYSTEM_H
 
-#include <string>
-#include <chrono>
-#include <mutex>
-#include <thread>
-#include <opencv2/core/core.hpp>
-
-#include "Tracking.h"
-#include "Map.h"
-#include "LocalMapping.h"
-#include "LoopClosing.h"
-#include "KeyFrameDatabase.h"
-#include "ORBVocabulary.h"
-
-
 namespace ORB_SLAM2
 {
-
-	class Viewer;
-	class FrameDrawer;
-	class Map;
-	class Tracking;
-	class LocalMapping;
-	class LoopClosing;
-
 	class System
 	{
 	public:
@@ -55,56 +33,8 @@ namespace ORB_SLAM2
 			STEREO = 1,
 			RGBD = 2
 		};
-
-	public:
-
-		// Initialize the SLAM system. It launches the Local Mapping, Loop Closing and Viewer threads.
-		System();
-		~System();
-
-		// Loading, starting, and stopping system threads.
-		bool Load(const string &strVocFile);
-		bool Start();
-		void Stop();
-
-		// Add tracker.
-		bool BindTracker(Tracking &tracker);
-
-		// Proccess the given monocular frame
-		// Input images: RGB (CV_8UC3) or grayscale (CV_8U). RGB is converted to grayscale.
-		// Returns the camera pose (empty if tracking fails).
-		cv::Mat TrackMonocular(const cv::Mat &im, const double &timestamp);
-
-
-	private:
-		// Input sensor
-		const eSensor mSensor = MONOCULAR;
-
-		// ORB vocabulary used for place recognition and feature matching.
-		ORBVocabulary* mpVocabulary;
-
-		// Is running?
-		bool isRunning;
-
-		// KeyFrame database for place recognition (relocalization and loop detection).
-		KeyFrameDatabase* mpKeyFrameDatabase;
-
-		// Map structure that stores the pointers to all KeyFrames and MapPoints.
-		Map* mpMap;
-
-		// Local Mapper. It manages the local map and performs local bundle adjustment.
-		LocalMapping* mpLocalMapper;
-
-		// Loop Closer. It searches loops with every new keyframe. If there is a loop it performs
-		// a pose graph optimization and full bundle adjustment (in a new thread) afterwards.
-		LoopClosing* mpLoopCloser;
-
-		// System threads: Local Mapping, Loop Closing, Viewer.
-		// The Tracking thread "lives" in the main execution thread that creates the System object.
-		std::thread* mptLocalMapping;
-		std::thread* mptLoopClosing;
 	};
 
-}// namespace ORB_SLAM
+} // namespace ORB_SLAM
 
 #endif // SYSTEM_H

@@ -19,34 +19,43 @@
 */
 
 #include "LoopClosing.h"
-
 #include "Sim3Solver.h"
-
 #include "Converter.h"
-
 #include "Optimizer.h"
-
 #include "ORBmatcher.h"
 
 
 namespace ORB_SLAM2
 {
-
-	LoopClosing::LoopClosing(Map *pMap, KeyFrameDatabase *pDB, ORBVocabulary *pVoc, const bool bFixScale) :
-		mbResetRequested(false), mbFinishRequested(false), mbFinished(true), mpMap(pMap),
-		mpKeyFrameDB(pDB), mpORBVocabulary(pVoc), mLastLoopKFid(0), mbRunningGBA(false), mbFinishedGBA(true),
-		mbStopGBA(false), mbFixScale(bFixScale)
+	LoopClosing::LoopClosing(Map& pMap, KeyFrameDatabase& pDB, ORBVocabulary& pVoc, const bool bFixScale) :
+		mbResetRequested(false), mbFinishRequested(false), mbFinished(true), mpMap(&pMap),
+		mpKeyFrameDB(&pDB), mpORBVocabulary(&pVoc), mLastLoopKFid(0), mbRunningGBA(false), mbFinishedGBA(true),
+		mbStopGBA(false), mbFixScale(bFixScale), mainThread()
 	{
 		mnCovisibilityConsistencyTh = 3;
 		mpMatchedKF = NULL;
 	}
 
-	void LoopClosing::SetLocalMapper(LocalMapping *pLocalMapper)
+	LoopClosing::~LoopClosing()
 	{
-		mpLocalMapper = pLocalMapper;
+		RequestFinish();
+		mainThread.join();
+	}
+
+	void LoopClosing::SetLocalMapper(LocalMapping& pLocalMapper)
+	{
+		mpLocalMapper = &pLocalMapper;
 	}
 
 	void LoopClosing::Run()
+	{
+		if (!mbFinished)
+			return;
+
+		mainThread = std::thread(&LoopClosing::Main, this);
+	}
+
+	void LoopClosing::Main()
 	{
 		mbFinished = false;
 
@@ -610,27 +619,11 @@ namespace ORB_SLAM2
 
 	void LoopClosing::RequestReset()
 	{
-		{
-			std::unique_lock<std::mutex> lock(mMutexReset);
-			mbResetRequested = true;
-		}
-
-		while (1)
-		{
-			{
-				std::unique_lock<std::mutex> lock2(mMutexReset);
-				if (!mbResetRequested)
-					break;
-			}
-			//usleep(5000);
-			std::this_thread::sleep_for(std::chrono::milliseconds(5));
-
-		}
+		mbResetRequested = true;
 	}
 
 	void LoopClosing::ResetIfRequested()
 	{
-		std::unique_lock<std::mutex> lock(mMutexReset);
 		if (mbResetRequested)
 		{
 			mlpLoopKeyFrameQueue.clear();
@@ -744,25 +737,21 @@ namespace ORB_SLAM2
 
 	void LoopClosing::RequestFinish()
 	{
-		std::unique_lock<std::mutex> lock(mMutexFinish);
 		mbFinishRequested = true;
 	}
 
 	bool LoopClosing::CheckFinish()
 	{
-		std::unique_lock<std::mutex> lock(mMutexFinish);
 		return mbFinishRequested;
 	}
 
 	void LoopClosing::SetFinish()
 	{
-		std::unique_lock<std::mutex> lock(mMutexFinish);
 		mbFinished = true;
 	}
 
 	bool LoopClosing::isFinished()
 	{
-		std::unique_lock<std::mutex> lock(mMutexFinish);
 		return mbFinished;
 	}
 

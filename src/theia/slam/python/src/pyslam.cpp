@@ -6,6 +6,11 @@
 
 #include <Tracking.h>
 #include <System.h>
+#include <ORBVocabulary.h>
+#include <Map.h>
+#include <LocalMapping.h>
+#include <LoopClosing.h>
+#include <KeyFrameDatabase.h>
 
 using namespace boost::python;
 using namespace ORB_SLAM2;
@@ -41,16 +46,39 @@ void export_all()
 		.def_readwrite("mThDepth", &TrackerParams::mThDepth)
 		.def_readwrite("mDepthMapFactor", &TrackerParams::mDepthMapFactor);
 
-	class_<Tracking, boost::noncopyable>("Tracking", init<TrackerParams&, int>())
+	class_<Tracking, boost::noncopyable>("Tracking", 
+		init<ORBVocabulary&, Map&, KeyFrameDatabase&, TrackerParams&, int>())
+		.def("set_loop_closer", &Tracking::SetLoopCloser)
+		.def("set_local_mapper", &Tracking::SetLocalMapper)
 		.def("run", &Tracking::Run)
 		.def("grab_one", &Tracking::GrabImageMonocular)
 		.def("get_state", &Tracking::GetState);
 
-	class_<System>("System")
-		.def("load", &System::Load)
-		.def("start", &System::Start)
-		.def("stop", &System::Stop)
-		.def("bind_tracker", &System::BindTracker);
+	// MEMORY LEAK!!!
+	class_<ORBVocabulary>("ORBVocabulary")
+		.def("load", &ORBVocabulary::loadFromTextFile)
+		.def("load2", &ORBVocabulary::loadFromTextFile2);
+
+	class_<KeyFrameDatabase, boost::noncopyable>("KeyFrameDatabase", 
+		init<ORBVocabulary&>());
+
+	class_<Map, boost::noncopyable>("Map");
+
+	class_<LocalMapping, boost::noncopyable>("LocalMapping", 
+		init<Map&, bool>())
+		.def("run", &LocalMapping::Run)
+		.def("request_finish", &LocalMapping::RequestFinish)
+		.def("set_loop_closer", &LocalMapping::SetLoopCloser);
+
+	class_<LoopClosing, boost::noncopyable>("LoopClosing", 
+		init<Map&, KeyFrameDatabase&, ORBVocabulary&, bool>())
+		.def("run", &LoopClosing::Run)
+		.def("set_local_mapper", &LoopClosing::SetLocalMapper);
+
+	enum_<System::eSensor>("eSensor")
+		.value("MONOCULAR", System::MONOCULAR)
+		.value("STEREO", System::STEREO)
+		.value("RGBD", System::RGBD);
 }
 
 BOOST_PYTHON_MODULE(pyslam)

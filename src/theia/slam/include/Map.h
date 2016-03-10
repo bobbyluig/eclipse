@@ -39,6 +39,7 @@ namespace ORB_SLAM2
 	{
 	public:
 		Map();
+		~Map();
 
 		void AddKeyFrame(KeyFrame* pKF);
 		void AddMapPoint(MapPoint* pMP);

@@ -35,15 +35,14 @@
 #include <iostream>
 #include <string>
 
-#include "gil.hpp"
-
 using namespace std;
 
 namespace ORB_SLAM2
 {
 
-	Tracking::Tracking(const TrackerParams &fSettings, const int sensor) :
-		mState(SYSTEM_NOT_READY), mSensor(sensor), mbOnlyTracking(false), mbVO(false), mnLastRelocFrameId(0)
+	Tracking::Tracking(ORBVocabulary& pVoc, Map& pMap, KeyFrameDatabase& pKFDB, const TrackerParams &fSettings, const int sensor) :
+		mState(NO_IMAGES_YET), mSensor(sensor), mbOnlyTracking(false), mbVO(false), mnLastRelocFrameId(0),
+		mpORBVocabulary(&pVoc), mpMap(&pMap), mpKeyFrameDB(&pKFDB), mpInitializer(static_cast<Initializer*>(NULL))
 	{
 		// Load camera parameters from settings file
 		float fx = fSettings.fx;
@@ -118,17 +117,14 @@ namespace ORB_SLAM2
 
 	Tracking::~Tracking() {}
 
+	void Tracking::SetLocalMapper(LocalMapping& pLocalMapper)
+	{
+		mpLocalMapper = &pLocalMapper;
+	}
 
-	void Tracking::Initialize(ORBVocabulary* pVoc, Map* pMap, KeyFrameDatabase* pKFDB, LocalMapping* pLocalMapper, LoopClosing* pLoopClosing)
-	{ 
-		mpORBVocabulary = pVoc;
-		mpMap = pMap;
-		mpKeyFrameDB = pKFDB;
-		mpLocalMapper = pLocalMapper;
-		mpLoopClosing = pLoopClosing;
-		mpInitializer = static_cast<Initializer*>(NULL);
-
-		mState = NO_IMAGES_YET;
+	void Tracking::SetLoopCloser(LoopClosing& pLoopClosing)
+	{
+		mpLoopClosing = &pLoopClosing;
 	}
 
 
@@ -448,8 +444,8 @@ namespace ORB_SLAM2
 			{
 				if (mpMap->KeyFramesInMap() <= 5)
 				{
-					cout << "Track lost soon after initialisation, reseting..." << endl;
-					// mpSystem->Reset();
+					cout << "Track lost soon after initialization, resetting." << endl;
+					Reset();
 					return;
 				}
 			}
@@ -656,7 +652,7 @@ namespace ORB_SLAM2
 		pKFcur->UpdateConnections();
 
 		// Bundle Adjustment
-		cout << "New Map created with " << mpMap->MapPointsInMap() << " points" << endl;
+		cout << "New Map created with " << mpMap->MapPointsInMap() << " points." << endl;
 
 		Optimizer::GlobalBundleAdjustemnt(mpMap, 20);
 
@@ -666,7 +662,7 @@ namespace ORB_SLAM2
 
 		if (medianDepth < 0 || pKFcur->TrackedMapPoints(1) < 100)
 		{
-			cout << "Wrong initialization, reseting..." << endl;
+			cout << "Wrong initialization, resetting." << endl;
 			Reset();
 			return;
 		}
@@ -1493,7 +1489,7 @@ namespace ORB_SLAM2
 	{
 		// mpViewer->RequestStop();
 
-		cout << "System Reseting" << endl;
+		cout << "System Resetting." << endl;
 
 		/*
 		while (!mpViewer->isStopped()) {
@@ -1503,22 +1499,24 @@ namespace ORB_SLAM2
 		*/
 
 		// Reset Local Mapping
-		cout << "Reseting Local Mapper...";
+		cout << "Resetting Local Mapper...";
 		mpLocalMapper->RequestReset();
-		cout << " done" << endl;
+		cout << " Done." << endl;
 
 		// Reset Loop Closing
-		cout << "Reseting Loop Closing...";
+		cout << "Resetting Loop Closer...";
 		mpLoopClosing->RequestReset();
-		cout << " done" << endl;
+		cout << " Done." << endl;
 
 		// Clear BoW Database
-		cout << "Reseting Database...";
+		cout << "Resetting Database...";
 		mpKeyFrameDB->clear();
-		cout << " done" << endl;
+		cout << " Done." << endl;
 
 		// Clear Map (this erase MapPoints and KeyFrames)
+		cout << "Clearing Map...";
 		mpMap->clear();
+		cout << " Done." << endl;
 
 		KeyFrame::nNextId = 0;
 		Frame::nNextId = 0;
@@ -1534,8 +1532,6 @@ namespace ORB_SLAM2
 		mlpReferences.clear();
 		mlFrameTimes.clear();
 		mlbLost.clear();
-
-		// mpViewer->Release();
 	}
 
 	void Tracking::ChangeCalibration(const string &strSettingPath)

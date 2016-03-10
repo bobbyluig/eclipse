@@ -23,25 +23,37 @@
 #include "ORBmatcher.h"
 #include "Optimizer.h"
 
-#include<mutex>
 
 namespace ORB_SLAM2
 {
-
-	LocalMapping::LocalMapping(Map *pMap, const float bMonocular) :
-		mbMonocular(bMonocular), mbResetRequested(false), mbFinishRequested(false), mbFinished(true), mpMap(pMap),
-		mbAbortBA(false), mbStopped(false), mbStopRequested(false), mbNotStop(false), mbAcceptKeyFrames(true)
+	LocalMapping::LocalMapping(Map& pMap, const bool bMonocular) :
+		mbMonocular(bMonocular), mbResetRequested(false), mbFinishRequested(false), mbFinished(true), mpMap(&pMap),
+		mbAbortBA(false), mbStopped(false), mbStopRequested(false), mbNotStop(false), mbAcceptKeyFrames(true),
+		mainThread()
 	{
 	}
 
-	void LocalMapping::SetLoopCloser(LoopClosing* pLoopCloser)
+	LocalMapping::~LocalMapping()
 	{
-		mpLoopCloser = pLoopCloser;
+		RequestFinish();
+		mainThread.join();
+	}
+
+	void LocalMapping::SetLoopCloser(LoopClosing& pLoopCloser)
+	{
+		mpLoopCloser = &pLoopCloser;
 	}
 
 	void LocalMapping::Run()
 	{
+		if (!mbFinished)
+			return;
 
+		mainThread = std::thread(&LocalMapping::Main, this);
+	}
+
+	void LocalMapping::Main()
+	{
 		mbFinished = false;
 
 		while (1)
@@ -552,7 +564,6 @@ namespace ORB_SLAM2
 
 	void LocalMapping::RequestStop()
 	{
-		std::unique_lock<std::mutex> lock(mMutexStop);
 		mbStopRequested = true;
 		std::unique_lock<std::mutex> lock2(mMutexNewKFs);
 		mbAbortBA = true;
@@ -560,7 +571,6 @@ namespace ORB_SLAM2
 
 	bool LocalMapping::Stop()
 	{
-		std::unique_lock<std::mutex> lock(mMutexStop);
 		if (mbStopRequested && !mbNotStop)
 		{
 			mbStopped = true;
@@ -573,20 +583,16 @@ namespace ORB_SLAM2
 
 	bool LocalMapping::isStopped()
 	{
-		std::unique_lock<std::mutex> lock(mMutexStop);
 		return mbStopped;
 	}
 
 	bool LocalMapping::stopRequested()
 	{
-		std::unique_lock<std::mutex> lock(mMutexStop);
 		return mbStopRequested;
 	}
 
 	void LocalMapping::Release()
 	{
-		std::unique_lock<std::mutex> lock(mMutexStop);
-		std::unique_lock<std::mutex> lock2(mMutexFinish);
 		if (mbFinished)
 			return;
 		mbStopped = false;
@@ -600,20 +606,16 @@ namespace ORB_SLAM2
 
 	bool LocalMapping::AcceptKeyFrames()
 	{
-		std::unique_lock<std::mutex> lock(mMutexAccept);
 		return mbAcceptKeyFrames;
 	}
 
 	void LocalMapping::SetAcceptKeyFrames(bool flag)
 	{
-		std::unique_lock<std::mutex> lock(mMutexAccept);
 		mbAcceptKeyFrames = flag;
 	}
 
 	bool LocalMapping::SetNotStop(bool flag)
 	{
-		std::unique_lock<std::mutex> lock(mMutexStop);
-
 		if (flag && mbStopped)
 			return false;
 
@@ -704,27 +706,11 @@ namespace ORB_SLAM2
 
 	void LocalMapping::RequestReset()
 	{
-		{
-			std::unique_lock<std::mutex> lock(mMutexReset);
-			mbResetRequested = true;
-		}
-
-		while (1)
-		{
-			{
-				std::unique_lock<std::mutex> lock2(mMutexReset);
-				if (!mbResetRequested)
-					break;
-			}
-			//usleep(3000);
-			std::this_thread::sleep_for(std::chrono::milliseconds(3));
-
-		}
+		mbResetRequested = true;
 	}
 
 	void LocalMapping::ResetIfRequested()
 	{
-		std::unique_lock<std::mutex> lock(mMutexReset);
 		if (mbResetRequested)
 		{
 			mlNewKeyFrames.clear();
@@ -735,27 +721,22 @@ namespace ORB_SLAM2
 
 	void LocalMapping::RequestFinish()
 	{
-		std::unique_lock<std::mutex> lock(mMutexFinish);
 		mbFinishRequested = true;
 	}
 
 	bool LocalMapping::CheckFinish()
 	{
-		std::unique_lock<std::mutex> lock(mMutexFinish);
 		return mbFinishRequested;
 	}
 
 	void LocalMapping::SetFinish()
 	{
-		std::unique_lock<std::mutex> lock(mMutexFinish);
 		mbFinished = true;
-		std::unique_lock<std::mutex> lock2(mMutexStop);
 		mbStopped = true;
 	}
 
 	bool LocalMapping::isFinished()
 	{
-		std::unique_lock<std::mutex> lock(mMutexFinish);
 		return mbFinished;
 	}
 

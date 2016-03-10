@@ -29,6 +29,8 @@
 
 #include <mutex>
 #include <shared_mutex>
+#include <atomic>
+#include <thread>
 
 
 namespace ORB_SLAM2
@@ -41,11 +43,15 @@ namespace ORB_SLAM2
 	class LocalMapping
 	{
 	public:
-		LocalMapping(Map* pMap, const float bMonocular);
+		LocalMapping(Map& pMap, const bool bMonocular);
+		~LocalMapping();
 
-		void SetLoopCloser(LoopClosing* pLoopCloser);
+		void SetLoopCloser(LoopClosing& pLoopCloser);
 
 		// Main function
+		void Main();
+
+		// Function to detach main into thread
 		void Run();
 
 		void InsertKeyFrame(KeyFrame* pKF);
@@ -89,14 +95,12 @@ namespace ORB_SLAM2
 		bool mbMonocular;
 
 		void ResetIfRequested();
-		bool mbResetRequested;
-		std::mutex mMutexReset;
+		std::atomic<bool> mbResetRequested;
 
 		bool CheckFinish();
 		void SetFinish();
-		bool mbFinishRequested;
-		bool mbFinished;
-		std::mutex mMutexFinish;
+		std::atomic<bool> mbFinishRequested;
+		std::atomic<bool> mbFinished;
 
 		Map* mpMap;
 
@@ -112,13 +116,14 @@ namespace ORB_SLAM2
 
 		bool mbAbortBA;
 
-		bool mbStopped;
-		bool mbStopRequested;
-		bool mbNotStop;
-		std::mutex mMutexStop;
+		std::atomic<bool> mbStopped;
+		std::atomic<bool> mbStopRequested;
+		std::atomic<bool> mbNotStop;
 
-		bool mbAcceptKeyFrames;
-		std::mutex mMutexAccept;
+		std::atomic<bool> mbAcceptKeyFrames;
+
+		// Thread
+		std::thread mainThread;
 	};
 
 } //namespace ORB_SLAM

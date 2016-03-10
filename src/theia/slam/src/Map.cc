@@ -29,6 +29,11 @@ namespace ORB_SLAM2
 	{
 	}
 
+	Map::~Map()
+	{
+		clear();
+	}
+
 	void Map::AddKeyFrame(KeyFrame *pKF)
 	{
 		std::unique_lock<std::mutex> lock(mMutexMap);

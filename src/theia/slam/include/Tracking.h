@@ -47,7 +47,7 @@ namespace ORB_SLAM2
 	class LoopClosing;
 	class System;
 
-	typedef struct TrackerParams
+	struct TrackerParams
 	{
 		// Camera configuration
 		float fx = static_cast<float>(0.0);
@@ -79,7 +79,7 @@ namespace ORB_SLAM2
 	{
 
 	public:
-		Tracking(const TrackerParams &fSettings, const int sensor);
+		Tracking(ORBVocabulary& pVoc, Map& pMap, KeyFrameDatabase& pKFDB, const TrackerParams &fSettings, const int sensor);
 		~Tracking();
 
 		// Preprocess the input and call Track(). Extract features and performs stereo matching.
@@ -87,8 +87,9 @@ namespace ORB_SLAM2
 		cv::Mat GrabImageRGBD(const cv::Mat &imRGB, const cv::Mat &imD, const double &timestamp);
 		cv::Mat GrabImageMonocular(const cv::Mat &im, const double &timestamp);
 
-		// Set all pointers.
-		void Initialize(ORBVocabulary* pVoc, Map* pMap, KeyFrameDatabase* pKFDB, LocalMapping* pLocalMapper, LoopClosing* pLoopClosing);
+		// Set pointers.
+		void SetLocalMapper(LocalMapping& pLocalMapper);
+		void SetLoopCloser(LoopClosing& pLoopClosing);
 
 		// Run main loop
 		void Run();
