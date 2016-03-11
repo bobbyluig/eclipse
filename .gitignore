@@ -39,3 +39,6 @@ bld/
 
 # Large file
 voc.txt
+
+# Windows
+[Tt]humbs.db
