@@ -14,6 +14,7 @@ After cloning the package, all the prerequisites for the project must be install
 - Pololu Mini Maestro 18
 - SparkFun RedBoard
 - ODROID-C1+
+- ODROID-C2
 - Raspberry Pi 2 Model B
 
 ##### Project requires
