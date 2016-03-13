@@ -12,13 +12,13 @@ from functools import partial
 
 from autobahn.asyncio.wamp import ApplicationSession
 from autobahn.wamp import auth
-from tools.autoreconnect import ApplicationRunner
+from shared.autoreconnect import ApplicationRunner
 from concurrent.futures import ThreadPoolExecutor
 
 from cerebral.dog1.hippocampus import Crossbar, Conversation, Manager
 from cerebral.dog1.commands import Commands
-from tools.pid import pid_spawn
-from tools.queue import SharedMemory
+from shared.pid import pid_spawn
+from shared.queue import SharedMemory
 
 
 class Cerebral(ApplicationSession):

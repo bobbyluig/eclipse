@@ -71,14 +71,16 @@ void export_all()
 		.def("run", &LocalMapping::Run)
 		.def("finish", &LocalMapping::RequestFinish)
 		.def("reset", &LocalMapping::RequestReset)
-		.def("set_loop_closer", &LocalMapping::SetLoopCloser);
+		.def("set_loop_closer", &LocalMapping::SetLoopCloser)
+		.def("set_monocular", &LocalMapping::SetMonocular);
 
 	class_<LoopClosing, boost::noncopyable>("LoopClosing", 
 		init<Map&, KeyFrameDatabase&, ORBVocabulary&, bool>())
 		.def("run", &LoopClosing::Run)
 		.def("finish", &LoopClosing::RequestFinish)
 		.def("reset", &LoopClosing::RequestReset)
-		.def("set_local_mapper", &LoopClosing::SetLocalMapper);
+		.def("set_local_mapper", &LoopClosing::SetLocalMapper)
+		.def("set_fix_scale", &LoopClosing::SetFixScale);
 
 	enum_<System::eSensor>("eSensor")
 		.value("MONOCULAR", System::MONOCULAR)

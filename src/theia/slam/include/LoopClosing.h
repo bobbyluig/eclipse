@@ -63,6 +63,9 @@ namespace ORB_SLAM2
 		// Function to detach main into thread
 		void Run();
 
+		// Change FixScale
+		void SetFixScale(const bool bFixScale);
+
 		void InsertKeyFrame(KeyFrame *pKF);
 
 		void RequestReset();

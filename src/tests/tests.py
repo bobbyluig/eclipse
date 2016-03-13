@@ -1,6 +1,6 @@
 from agility.pololu.usc import Usc
 from agility.pololu.reader import BytecodeReader
-from tools.timer import time_it
+from shared.timer import time_it
 from agility.maestro import Maestro
 from pprint import pprint
 from lykos.apollo import Apollo

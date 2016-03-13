@@ -14,7 +14,7 @@ from autobahn.wamp import auth
 
 from agility.main import Leg, Robot, Servo
 from lykos.apollo import Apollo
-from tools.autoreconnect import ApplicationRunner
+from shared.autoreconnect import ApplicationRunner
 
 ######################
 # Linguistics library.

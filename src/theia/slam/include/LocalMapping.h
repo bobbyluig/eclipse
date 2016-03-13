@@ -54,6 +54,9 @@ namespace ORB_SLAM2
 		// Function to detach main into thread
 		void Run();
 
+		// Change type.
+		void SetMonocular(const bool bMonocular);
+
 		void InsertKeyFrame(KeyFrame* pKF);
 
 		// Thread Synch
@@ -92,7 +95,7 @@ namespace ORB_SLAM2
 
 		cv::Mat SkewSymmetricMatrix(const cv::Mat &v);
 
-		bool mbMonocular;
+		std::atomic<bool> mbMonocular;
 
 		void ResetIfRequested();
 		std::atomic<bool> mbResetRequested;

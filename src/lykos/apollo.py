@@ -2,7 +2,7 @@ import numpy as np
 import pyaudio
 from collections import deque
 import math, time, logging
-from tools.alsa import noalsaerr
+from shared.alsa import noalsaerr
 
 logger = logging.getLogger('universe')
 

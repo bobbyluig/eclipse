@@ -1,4 +1,4 @@
-from tools.queue import SharedMemory
+from shared.queue import SharedMemory
 from cerebral.dog1.hippocampus import Manager, Android
 from cerebral.dog1.commands import Commands
 from agility.main import Agility, IR

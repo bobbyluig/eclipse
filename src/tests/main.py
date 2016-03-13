@@ -8,7 +8,7 @@ from autobahn.asyncio.wamp import ApplicationSession
 from autobahn.wamp import auth
 
 # from agility.tests.crawl import Agility
-from tools.autoreconnect import ApplicationRunner
+from shared.autoreconnect import ApplicationRunner
 
 ##############################
 # Create the main application.
