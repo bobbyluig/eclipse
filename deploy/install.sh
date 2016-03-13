@@ -1,12 +1,12 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 ###########################################################################
 # Install script for Project Lycanthrope.
 # By Lujing Cen.
 # Copyright (c) Eclipse Technologies 2015-2016.
-# Use only with Debian 8 ("Jessie") ARMv7. Script must be executed as root.
+# Use only with Debian 8 ("Jessie") ARMv8. Script must be executed as root.
 # Requires at least 4GB of free space for installation.
-# Designed for ARMv7 Debian Distributions.
+# Designed for ARM64 architecture. Optimized for Cortex-A53.
 ###########################################################################
 
 #############
@@ -37,7 +37,7 @@ sed -i "s/$hostn/$newhost/g" /etc/hostname
 ###############################ss
 
 # Get newest stuff.
-# echo 'deb http://ftp.us.debian.org/debian stretch main' > custom.list
+# echo 'deb http://ftp.us.debian.org/debian stretch main non-free contrib' > custom.list
 # cp custom.list /etc/apt/sources.list.d/
 # rm custom.list
 
@@ -48,7 +48,10 @@ apt-get -y update && apt-get -y upgrade
 apt-get -y install apt-utils
 
 # Get required software.
-apt-get -y install p7zip-full nano wireless-tools wpasupplicant usbutils wget connman libusb-dev
+apt-get -y install p7zip-full nano wireless-tools wpasupplicant usbutils wget connman \
+libusb-dev ca-certificates linux-headers-odrobian-s905 \
+firmware-linux firmware-linux-free firmware-linux-nonfree firmware-realtek \
+cmake pkg-config s905-zram
 
 ###################
 # Clone repository.
@@ -77,26 +80,50 @@ rm -f Python-3.5.1.tgz
 
 # Get port audio.
 cd ~
-apt-get -y install libasound-dev libav-tools
-wget http://www.portaudio.com/archives/pa_stable_v19_20140130.tgz
-tar zxvf pa_stable_v19_20140130.tgz
-cd portaudio
+apt-get -y install libasound-dev libav-tools portaudio19-dev
+
+# Get Python libraries.
+export NPY_NUM_BUILD_JOBS=4
+pip3 install --upgrade pip
+pip3 install numpy pyserial autobahn[accelerate] pyusb psutil
+pip3 install pyaudio pydub
+
+##############################
+# Build Numba and dependencies.
+##############################
+
+# Get oprofile. Needed ONLY by llvmlite 0.9.0. No longer needed in Git repository.
+cd ~
+apt-get -y install libedit-dev libpopt-dev libiberty-dev binutils-dev
+wget http://prdownloads.sourceforge.net/oprofile/oprofile-1.1.0.tar.gz
+tar zxvf oprofile-1.1.0.tar.gz
+cd oprofile-1.1.0
 ./configure
+make -j4 && make install
+cd ~
+rm -rf oprofile-1.1.0 oprofile-1.1.0.tar.gz
+
+# Build LLVM and install.
+cd ~
+wget http://llvm.org/releases/3.7.1/llvm-3.7.1.src.tar.xz
+tar xf llvm-3.7.1.src.tar.xz
+cd llvm-3.7.1.src
+mkdir build
+cd build
+cmake -DCMAKE_BUILD_TYPE=Release -DLLVM_TARGETS_TO_BUILD="AArch64" -DLLVM_USE_OPROFILE=ON -DPYTHON_EXECUTABLE=/usr/local/bin/python3.5 ..
 make -j4 && make install
 ldconfig
 cd ~
-rm -rf pa_stable_v19_20140130.tgz portaudio
+rm -rf llvm-3.7.1.src
 
-# Get Python libraries.
-pip3 install numpy pyserial autobahn[accelerate] pyusb psutil
-pip3 install pyaudio pydub
+# Install numba.
+pip3 install numba
 
 ####################
 # Install OpenCV 3.
 ####################
 
 # Get required libraries.
-apt-get -y install cmake pkg-config
 apt-get -y install libjpeg-dev libtiff5-dev libjasper-dev libpng12-dev
 apt-get -y install libavcodec-dev libavformat-dev libswscale-dev libv4l-dev
 apt-get -y install libatlas-base-dev gfortran
@@ -126,7 +153,7 @@ cmake -D CMAKE_BUILD_TYPE=RELEASE \
 -D BUILD_PERF_TESTS=OFF \
 -D BUILD_TESTS=OFF \
 -D BUILD_EXAMPLES=OFF ..
-make CXXFLAGS="-O3 -mcpu=cortex-a5 -mfloat-abi=hard -mfpu=neon-fp16 -ffast-math" -j4 && make install
+make CXXFLAGS="-O3 -mcpu=cortex-a53 -mfloat-abi=hard -mfpu=neon-fp-armv8 -ffast-math" -j4 && make install
 ldconfig
 
 # Cleanup.
@@ -142,7 +169,7 @@ cd ~/Eclipse/src/theia/oculus
 mkdir build
 cd build
 cmake -D  PYTHON3_NUMPY_INCLUDE_DIRS=/usr/local/lib/python3.5/site-packages/numpy/core/include ..
-make CXXFLAGS="-O3 -mcpu=cortex-a5 -mfloat-abi=hard -mfpu=neon-fp16 -ffast-math" && make install
+make CXXFLAGS="-O3 -mcpu=cortex-a53 -mfloat-abi=hard -mfpu=neon-fp-armv8 -ffast-math" && make install
 
 #################
 # MJPEG-Streamer.
@@ -161,4 +188,4 @@ export LD_LIBRARY_PATH=.
 ######################
 
 apt-get -y install arduino-core picocom python python-pip python-dev
-pip install ino  
+pip install ino

@@ -13,18 +13,17 @@ class Maestro:
         """
         :param port: The virtual port number.
         :param timeout: Timeout option for each transfer.
-        :param use_usc: Use low level USB controls.
         """
 
-        # Determine the operating system and port strings.
-        # Command port is used for USB Dual Port mode.
-        # Can automatically determine from a scan.
-        ports = list(list_ports.grep(r'(?i)1ffb:008b'))
+        if port is not None:
+            self.port = port
+        else:
+            # Determine the operating system and port strings.
+            # Command port is used for USB Dual Port mode.
+            # Can automatically determine from a scan.
+            ports = list(list_ports.grep(r'(?i)1ffb:008b'))
 
-        if os.name == 'nt':
-            if port is not None:
-                self.port = port
-            else:
+            if os.name == 'nt':
                 if len(ports) == 2:
                     if 'Command' in ports[0][1]:
                         self.port = ports[0][0]
@@ -32,9 +31,6 @@ class Maestro:
                         self.port = ports[1][0]
                 else:
                     raise Exception('Unable to determine the Command port automatically. Please specify.')
-        else:
-            if port is not None:
-                self.port = port
             else:
                 if len(ports) == 2:
                     # Assuming nothing was messed with, the command port is the lower port.
