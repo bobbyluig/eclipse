@@ -5,6 +5,8 @@ var concat = require('gulp-concat');
 var sass = require('gulp-sass');
 var rename = require('gulp-rename');
 var clean = require('gulp-clean');
+var watch_semantic = require('./semantic/tasks/watch');
+var build_semantic = require('./semantic/tasks/build');
 
 
 // Bower components.
@@ -12,6 +14,10 @@ var bower = [
     'bower_components/jquery/dist/jquery.min.js',
     'bower_components/autobahnjs/autobahn.min.js'
 ];
+
+// Semantic.
+gulp.task('watch_semantic', watch_semantic);
+gulp.task('build_semantic', build_semantic);
 
 // Clean.
 gulp.task('clean', function() {
@@ -31,8 +37,14 @@ gulp.task('copy_html', function() {
        .pipe(gulp.dest('build'));
 });
 
+// Copy Semantic.
+gulp.task('copy_semantic', function() {
+   return gulp.src('semantic/dist/**/*')
+       .pipe(gulp.dest('build/semantic'))
+});
+
 // Complete copy.
-gulp.task('copy', ['copy_bower', 'copy_html']);
+gulp.task('copy', ['copy_bower', 'copy_html', 'copy_semantic']);
 
 // Compile SASS.
 gulp.task('sass', function() {
@@ -50,10 +62,12 @@ gulp.task('js', function() {
 
 // Watch.
 gulp.task('watch', function() {
-    gulp.watch('js/*.js', ['scripts']);
-    gulp.watch('scss/*.scss', ['sass']);
+    gulp.watch('main/js/*.js', ['scripts']);
+    gulp.watch('main/scss/*.scss', ['sass']);
+    gulp.watch('main/html/*.html', ['copy_html']);
+    gulp.watch('semantic/dist/**/*', ['copy_semantic']);
 });
 
 // Development.
-gulp.task('dev', ['clean', 'copy', 'watch']);
+gulp.task('dev', ['copy', 'watch_semantic', 'watch']);
 
