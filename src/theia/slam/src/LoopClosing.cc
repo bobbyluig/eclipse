@@ -55,9 +55,10 @@ namespace ORB_SLAM2
 		mainThread = std::thread(&LoopClosing::Main, this);
 	}
 
-	void LoopClosing::SetFixScale(const bool bFixScale)
+	bool LoopClosing::SetFixScale(const bool bFixScale)
 	{
 		mbFixScale = bFixScale;
+		return true;
 	}
 
 	void LoopClosing::Main()

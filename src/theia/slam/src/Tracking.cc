@@ -35,15 +35,55 @@
 #include <iostream>
 #include <string>
 
+#include "gil.hpp"
+
 using namespace std;
 
 namespace ORB_SLAM2
 {
 
-	Tracking::Tracking(ORBVocabulary& pVoc, Map& pMap, KeyFrameDatabase& pKFDB, const TrackerParams &fSettings, const int sensor) :
-		mState(NO_IMAGES_YET), mSensor(sensor), mbOnlyTracking(false), mbVO(false), mnLastRelocFrameId(0),
-		mpORBVocabulary(&pVoc), mpMap(&pMap), mpKeyFrameDB(&pKFDB), mpInitializer(static_cast<Initializer*>(NULL))
+	Tracking::Tracking(ORBVocabulary& pVoc, Map& pMap, KeyFrameDatabase& pKFDB, const TrackerParams &fSettings) :
+		mState(NO_IMAGES_YET), mbOnlyTracking(false), mbVO(false), mnLastRelocFrameId(0),
+		mpORBVocabulary(&pVoc), mpMap(&pMap), mpKeyFrameDB(&pKFDB), 
+		mpInitializer(static_cast<Initializer*>(NULL)), mpORBextractorLeft(static_cast<ORBextractor*>(NULL)),
+		mpORBextractorRight(static_cast<ORBextractor*>(NULL)), mpIniORBextractor(static_cast<ORBextractor*>(NULL))
 	{
+		ChangeSettings(fSettings);
+	}
+
+
+	Tracking::~Tracking()
+	{
+		if (mpInitializer)
+			delete mpInitializer;
+		if (mpORBextractorLeft)
+			delete mpORBextractorLeft;
+		if (mpORBextractorRight)
+			delete mpORBextractorRight;
+		if (mpIniORBextractor)
+			delete mpIniORBextractor;
+	}
+
+	void Tracking::SetLocalMapper(LocalMapping& pLocalMapper)
+	{
+		mpLocalMapper = &pLocalMapper;
+	}
+
+	void Tracking::SetLoopCloser(LoopClosing& pLoopClosing)
+	{
+		mpLoopClosing = &pLoopClosing;
+	}
+
+	void Tracking::Run()
+	{
+		cout << mK << endl;
+	}
+
+	void Tracking::ChangeSettings(const TrackerParams &fSettings)
+	{
+		// Load tracker type
+		mSensor = fSettings.sensor;
+
 		// Load camera parameters from settings file
 		float fx = fSettings.fx;
 		float fy = fSettings.fy;
@@ -73,7 +113,7 @@ namespace ORB_SLAM2
 		mbf = fSettings.bf;
 
 		float fps = fSettings.fps;
-		if (fps == 0)
+		if (fps <= 0)
 			fps = 30;
 
 		// Max/Min Frames to insert keyframes and to check relocalisation
@@ -91,20 +131,21 @@ namespace ORB_SLAM2
 		int fIniThFAST = fSettings.fIniThFAST;
 		int fMinThFAST = fSettings.fMinThFAST;
 
-		mpORBextractorLeft = new ORBextractor(nFeatures, fScaleFactor, nLevels, fIniThFAST, fMinThFAST);
+		if (!mpORBextractorLeft)
+			mpORBextractorLeft = new ORBextractor(nFeatures, fScaleFactor, nLevels, fIniThFAST, fMinThFAST);
 
-		if (sensor == System::STEREO)
+		if (mSensor == System::STEREO && !mpORBextractorRight)
 			mpORBextractorRight = new ORBextractor(nFeatures, fScaleFactor, nLevels, fIniThFAST, fMinThFAST);
 
-		if (sensor == System::MONOCULAR)
+		if (mSensor == System::MONOCULAR && !mpIniORBextractor)
 			mpIniORBextractor = new ORBextractor(2 * nFeatures, fScaleFactor, nLevels, fIniThFAST, fMinThFAST);
 
-		if (sensor == System::STEREO || sensor == System::RGBD)
+		if (mSensor == System::STEREO || mSensor == System::RGBD)
 		{
 			mThDepth = mbf*(float)fSettings.mThDepth / fx;
 		}
 
-		if (sensor == System::RGBD)
+		if (mSensor == System::RGBD)
 		{
 			mDepthMapFactor = fSettings.mDepthMapFactor;
 			if (mDepthMapFactor == 0)
@@ -113,26 +154,6 @@ namespace ORB_SLAM2
 				mDepthMapFactor = 1.0f / mDepthMapFactor;
 		}
 	}
-
-
-	Tracking::~Tracking() {}
-
-	void Tracking::SetLocalMapper(LocalMapping& pLocalMapper)
-	{
-		mpLocalMapper = &pLocalMapper;
-	}
-
-	void Tracking::SetLoopCloser(LoopClosing& pLoopClosing)
-	{
-		mpLoopClosing = &pLoopClosing;
-	}
-
-
-	void Tracking::Run()
-	{
-		cout << mK << endl;
-	}
-
 
 	cv::Mat Tracking::GrabImageStereo(const cv::Mat &imRectLeft, const cv::Mat &imRectRight, const double &timestamp)
 	{
@@ -170,7 +191,7 @@ namespace ORB_SLAM2
 
 		Track();
 
-		return mCurrentFrame.mTcw.clone();
+		return mCurrentFrame.GetCameraCenter();
 	}
 
 
@@ -201,7 +222,7 @@ namespace ORB_SLAM2
 
 		Track();
 
-		return mCurrentFrame.mTcw.clone();
+		return mCurrentFrame.GetCameraCenter();
 	}
 
 
@@ -295,7 +316,7 @@ namespace ORB_SLAM2
 				// Only Tracking: Local Mapping is deactivated
 
 				if (mState == LOST)
-				{
+				{	
 					bOK = Relocalization();
 				}
 				else
@@ -316,7 +337,6 @@ namespace ORB_SLAM2
 					else
 					{
 						// In last frame we tracked mainly "visual odometry" points.
-
 						// We compute two camera poses, one from motion model and one doing relocalization.
 						// If relocalization is sucessfull we choose that solution, otherwise we retain
 						// the "visual odometry" solution.
@@ -368,7 +388,9 @@ namespace ORB_SLAM2
 			if (!mbOnlyTracking)
 			{
 				if (bOK)
+				{
 					bOK = TrackLocalMap();
+				}
 			}
 			else
 			{
@@ -376,7 +398,9 @@ namespace ORB_SLAM2
 				// a local map and therefore we do not perform TrackLocalMap(). Once the system relocalizes
 				// the camera we will use the local map again.
 				if (bOK && !mbVO)
+				{
 					bOK = TrackLocalMap();
+				}
 			}
 
 			if (bOK)
@@ -459,21 +483,24 @@ namespace ORB_SLAM2
 		// Store frame pose information to retrieve the complete camera trajectory afterwards.
 		if (!mCurrentFrame.mTcw.empty())
 		{
-			cv::Mat Tcr = mCurrentFrame.mTcw*mCurrentFrame.mpReferenceKF->GetPoseInverse();
+			cv::Mat Tcr;
+			if (!mCurrentFrame.mpReferenceKF)
+				Tcr = mCurrentFrame.mTcw;
+			else
+				Tcr = mCurrentFrame.mTcw*mCurrentFrame.mpReferenceKF->GetPoseInverse();
+
 			mlRelativeFramePoses.push_back(Tcr);
 			mlpReferences.push_back(mpReferenceKF);
 			mlFrameTimes.push_back(mCurrentFrame.mTimeStamp);
 			mlbLost.push_back(mState == LOST);
 		}
-		else
+		else if (!mlRelativeFramePoses.empty())
 		{
-			// This can happen if tracking is lost
 			mlRelativeFramePoses.push_back(mlRelativeFramePoses.back());
 			mlpReferences.push_back(mlpReferences.back());
 			mlFrameTimes.push_back(mlFrameTimes.back());
 			mlbLost.push_back(mState == LOST);
 		}
-
 	}
 
 
@@ -1523,39 +1550,6 @@ namespace ORB_SLAM2
 		mlbLost.clear();
 	}
 
-	void Tracking::ChangeCalibration(const string &strSettingPath)
-	{
-		cv::FileStorage fSettings(strSettingPath, cv::FileStorage::READ);
-		float fx = fSettings["Camera.fx"];
-		float fy = fSettings["Camera.fy"];
-		float cx = fSettings["Camera.cx"];
-		float cy = fSettings["Camera.cy"];
-
-		cv::Mat K = cv::Mat::eye(3, 3, CV_32F);
-		K.at<float>(0, 0) = fx;
-		K.at<float>(1, 1) = fy;
-		K.at<float>(0, 2) = cx;
-		K.at<float>(1, 2) = cy;
-		K.copyTo(mK);
-
-		cv::Mat DistCoef(4, 1, CV_32F);
-		DistCoef.at<float>(0) = fSettings["Camera.k1"];
-		DistCoef.at<float>(1) = fSettings["Camera.k2"];
-		DistCoef.at<float>(2) = fSettings["Camera.p1"];
-		DistCoef.at<float>(3) = fSettings["Camera.p2"];
-		const float k3 = fSettings["Camera.k3"];
-		if (k3 != 0)
-		{
-			DistCoef.resize(5);
-			DistCoef.at<float>(4) = k3;
-		}
-		DistCoef.copyTo(mDistCoef);
-
-		mbf = fSettings["Camera.bf"];
-
-		Frame::mbInitialComputations = true;
-	}
-
 	void Tracking::RequestFinish()
 	{
 		std::unique_lock<std::mutex> lock(mMutexFinish);
@@ -1573,10 +1567,15 @@ namespace ORB_SLAM2
 		mbOnlyTracking = flag;
 	}
 
-	void Tracking::ForceReinitialize()
+	bool Tracking::ForceLocalize()
 	{
 		if (mpMap->KeyFramesInMap() > 0)
+		{
 			mState = LOST;
+			return true;
+		}
+		
+		return false;
 	}
 
 	int Tracking::GetState()

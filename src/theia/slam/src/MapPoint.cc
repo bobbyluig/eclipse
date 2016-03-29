@@ -26,7 +26,7 @@
 namespace ORB_SLAM2
 {
 
-	long unsigned int MapPoint::nNextId = 0;
+	std::atomic<long unsigned int>MapPoint::nNextId = 0;
 	std::mutex MapPoint::mGlobalMutex;
 
 	MapPoint::MapPoint(const cv::Mat &Pos, KeyFrame *pRefKF, Map* pMap) :
@@ -38,8 +38,6 @@ namespace ORB_SLAM2
 		Pos.copyTo(mWorldPos);
 		mNormalVector = cv::Mat::zeros(3, 1, CV_32F);
 
-		// MapPoints can be created from Tracking and Local Mapping. This mutex avoid conflicts with id.
-		std::unique_lock<std::mutex> lock(mpMap->mMutexPointCreation);
 		mnId = nNextId++;
 	}
 
@@ -65,8 +63,6 @@ namespace ORB_SLAM2
 
 		pFrame->mDescriptors.row(idxF).copyTo(mDescriptor);
 
-		// MapPoints can be created from Tracking and Local Mapping. This mutex avoid conflicts with id.
-		std::unique_lock<std::mutex> lock(mpMap->mMutexPointCreation);
 		mnId = nNextId++;
 	}
 

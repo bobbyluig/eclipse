@@ -62,9 +62,6 @@ namespace ORB_SLAM2
 
 		std::shared_timed_mutex mMutexMapUpdate;
 
-		// This avoid that two points are created simultaneously in separate threads (id conflict)
-		std::mutex mMutexPointCreation;
-
 	protected:
 		std::set<MapPoint*> mspMapPoints;
 		std::set<KeyFrame*> mspKeyFrames;

@@ -52,9 +52,10 @@ namespace ORB_SLAM2
 		mainThread = std::thread(&LocalMapping::Main, this);
 	}
 
-	void LocalMapping::SetMonocular(const bool bMonocular)
+	bool LocalMapping::SetMonocular(const bool bMonocular)
 	{
 		mbMonocular = bMonocular;
+		return true;
 	}
 
 	void LocalMapping::Main()

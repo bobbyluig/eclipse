@@ -30,6 +30,7 @@
 #include "KeyFrameDatabase.h"
 
 #include <mutex>
+#include <atomic>
 
 
 namespace ORB_SLAM2
@@ -120,7 +121,7 @@ namespace ORB_SLAM2
 		// The following variables are accesed from only 1 thread or never change (no mutex needed).
 	public:
 
-		static long unsigned int nNextId;
+		static std::atomic<long unsigned int> nNextId;
 		long unsigned int mnId;
 		const long unsigned int mnFrameId;
 

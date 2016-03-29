@@ -499,7 +499,7 @@ def correlation_template_test(camera, start=None, bb=None, sequence=False):
         count += 1
 
         # Make it larger for POC.
-        frame = cv2.resize(frame, (0, 0), fx=2, fy=2)
+        # frame = cv2.resize(frame, (0, 0), fx=2, fy=2)
 
         cv2.imshow('frame', frame)
         k = cv2.waitKey(1)

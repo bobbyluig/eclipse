@@ -27,6 +27,7 @@
 
 #include <opencv2/core/core.hpp>
 #include <mutex>
+#include <atomic>
 
 namespace ORB_SLAM2
 {
@@ -82,7 +83,7 @@ namespace ORB_SLAM2
 
 	public:
 		long unsigned int mnId;
-		static long unsigned int nNextId;
+		static std::atomic<long unsigned int> nNextId;
 		long int mnFirstKFid;
 		long int mnFirstFrame;
 		int nObs;

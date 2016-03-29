@@ -29,9 +29,9 @@ endif()
 # Locate Boost and add include files.
 set(Boost_NO_BOOST_CMAKE ON)
 
-find_package(Boost 1.41.0 COMPONENTS python-py34)
+find_package(Boost COMPONENTS python-py34)
 if (NOT Boost_FOUND)
-    find_package(Boost 1.41.0 COMPONENTS python)
+    find_package(Boost COMPONENTS python)
 endif()
 
 if (NOT WIN32)

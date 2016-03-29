@@ -21,7 +21,8 @@
 #ifndef FRAME_H
 #define FRAME_H
 
-#include<vector>
+#include <vector>
+#include <atomic>
 
 #include "MapPoint.h"
 #include "DBoW2/BowVector.h"
@@ -164,7 +165,7 @@ namespace ORB_SLAM2
 		cv::Mat mTcw;
 
 		// Current and Next Frame id.
-		static long unsigned int nNextId;
+		static std::atomic<long unsigned int> nNextId;
 		long unsigned int mnId;
 
 		// Reference Keyframe.

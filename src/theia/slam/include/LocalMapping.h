@@ -55,7 +55,7 @@ namespace ORB_SLAM2
 		void Run();
 
 		// Change type.
-		void SetMonocular(const bool bMonocular);
+		bool SetMonocular(const bool bMonocular);
 
 		void InsertKeyFrame(KeyFrame* pKF);
 

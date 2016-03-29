@@ -26,6 +26,7 @@ static void* init_ar()
 void export_all()
 {
 	class_<TrackerParams>("TrackerParams")
+		.def_readwrite("sensor", &TrackerParams::sensor)
 		.def_readwrite("fx", &TrackerParams::fx)
 		.def_readwrite("fy", &TrackerParams::fy)
 		.def_readwrite("cx", &TrackerParams::cx)
@@ -47,12 +48,16 @@ void export_all()
 		.def_readwrite("mDepthMapFactor", &TrackerParams::mDepthMapFactor);
 
 	class_<Tracking, boost::noncopyable>("Tracking", 
-		init<ORBVocabulary&, Map&, KeyFrameDatabase&, TrackerParams&, int>())
+		init<ORBVocabulary&, Map&, KeyFrameDatabase&, TrackerParams&>())
 		.def("set_loop_closer", &Tracking::SetLoopCloser)
 		.def("set_local_mapper", &Tracking::SetLocalMapper)
 		.def("run", &Tracking::Run)
-		.def("grab_one", &Tracking::GrabImageMonocular)
-		.def("get_state", &Tracking::GetState);
+		.def("inform_only_tracking", &Tracking::InformOnlyTracking)
+		.def("change_settings", &Tracking::ChangeSettings)
+		.def("grab_mono", &Tracking::GrabImageMonocular)
+		.def("grab_stereo", &Tracking::GrabImageStereo)
+		.def("get_state", &Tracking::GetState)
+		.def("force_localize", &Tracking::ForceLocalize);
 
 	// MEMORY LEAK!!!
 	class_<ORBVocabulary>("ORBVocabulary")

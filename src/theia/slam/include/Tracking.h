@@ -27,6 +27,7 @@
 
 #include <mutex>
 #include <shared_mutex>
+#include <atomic>
 
 #include "Map.h"
 #include "LocalMapping.h"
@@ -49,6 +50,9 @@ namespace ORB_SLAM2
 
 	struct TrackerParams
 	{
+		// Sensor configuration
+		int sensor = System::MONOCULAR;
+
 		// Camera configuration
 		float fx = static_cast<float>(0.0);
 		float fy = static_cast<float>(0.0);
@@ -79,7 +83,7 @@ namespace ORB_SLAM2
 	{
 
 	public:
-		Tracking(ORBVocabulary& pVoc, Map& pMap, KeyFrameDatabase& pKFDB, const TrackerParams &fSettings, const int sensor);
+		Tracking(ORBVocabulary& pVoc, Map& pMap, KeyFrameDatabase& pKFDB, const TrackerParams &fSettings);
 		~Tracking();
 
 		// Preprocess the input and call Track(). Extract features and performs stereo matching.
@@ -94,16 +98,14 @@ namespace ORB_SLAM2
 		// Run main loop
 		void Run();
 
-		// Load new settings
-		// The focal lenght should be similar or scale prediction will fail when projecting points
-		// TODO: Modify MapPoint::PredictScale to take into account focal lenght
-		void ChangeCalibration(const string &strSettingPath);
+		// Set sensor
+		void ChangeSettings(const TrackerParams &fSettings);
 
 		// Use this function if you have deactivated local mapping and you only want to localize the camera.
 		void InformOnlyTracking(const bool &flag);
 
 		// Force reinitialization.
-		void ForceReinitialize();
+		bool ForceLocalize();
 
 		// Request stop
 		void RequestFinish();
@@ -117,14 +119,15 @@ namespace ORB_SLAM2
 			NO_IMAGES_YET = 0,
 			NOT_INITIALIZED = 1,
 			OK = 2,
-			LOST = 3
+			LOST = 3,
+			LOCALIZE = 4
 		};
 
-		eTrackingState mState;
+		std::atomic<eTrackingState> mState;
 		eTrackingState mLastProcessedState;
 
 		// Input sensor
-		int mSensor;
+		std::atomic<int> mSensor;
 
 		// Current Frame
 		Frame mCurrentFrame;
@@ -205,7 +208,7 @@ namespace ORB_SLAM2
 		std::vector<MapPoint*> mvpLocalMapPoints;
 
 		//Map
-		Map* mpMap;
+		Map* mpMap = NULL;
 
 		//Calibration matrix
 		cv::Mat mK;

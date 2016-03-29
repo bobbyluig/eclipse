@@ -21,12 +21,12 @@
 #include "KeyFrame.h"
 #include "Converter.h"
 #include "ORBmatcher.h"
-#include<mutex>
+#include <mutex>
 
 namespace ORB_SLAM2
 {
 
-	long unsigned int KeyFrame::nNextId = 0;
+	std::atomic<long unsigned int> KeyFrame::nNextId = 0;
 
 	KeyFrame::KeyFrame(Frame &F, Map *pMap, KeyFrameDatabase *pKFDB) :
 		mnFrameId(F.mnId), mTimeStamp(F.mTimeStamp), mnGridCols(FRAME_GRID_COLS), mnGridRows(FRAME_GRID_ROWS),

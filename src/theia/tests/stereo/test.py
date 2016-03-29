@@ -8,7 +8,7 @@ k = np.array([[795.690125, 0, 335.536987],
 d = np.array([-0.0019273272, 0.3212610781, 0.0141755575, 0.0021216469])
 newcamera, roi = cv2.getOptimalNewCameraMatrix(k, d, (640, 480), 1)
 
-stereo = cv2.StereoSGBM_create(0, 16, 21)
+stereo = cv2.StereoSGBM_create(0, 16, 15)
 
 left = cv2.VideoCapture(1)
 right = cv2.VideoCapture(0)
@@ -21,6 +21,7 @@ def read_left():
 
     while True:
         _, x = left.read()
+        # x = cv2.GaussianBlur(x, (9, 9), 0)
         l = cv2.undistort(x, k, d, None, newcamera)
 
 def read_right():
@@ -29,6 +30,7 @@ def read_right():
     while True:
         _, x = right.read()
         x = cv2.flip(x, -1)
+        # x = cv2.GaussianBlur(x, (9, 9), 0)
         r = cv2.undistort(x, k, d, None, newcamera)
 
 x = threading.Thread(target=read_left)
@@ -44,4 +46,6 @@ while True:
         cv2.imshow('left', l)
         cv2.imshow('right', r)
 
-        cv2.waitKey(1)
+        if cv2.waitKey(1) != -1:
+            cv2.imwrite('left.png', l)
+            cv2.imwrite('right.png', r)

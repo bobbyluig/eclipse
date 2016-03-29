@@ -64,7 +64,7 @@ namespace ORB_SLAM2
 		void Run();
 
 		// Change FixScale
-		void SetFixScale(const bool bFixScale);
+		bool SetFixScale(const bool bFixScale);
 
 		void InsertKeyFrame(KeyFrame *pKF);
 
