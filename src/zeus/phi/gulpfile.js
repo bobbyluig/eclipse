@@ -4,6 +4,7 @@ var autoprefixer = require('gulp-autoprefixer');
 var concat = require('gulp-concat');
 var sass = require('gulp-sass');
 var rename = require('gulp-rename');
+var clean = require('gulp-clean');
 
 
 // Bower components.
@@ -12,13 +13,26 @@ var bower = [
     'bower_components/autobahnjs/autobahn.min.js'
 ];
 
-// Copy files.
-gulp.task('copy', function() {
-    gulp.src('main/html/*.html')
-        .pipe(gulp.dest('build'));
-    gulp.src(bower)
+// Clean.
+gulp.task('clean', function() {
+   return gulp.src('build', {read: false})
+       .pipe(clean());
+});
+
+// Copy bower files.
+gulp.task('copy_bower', function() {
+    return gulp.src(bower)
         .pipe(gulp.dest('build/js'));
 });
+
+// Copy HTML.
+gulp.task('copy_html', function() {
+   return gulp.src('main/html/*.html')
+       .pipe(gulp.dest('build'));
+});
+
+// Complete copy.
+gulp.task('copy', ['copy_bower', 'copy_html']);
 
 // Compile SASS.
 gulp.task('sass', function() {
@@ -41,5 +55,5 @@ gulp.task('watch', function() {
 });
 
 // Development.
-gulp.task('dev', ['copy', 'watch']);
+gulp.task('dev', ['clean', 'copy', 'watch']);
 

@@ -44,5 +44,8 @@
     "run-sequence": "^1.1.5",
     "semantic-ui": "^2.1.8",
     "yamljs": "^0.2.7"
+  },
+  "devDependencies": {
+    "gulp-clean": "^0.3.2"
   }
 }
