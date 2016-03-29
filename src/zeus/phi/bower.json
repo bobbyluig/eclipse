@@ -1,0 +1,18 @@
+{
+  "name": "phi",
+  "description": "Command center front end for EDD 2016 - Project Lycanthrope.",
+  "main": "index.js",
+  "authors": [
+    "Lujing Cen"
+  ],
+  "license": "MIT",
+  "homepage": "https://github.com/bobbyluig/Eclipse",
+  "moduleType": [],
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
