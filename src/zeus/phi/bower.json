@@ -14,5 +14,9 @@
     "bower_components",
     "test",
     "tests"
-  ]
+  ],
+  "dependencies": {
+    "jquery": "^2.2.2",
+    "autobahnjs": "autobahn#^0.9.9"
+  }
 }
