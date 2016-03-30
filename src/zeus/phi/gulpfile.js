@@ -12,7 +12,8 @@ var build_semantic = require('./semantic/tasks/build');
 // Bower components.
 var bower = [
     'bower_components/jquery/dist/jquery.min.js',
-    'bower_components/autobahnjs/autobahn.min.js'
+    'bower_components/autobahnjs/autobahn.min.js',
+    'bower_components/rivets/dist/rivets.bundled.min.js'
 ];
 
 // Semantic.
@@ -55,14 +56,14 @@ gulp.task('sass', function() {
 
 // Concatenate JS.
 gulp.task('js', function() {
-    return gulp.src('main/js/*.js')
+    return gulp.src(['main/js/main.js', 'main/js/*.js'])
         .pipe(concat('phi.js'))
         .pipe(gulp.dest('build/js'));
 });
 
 // Watch.
 gulp.task('watch', function() {
-    gulp.watch('main/js/*.js', ['scripts']);
+    gulp.watch('main/js/*.js', ['js']);
     gulp.watch('main/scss/*.scss', ['sass']);
     gulp.watch('main/html/*.html', ['copy_html']);
     gulp.watch('semantic/dist/**/*', ['copy_semantic']);

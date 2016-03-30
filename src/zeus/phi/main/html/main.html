@@ -9,30 +9,132 @@
     <link rel="stylesheet" type="text/css" href="semantic/semantic.min.css">
 </head>
 <body>
-<h3>Hello World!</h3>
-<div class="ui card">
-  <div class="image">
-    <img src="http://placehold.it/640x480">
-  </div>
-  <div class="content">
-    <a class="header">Kristy</a>
-    <div class="meta">
-      <span class="date">Joined in 2013</span>
-    </div>
-    <div class="description">
-      Kristy is an art director living in New York.
-    </div>
-  </div>
-  <div class="extra content">
-    <a>
-      <i class="user icon"></i>
-      22 Friends
+<div id="menu" class="ui inverted top attached menu" rv-class-red="data.color | eq 1" rv-class-blue="data.color | eq 2">
+    <a class="ui icon item">
+        <i class="home icon"></i>
     </a>
+    <div id="views" class="ui dropdown icon item">
+        <i class="browser icon"></i>
+        <div class="menu">
+            <div class="item">View 1</div>
+            <div class="item">View 2</div>
+        </div>
+    </div>
+    <div class="ui dropdown icon item">
+        <i class="options icon"></i>
+        <div class="menu">
+            <div rv-on-click="run.teamSetting" class="item">Change Team</div>
+            <div rv-on-click="run.commSetting" class="item">Communication</div>
+            <div class="item">Edit Permissions</div>
+        </div>
+    </div>
+
+    <div class="right menu">
+        <a class="item name" rv-text="data.name" rv-href="data.link" target="_blank"></a>
+    </div>
+</div>
+<div class="ui bottom attached segment">
+    <p>Hi!</p>
+</div>
+
+<div id="team-modal" class="ui modal">
+  <div class="header">
+      Team Selection
   </div>
+    <div class="content">
+        <div class="ui center aligned internally celled stackable grid">
+            <div class="row">
+                <div class="eight wide column">
+                    <img class="ui centered image" src="http://placehold.it/350x150">
+                    <div class="ui red header">
+                        Eclipse Technologies
+                    </div>
+                    <p>Eclipse Technologies strives to drive change and surpass limitations. The world will not progress
+                        into a better place if changes aren’t made. In order to make changes, limitations must be
+                        surpassed.
+                        We aim to do the impossible in order to motivate others.</p>
+                </div>
+                <div class="eight wide image column">
+                    <img class="ui centered image" src="http://placehold.it/350x150">
+                    <div class="ui blue header">Paragon Industries</div>
+                    <p>We be Paragon.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="actions">
+        <div class="ui two buttons">
+            <button class="ui red button" rv-on-click="run.teamRed">Red Team</button>
+            <div class="or"></div>
+            <button class="ui blue button" rv-on-click="run.teamBlue">Blue Team</button>
+        </div>
+    </div>
+</div>
+
+<div id="comm-modal" class="ui modal">
+    <div class="header">
+        Communication Settings
+    </div>
+    <div class="content">
+        <form class="ui form">
+            <div class="two fields">
+                <div class="field">
+                    <label>Auth ID</label>
+                    <input type="text" name="authid" placeholder="Auth ID" rv-value="data.authid">
+                </div>
+                <div class="field">
+                    <label>Secret</label>
+                    <input type="password" name="secret" placeholder="Secret" rv-value="data.secret">
+                </div>
+            </div>
+            <div class="two fields">
+                <div class="field">
+                    <label>URL</label>
+                    <input type="text" name="url" placeholder="URL" rv-value="data.url">
+                </div>
+                <div class="field">
+                    <label>Realm</label>
+                    <input type="text" name="realm" placeholder="Realm" rv-value="data.realm">
+                </div>
+            </div>
+            <div class="four fields">
+                <div class="field">
+                    <label>Max Retries</label>
+                    <input type="number" name="max_retries" placeholder="Max Retries" rv-value="data.max_retries">
+                </div>
+                <div class="field">
+                    <label>Initial Delay</label>
+                    <input type="number" name="initial_retry_delay" placeholder="Initial Delay" rv-value="data.initial_retry_delay">
+                </div>
+                <div class="field">
+                    <label>Max Delay</label>
+                    <input type="number" name="max_retry_delay" placeholder="Max Delay" rv-value="data.max_retry_delay">
+                </div>
+                <div class="field">
+                    <label>Delay Growth</label>
+                    <input type="number" step="0.1" name="retry_delay_growth" placeholder="Delay Growth" rv-value="data.retry_delay_growth">
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="actions">
+        <div class="ui red icon button" rv-on-click="run.resetComm">
+            Reset
+            <i class="remove icon"></i>
+        </div>
+        <div class="ui positive right labeled icon button">
+            Done
+            <i class="checkmark icon"></i>
+        </div>
+    </div>
 </div>
 
 <script src="js/jquery.min.js"></script>
 <script src="js/autobahn.min.js"></script>
 <script src="semantic/semantic.min.js"></script>
+<script src="js/rivets.bundled.min.js"></script>
+<script src="js/phi.js"></script>
 </body>
 </html>
