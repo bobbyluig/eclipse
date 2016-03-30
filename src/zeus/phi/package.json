@@ -46,6 +46,7 @@
     "yamljs": "^0.2.7"
   },
   "devDependencies": {
-    "gulp-clean": "^0.3.2"
+    "gulp-clean": "^0.3.2",
+    "gulp-webserver": "^0.9.1"
   }
 }

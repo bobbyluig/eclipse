@@ -16,8 +16,8 @@
     <div id="views" class="ui dropdown icon item">
         <i class="browser icon"></i>
         <div class="menu">
-            <div class="item">View 1</div>
-            <div class="item">View 2</div>
+            <div class="item" data-tab="first">View 1</div>
+            <div class="item" data-tab="second">View 2</div>
         </div>
     </div>
     <div class="ui dropdown icon item">
@@ -25,7 +25,8 @@
         <div class="menu">
             <div rv-on-click="run.teamSetting" class="item">Change Team</div>
             <div rv-on-click="run.commSetting" class="item">Communication</div>
-            <div class="item">Edit Permissions</div>
+            <div rv-on-click="run.saveSettings" class="item">Save Settings</div>
+            <div rv-on-click="run.reset" class="item">Reset</div>
         </div>
     </div>
 
@@ -33,9 +34,18 @@
         <a class="item name" rv-text="data.name" rv-href="data.link" target="_blank"></a>
     </div>
 </div>
-<div class="ui bottom attached segment">
-    <p>Hi!</p>
+
+<div class="ui active dimmer">
+    <div class="ui large text loader">
+        Loading System
+    </div>
 </div>
+
+<div class="ui tab basic segment active" data-tab="home"></div>
+<div class="ui bottom attached tab segment" data-tab="first"></div>
+<div class="ui bottom attached tab segment" data-tab="second"></div>
+<div class="ui bottom attached tab segment" data-tab="third"></div>
+
 
 <div id="team-modal" class="ui modal">
   <div class="header">

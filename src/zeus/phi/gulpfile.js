@@ -7,6 +7,7 @@ var rename = require('gulp-rename');
 var clean = require('gulp-clean');
 var watch_semantic = require('./semantic/tasks/watch');
 var build_semantic = require('./semantic/tasks/build');
+var webserver = require('gulp-webserver');
 
 
 // Bower components.
@@ -69,6 +70,15 @@ gulp.task('watch', function() {
     gulp.watch('semantic/dist/**/*', ['copy_semantic']);
 });
 
+// Server.
+gulp.task('server', function() {
+   gulp.src('build')
+       .pipe(webserver({
+           livereload: false,
+           open: true
+       }));
+});
+
 // Development.
-gulp.task('dev', ['copy', 'watch_semantic', 'watch']);
+gulp.task('dev', ['copy', 'watch_semantic', 'watch', 'server']);
 
