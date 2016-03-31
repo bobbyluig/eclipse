@@ -35,7 +35,7 @@ gulp.task('copy_bower', function() {
 
 // Copy HTML.
 gulp.task('copy_html', function() {
-   return gulp.src('main/html/*.html')
+   return gulp.src('main/html/**/*')
        .pipe(gulp.dest('build'));
 });
 
@@ -66,7 +66,7 @@ gulp.task('js', function() {
 gulp.task('watch', function() {
     gulp.watch('main/js/*.js', ['js']);
     gulp.watch('main/scss/*.scss', ['sass']);
-    gulp.watch('main/html/*.html', ['copy_html']);
+    gulp.watch('main/html/**/*', ['copy_html']);
     gulp.watch('semantic/dist/**/*', ['copy_semantic']);
 });
 
@@ -80,5 +80,5 @@ gulp.task('server', function() {
 });
 
 // Development.
-gulp.task('dev', ['copy', 'watch_semantic', 'watch', 'server']);
+gulp.task('dev', ['copy', 'js', 'sass', 'watch_semantic', 'watch', 'server']);
 

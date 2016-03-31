@@ -1,0 +1,60 @@
+<div id="modal-com" class="ui modal">
+    <div class="header">
+        Communication Settings
+    </div>
+    <div class="content">
+        <form class="ui form">
+            <div class="two fields">
+                <div class="field">
+                    <label>Auth ID</label>
+                    <input type="text" name="authid" placeholder="Auth ID" rv-value="data.authid">
+                </div>
+                <div class="field">
+                    <label>Secret</label>
+                    <input type="password" name="secret" placeholder="Secret" rv-value="data.secret">
+                </div>
+            </div>
+            <div class="two fields">
+                <div class="field">
+                    <label>URL</label>
+                    <input type="text" name="url" placeholder="URL" rv-value="data.url">
+                </div>
+                <div class="field">
+                    <label>Realm</label>
+                    <input type="text" name="realm" placeholder="Realm" rv-value="data.realm">
+                </div>
+            </div>
+            <div class="four fields">
+                <div class="field">
+                    <label>Max Retries</label>
+                    <input type="number" name="max_retries" placeholder="Max Retries" rv-value="data.max_retries">
+                </div>
+                <div class="field">
+                    <label>Initial Delay</label>
+                    <input type="number" name="initial_retry_delay" placeholder="Initial Delay"
+                           rv-value="data.initial_retry_delay">
+                </div>
+                <div class="field">
+                    <label>Max Delay</label>
+                    <input type="number" name="max_retry_delay" placeholder="Max Delay" rv-value="data.max_retry_delay">
+                </div>
+                <div class="field">
+                    <label>Delay Growth</label>
+                    <input type="number" step="0.1" name="retry_delay_growth" placeholder="Delay Growth"
+                           rv-value="data.retry_delay_growth">
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="actions">
+        <div class="ui red icon button" rv-on-click="run.reset">
+            Reset
+            <i class="remove icon"></i>
+        </div>
+        <div class="ui positive right labeled icon button">
+            Done
+            <i class="checkmark icon"></i>
+        </div>
+    </div>
+</div>

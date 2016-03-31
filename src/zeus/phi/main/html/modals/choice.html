@@ -1,0 +1,18 @@
+<div class="ui small modal">
+    <div class="header">
+        {{ data.header }}
+    </div>
+    <div class="content">
+        <p>{{ data.content }}</p>
+    </div>
+    <div class="actions">
+        <div class="ui right red labeled icon button" rv-on-click="run.no">
+            No
+            <i class="remove icon"></i>
+        </div>
+        <div class="ui right green labeled icon button" rv-on-click="run.yes">
+            Yes
+            <i class="checkmark icon"></i>
+        </div>
+    </div>
+</div>

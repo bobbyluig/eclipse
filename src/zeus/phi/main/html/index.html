@@ -23,10 +23,10 @@
     <div class="ui dropdown icon item">
         <i class="options icon"></i>
         <div class="menu">
-            <div rv-on-click="run.teamSetting" class="item">Change Team</div>
-            <div rv-on-click="run.commSetting" class="item">Communication</div>
+            <div rv-on-click="run.changeTeam" class="item">Change Team</div>
+            <div rv-on-click="run.comSettings" class="item">Communication</div>
             <div rv-on-click="run.saveSettings" class="item">Save Settings</div>
-            <div rv-on-click="run.reset" class="item">Reset</div>
+            <div rv-on-click="run.resetSettings" class="item">Reset</div>
         </div>
     </div>
 
@@ -45,101 +45,6 @@
 <div class="ui bottom attached tab segment" data-tab="first"></div>
 <div class="ui bottom attached tab segment" data-tab="second"></div>
 <div class="ui bottom attached tab segment" data-tab="third"></div>
-
-
-<div id="team-modal" class="ui modal">
-  <div class="header">
-      Team Selection
-  </div>
-    <div class="content">
-        <div class="ui center aligned internally celled stackable grid">
-            <div class="row">
-                <div class="eight wide column">
-                    <img class="ui centered image" src="http://placehold.it/350x150">
-                    <div class="ui red header">
-                        Eclipse Technologies
-                    </div>
-                    <p>Eclipse Technologies strives to drive change and surpass limitations. The world will not progress
-                        into a better place if changes aren’t made. In order to make changes, limitations must be
-                        surpassed.
-                        We aim to do the impossible in order to motivate others.</p>
-                </div>
-                <div class="eight wide image column">
-                    <img class="ui centered image" src="http://placehold.it/350x150">
-                    <div class="ui blue header">Paragon Industries</div>
-                    <p>We be Paragon.</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="actions">
-        <div class="ui two buttons">
-            <button class="ui red button" rv-on-click="run.teamRed">Red Team</button>
-            <div class="or"></div>
-            <button class="ui blue button" rv-on-click="run.teamBlue">Blue Team</button>
-        </div>
-    </div>
-</div>
-
-<div id="comm-modal" class="ui modal">
-    <div class="header">
-        Communication Settings
-    </div>
-    <div class="content">
-        <form class="ui form">
-            <div class="two fields">
-                <div class="field">
-                    <label>Auth ID</label>
-                    <input type="text" name="authid" placeholder="Auth ID" rv-value="data.authid">
-                </div>
-                <div class="field">
-                    <label>Secret</label>
-                    <input type="password" name="secret" placeholder="Secret" rv-value="data.secret">
-                </div>
-            </div>
-            <div class="two fields">
-                <div class="field">
-                    <label>URL</label>
-                    <input type="text" name="url" placeholder="URL" rv-value="data.url">
-                </div>
-                <div class="field">
-                    <label>Realm</label>
-                    <input type="text" name="realm" placeholder="Realm" rv-value="data.realm">
-                </div>
-            </div>
-            <div class="four fields">
-                <div class="field">
-                    <label>Max Retries</label>
-                    <input type="number" name="max_retries" placeholder="Max Retries" rv-value="data.max_retries">
-                </div>
-                <div class="field">
-                    <label>Initial Delay</label>
-                    <input type="number" name="initial_retry_delay" placeholder="Initial Delay" rv-value="data.initial_retry_delay">
-                </div>
-                <div class="field">
-                    <label>Max Delay</label>
-                    <input type="number" name="max_retry_delay" placeholder="Max Delay" rv-value="data.max_retry_delay">
-                </div>
-                <div class="field">
-                    <label>Delay Growth</label>
-                    <input type="number" step="0.1" name="retry_delay_growth" placeholder="Delay Growth" rv-value="data.retry_delay_growth">
-                </div>
-            </div>
-        </form>
-    </div>
-
-    <div class="actions">
-        <div class="ui red icon button" rv-on-click="run.resetComm">
-            Reset
-            <i class="remove icon"></i>
-        </div>
-        <div class="ui positive right labeled icon button">
-            Done
-            <i class="checkmark icon"></i>
-        </div>
-    </div>
-</div>
 
 <script src="js/jquery.min.js"></script>
 <script src="js/autobahn.min.js"></script>

@@ -1,18 +1,21 @@
+// Default settings.
+var defaults = {};
+
 // Global variables.
 var settings = {};
+var wamp;
 
 // Controllers.
+var ctrlLoad = {};
 var ctrlMenu ={};
 var ctrlModal = {};
+var ctrlWamp = {};
 
-rivets.formatters.eq = function(value, args) {
-    return value === args;
-};
-
+// Main
 $(document).ready(function() {
     // Begin loading.
-    loadComponents();
-    loadSettings();
+    ctrlLoad.loadTabs();
+    ctrlMenu.loadSettings();
 
     $('.ui.dropdown').dropdown({
         action: 'hide'
@@ -20,15 +23,14 @@ $(document).ready(function() {
 
     $('.menu .item').tab();
 
-    rivets.bind($('#comm-modal'), {data: settings.comm, run: ctrlModal});
-    rivets.bind($('#team-modal'), {run: ctrlModal});
     rivets.bind($('#menu'), {data: settings.style, run: ctrlMenu});
 
     // End loading.
     $('.dimmer.active').removeClass('active');
 });
 
+// Prevent accidental closing.
 $(window).bind('beforeunload', function() {
-    saveSettings();
+    ctrlMenu.saveSettings();
     return "Unloading will cause loss of current mission state. Are you sure you want to do this?";
 });
