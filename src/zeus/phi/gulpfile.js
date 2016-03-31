@@ -72,7 +72,7 @@ gulp.task('watch', function() {
 
 // Server.
 gulp.task('server', function() {
-   gulp.src('build')
+   return gulp.src('build')
        .pipe(webserver({
            livereload: false,
            open: true

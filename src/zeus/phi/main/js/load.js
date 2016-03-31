@@ -8,3 +8,8 @@ ctrlLoad.loadTabs = function () {
         $(this).load(url);
     });
 };
+
+// Status resets.
+state.com = {
+    state: 'closed'
+};

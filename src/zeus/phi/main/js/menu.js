@@ -43,7 +43,7 @@ ctrlMenu.resetSettings = function () {
     var context = {run: functions, data: strings};
 
     functions.yes = function () {
-        ctrlMenu.reset();
+        ctrlMenu.softReset();
     };
     functions.no = function () {
     };
@@ -51,7 +51,7 @@ ctrlMenu.resetSettings = function () {
     ctrlModal.modal('choice', false, context);
 };
 
-ctrlMenu.reset = function () {
+ctrlMenu.softReset = function () {
     for (var category in settings) {
         if (settings.hasOwnProperty(category) && defaults.hasOwnProperty(category)) {
             for (var property in settings[category]) {
@@ -61,6 +61,10 @@ ctrlMenu.reset = function () {
             }
         }
     }
+};
+
+ctrlMenu.hardReset = function() {
+    settings = defaults;
 };
 
 ctrlMenu.loadSettings = function () {

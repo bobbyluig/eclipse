@@ -3,6 +3,7 @@ var defaults = {};
 
 // Global variables.
 var settings = {};
+var state = {};
 var wamp;
 
 // Controllers.
@@ -23,7 +24,7 @@ $(document).ready(function() {
 
     $('.menu .item').tab();
 
-    rivets.bind($('#menu'), {data: settings.style, run: ctrlMenu});
+    rivets.bind($('#menu'), {data: settings.style, run: ctrlMenu, state: state});
 
     // End loading.
     $('.dimmer.active').removeClass('active');
