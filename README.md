@@ -4,7 +4,9 @@ This repository contains all code used in the 2016 CARPA Initiative Challenge - 
 
 ## Style
 
-In most cases, all code styling abides by [PEP 8](https://www.python.org/dev/peps/pep-0008/). All objects should use *CamelCase* and all functions should used *mixedCase*. The use of *mixedCase* is due to the nature of OpenCV and Pololu libraries where such is the prevailing style. Variables, especially those of a class, should also used *mixedCase* as such is the prevailing style (this does not abide by PEP 8). File names are always all lowercase with no underscores.
+In most cases, all code styling abides by [PEP 8](https://www.python.org/dev/peps/pep-0008/). All objects should use *CamelCase* and all functions should used *lower_case*. The use of *mixedCase* is present due to the nature of OpenCV and Pololu libraries where such is the prevailing style. Variables, especially those of a class, should also used *lower_case*. File names are always all lowercase with no underscores.
+
+For JavaScript (phi), code functions and objects should use *mixedCase*. 
 
 ## Development
 
