@@ -32,7 +32,7 @@ After cloning the package, all the prerequisites for the project must be install
 - Boost Python (sudo apt-get install libboost-dev-all should be good).
 - OpenCV 3 and contrib module with Python3 binding.
 - C++11 capable compiler for robots. (GCC 4.9+, includes GCC 5).
-- C++14 capable compiler for command center. Usage of `slam` requires 64-bit Python.
+- C++14 capable compiler for command center. Usage of `slam` requires 64-bit Python. Project tested on MSVC 2015.
 - The latest version of the following Python packages and their dependencies: `numpy`, `pyserial`, `autobahn`, `pyusb`, `pyaudio`.
 - Processor support for SSE2 intrinsics (on most Intel and AMD processors) or NEON intrinsics (on ARM Cortex-A series).
 
