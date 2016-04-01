@@ -1,5 +1,5 @@
 ctrlRpc.basicDecision = function (args, kwargs, details) {
-    var d = new autobahn.when.defer();
+    var d = autobahn.when.defer();
 
     var functions = {};
     var strings = {
