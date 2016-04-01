@@ -50,7 +50,7 @@ gulp.task('copy', ['copy_bower', 'copy_html', 'copy_semantic']);
 
 // Compile SASS.
 gulp.task('sass', function() {
-   return gulp.src('main/scss/*.scss')
+   return gulp.src('main/sass/*.scss')
        .pipe(sass())
        .pipe(gulp.dest('build/css'));
 });
@@ -65,7 +65,7 @@ gulp.task('js', function() {
 // Watch.
 gulp.task('watch', function() {
     gulp.watch('main/js/*.js', ['js']);
-    gulp.watch('main/scss/*.scss', ['sass']);
+    gulp.watch('main/sass/*.scss', ['sass']);
     gulp.watch('main/html/**/*', ['copy_html']);
     gulp.watch('semantic/dist/**/*', ['copy_semantic']);
 });

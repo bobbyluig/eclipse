@@ -140,8 +140,7 @@ class ApplicationRunner(object):
                 session.debug_app = self.debug_app
                 return session
 
-        self.transport_factory = WampWebSocketClientFactory(create, url=self.url, serializers=self.serializers,
-                                                            debug=self.debug, debug_wamp=self.debug_wamp)
+        self.transport_factory = WampWebSocketClientFactory(create, url=self.url, serializers=self.serializers)
 
         txaio.use_asyncio()
         txaio.config.loop = self.loop

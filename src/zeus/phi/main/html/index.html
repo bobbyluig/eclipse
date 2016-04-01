@@ -7,9 +7,10 @@
 
     <title>Zeus | EDD 2016</title>
     <link rel="stylesheet" type="text/css" href="semantic/semantic.min.css">
+    <link rel="stylesheet" type="text/css" href="css/phi.css">
 </head>
 <body>
-<div id="menu" class="ui inverted top attached menu" rv-class-red="data.color |=== 1" rv-class-blue="data.color |=== 2">
+<div id="menu" class="ui inverted top attached menu" rv-class-red="style.color |=== 1" rv-class-blue="style.color |=== 2">
     <a class="ui icon item">
         <i class="home icon"></i>
     </a>
@@ -23,15 +24,15 @@
     <div class="ui dropdown icon item">
         <i class="options icon"></i>
         <div class="menu">
-            <div rv-on-click="run.changeTeam" class="item">Change Team</div>
-            <div rv-on-click="run.comSettings" class="item" rv-class-disabled="state.com.state |!== 'closed'">Communication</div>
-            <div rv-on-click="run.saveSettings" class="item">Save Settings</div>
-            <div rv-on-click="run.resetSettings" class="item">Reset</div>
+            <div rv-on-click="menu.changeTeam" class="item">Change Team</div>
+            <div rv-on-click="menu.comSettings" class="item" rv-class-disabled="state.com.state |!== 'closed'">Communication</div>
+            <div rv-on-click="menu.saveSettings" class="item">Save Settings</div>
+            <div rv-on-click="menu.resetSettings" class="item">Reset</div>
         </div>
     </div>
 
     <div class="right menu">
-        <a class="item name" rv-text="data.name" rv-href="data.link" target="_blank"></a>
+        <a class="item name" rv-text="style.name" rv-href="style.link" target="_blank"></a>
     </div>
 </div>
 
@@ -41,10 +42,9 @@
     </div>
 </div>
 
-<div class="ui tab basic segment active" data-tab="home"></div>
+<div class="ui bottom attached tab segment active" data-tab="home"></div>
 <div class="ui bottom attached tab segment" data-tab="first"></div>
 <div class="ui bottom attached tab segment" data-tab="second"></div>
-<div class="ui bottom attached tab segment" data-tab="third"></div>
 
 <script src="js/jquery.min.js"></script>
 <script src="js/autobahn.min.js"></script>

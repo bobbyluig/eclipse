@@ -1,11 +1,13 @@
 #!/usr/bin/env python3.5
 
 # Configure global logging.
-import logging
+
 import ssl
+import asyncio
 
 from autobahn.asyncio.wamp import ApplicationSession
 from autobahn.wamp import auth
+from autobahn.wamp.types import CallOptions
 
 # from agility.tests.crawl import Agility
 from shared.autoreconnect import ApplicationRunner
@@ -14,26 +16,24 @@ from shared.autoreconnect import ApplicationRunner
 # Create the main application.
 ##############################
 
-logger = logging.getLogger('universe')
-
 # Constants.
 user = 'DOG-1E5'
 password = 'de2432k,/s-=/8Eu'
 
 # Agility.
-from queue import Queue
+# from queue import Queue
 
-q = Queue()
+# q = Queue()
 # agility = Agility(q)
 
 
 class Cerebral(ApplicationSession):
     def onConnect(self):
-        logger.info('Connected to server.')
+        print('Connected to server.')
         self.join(self.config.realm, ['wampcra'], user)
 
     def onChallenge(self, challenge):
-        logger.info('Challenge received.')
+        print('Challenge received.')
         if challenge.method == 'wampcra':
             if 'salt' in challenge.extra:
                 key = auth.derive_key(password.encode(),
@@ -48,8 +48,8 @@ class Cerebral(ApplicationSession):
             raise Exception('Unknown challenge method: %s' % challenge.method)
 
     async def onJoin(self, details):
-        logger.info('Joined "%s" realm.' % self.config.realm)
-
+        print('Joined "%s" realm.' % self.config.realm)
+        
         await self.register(self.identify, 'dog.identify')
         await self.register(self.hello, 'dog.hello')
         await self.register(self.walk, 'dog.walk')
@@ -58,8 +58,16 @@ class Cerebral(ApplicationSession):
         await self.register(self.home, 'dog.home')
         await self.register(self.blue_team, 'dog.blue_team')
 
+        await asyncio.sleep(1)
+        print('Calling procedure.')
+
+        decision = await self.call('zeus.phi.basic_decision', 'Are You Sure?',
+                                   'Are you sure that you want to self destruct? This is a highly dangerous operation.')
+
+        print(decision)
+
     def onDisconnect(self):
-        logger.warning('Connection lost!')
+        print('Connection lost!')
 
     ############
     # Functions.
@@ -70,33 +78,33 @@ class Cerebral(ApplicationSession):
                                 "I am designed for Project Lycanthrope by E D D Red Team 2016. "
                                 "Rawr."
                   )
-        logger.info('Executed identify().')
+        print('Executed identify().')
 
     async def hello(self):
         self.call('zeus.speak', "Hello world!")
-        logger.info('Executed hello().')
+        print('Executed hello().')
 
     async def blue_team(self):
         self.call('zeus.speak', "I could not find Blue Team's robot. Robot does not exist.")
-        logger.info('Executed blue_team().')
+        print('Executed blue_team().')
 
     async def walk(self):
         self.call('zeus.speak', "Executing walking sequence.")
-        agility.walk()
-        logger.info('Executed walk().')
+        # agility.walk()
+        print('Executed walk().')
 
     async def pushup(self):
         self.call('zeus.speak', "Executing push-ups.")
-        agility.pushup()
-        logger.info('Executed pushup().')
+        # agility.pushup()
+        print('Executed pushup().')
 
     async def stop(self):
-        agility.stop()
-        logger.info('Executed stop().')
+        # agility.stop()
+        print('Executed stop().')
 
     async def home(self):
-        agility.home()
-        logger.info('Executed home().')
+        # agility.home()
+        print('Executed home().')
 
 
 if __name__ == '__main__':

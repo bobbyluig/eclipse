@@ -1,5 +1,11 @@
 ctrlWamp.connect = function () {
-    state.com.state = 'connecting';
+    if (state.com.state != 'closed') {
+        ctrlLog.log('system', 'Connection already exists.', 2);
+        return;
+    }
+    else {
+        state.com.state = 'connecting';
+    }
 
     this.connection = new autobahn.Connection({
         url: settings.com.url,
@@ -21,11 +27,26 @@ ctrlWamp.connect = function () {
     this.connection.onopen = function (session) {
         wamp = session;
         state.com.state = 'open';
-        console.log('Connected!');
+        ctrlLog.log('system', 'Connected!', 1);
+
+        ctrlRpc.registerAll();
     };
 
     this.connection.onclose = function (reason, details) {
-        state.com.state = reason;
+        var message, level;
+
+        if (details.will_retry) {
+            message = 'Connection lost. Retrying.';
+            level = 2;
+            state.com.state = reason;
+        }
+        else {
+            message = 'Connection lost.';
+            level = 3;
+            state.com.state = 'closed';
+        }
+
+        ctrlLog.log('system', message, level);
     };
 
     this.connection.open();

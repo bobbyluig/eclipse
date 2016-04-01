@@ -11,6 +11,8 @@ var ctrlLoad = {};
 var ctrlMenu ={};
 var ctrlModal = {};
 var ctrlWamp = {};
+var ctrlRpc = {};
+var ctrlLog = {};
 
 // Main
 $(document).ready(function() {
@@ -24,7 +26,7 @@ $(document).ready(function() {
 
     $('.menu .item').tab();
 
-    rivets.bind($('#menu'), {data: settings.style, run: ctrlMenu, state: state});
+    rivets.bind($('#menu'), {style: settings.style, menu: ctrlMenu, state: state});
 
     // End loading.
     $('.dimmer.active').removeClass('active');

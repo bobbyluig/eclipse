@@ -1,0 +1,14 @@
+span.light {
+  display: inline-block;
+    float: none;
+    font-weight: 400;
+    font-style: normal;
+    margin: 0 0 0 .5em;
+    padding: 0;
+    color: rgba(0,0,0,.4);
+}
+
+.segment.scrollable {
+  overflow: auto;
+  height: 300px;
+}

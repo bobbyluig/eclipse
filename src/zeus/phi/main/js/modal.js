@@ -38,7 +38,7 @@ ctrlModal.modal = function (name, force, context) {
     var selector = $(id);
 
     var settings = {
-        closeable: !force,
+        closable: !force,
         selector: {
             close: '.close, .actions .button'
         }
