@@ -36,7 +36,7 @@ After cloning the package, all the prerequisites for the project must be install
 - The latest version of the following Python packages and their dependencies: `numpy`, `pyserial`, `autobahn`, `pyusb`, `pyaudio`.
 - Processor support for SSE2 intrinsics (on most Intel and AMD processors) or NEON intrinsics (on ARM Cortex-A series).
 
-The root directory for the Python code is the `src` folder. Ensure that your IDE (like PyCharm) knows that it is the root directory. Tests should be written in `test.py` before being moved to `main.py` or other files.
+The root directory for the Python code is the `src` folder. Ensure that your IDE (like PyCharm) knows that it is the root directory. Tests should be written in test directories before being moved to `main.py` or other files.
 
 USB is quite interesting. Pololu's configuation software is written in C# and uses an outdated version of WinUSB. However, pyusb requires libusb-win32 (or equivalent). First, configure the Mini Maestro using the Pololu software. Ensure that CRC check is disabled and that the serial mode is set to "USB Dual Port." Other modes should work as well but this is the most stable and well-tested mode. You may modify other parameters to your liking but be prepared to change code parameters if things like period and timeout are changed from their default value.
 
