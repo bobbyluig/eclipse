@@ -10,11 +10,14 @@ ctrlRpc.basicDecision = function (args, kwargs, details) {
 
     functions.yes = function () {
         d.resolve(true);
+        ctrlLog.log('system', 'A user decision has been resolved.', 0);
     };
     functions.no = function () {
         d.resolve(false);
+        ctrlLog.log('system', 'A user decision has been resolved.', 0);
     };
 
+    ctrlLog.log('system', 'A user decision has been requested.', 0);
     ctrlModal.modal('choice', true, context);
 
     return d.promise;

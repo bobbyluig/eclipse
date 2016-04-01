@@ -18,6 +18,12 @@ ctrlLog.log = function (logger, message, level) {
         display = $(display);
         display.scrollTop(display.prop("scrollHeight"));
     }
+
+    /*
+    selector.find('.item.hidden').each(function () {
+        $(this).transition('fade down');
+    });
+    */
 };
 
 ctrlLog.init = function (logger) {
@@ -39,7 +45,7 @@ ctrlLog.init = function (logger) {
         log.zero();
     };
 
-    var view = rivets.bind(selector, {log: log});
+    var view = rivets.bind(selector, {log: log, style: settings.style});
     selector.data('view', view);
 
     this.log(selector, 'Logger initialized!', 1);

@@ -29,7 +29,7 @@
                                 <i class="green checkmark icon" rv-if="event.level |=== 1"></i>
                                 <i class="orange warning sign icon" rv-if="event.level |=== 2"></i>
                                 <i class="red remove icon" rv-if="event.level |=== 3"></i>
-                                {{ event.message }} <span class="light">({{ event.time }})</span>
+                                {{ event.message }} <span class="light">({{ event.time }})< /span>
                             </div>
                         </div>
                     </div>
@@ -38,7 +38,7 @@
         </div>
 
         <div class="column">
-            <div class="ui raised segments">
+            <div class="ui raised segments rv">
                 <div class="ui segment">
                     <div class="ui large purple label">
                         Communication Controls

@@ -58,7 +58,6 @@ class Cerebral(ApplicationSession):
         await self.register(self.home, 'dog.home')
         await self.register(self.blue_team, 'dog.blue_team')
 
-        await asyncio.sleep(1)
         print('Calling procedure.')
 
         decision = await self.call('zeus.phi.basic_decision', 'Are You Sure?',

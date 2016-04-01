@@ -26,8 +26,13 @@ ctrlLoad.insertTab = function (name, html) {
     });
 
     // Initialize overall style.
-    var view = rivets.bind(tab, {style: settings.style, wamp: ctrlWamp});
-    tab.data('view', view);
+    tab.find('.rv').each(function () {
+        var rv = $(this);
+        if (!rv.data('view')) {
+            var view = rivets.bind(rv, {style: settings.style, wamp: ctrlWamp});
+            rv.data('view', view);
+        }
+    });
 
     selector.append(tab);
 };
