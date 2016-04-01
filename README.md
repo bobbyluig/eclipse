@@ -21,12 +21,18 @@ After cloning the package, all the prerequisites for the project must be install
 - Raspberry Pi 2 Model B
 - Raspberry Pi 3
 
+##### Recommended Command Center Specifications
+- Intel i7 (4th generation and up) if real-time multi-robot slam is desired.
+- 16 GB ram. 8 GB is risky for `slam`.
+
 ##### Project requires
 - Windows 7+, Linux (tested on Debian Jessie+, Raspiban, and Odrobian), or OS X (untested but should work).
 - CMake 2.8.7 or higher.
 - Python 3.5+ (usage of new async and await syntax).
 - Boost Python (sudo apt-get install libboost-dev-all should be good).
 - OpenCV 3 and contrib module with Python3 binding.
+- C++11 capable compiler for robots. (GCC 4.9+, includes GCC 5).
+- C++14 capable compiler for command center. Usage of `slam` requires 64-bit Python.
 - The latest version of the following Python packages and their dependencies: `numpy`, `pyserial`, `autobahn`, `pyusb`, `pyaudio`.
 - Processor support for SSE2 intrinsics (on most Intel and AMD processors) or NEON intrinsics (on ARM Cortex-A series).
 
