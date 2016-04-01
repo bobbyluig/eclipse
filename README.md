@@ -1,6 +1,6 @@
 # Red Eclipse Framework
 
-This repository contains all code used by Eclipse (Red Team) in the 2016 CARPA Initiative Challenge - The Lycanthrope Project. Failure in any aspect of the project is not in any way related to deficiencies in the code of this framework.
+This repository contains all code used in the 2016 CARPA Initiative Challenge - The Lycanthrope Project. Failure in any aspect of the project is not in any way related to deficiencies in the code of this framework.
 
 ## Style
 
@@ -13,12 +13,14 @@ After cloning the package, all the prerequisites for the project must be install
 ##### Test with the following hardware
 - Pololu Mini Maestro 18
 - SparkFun RedBoard
+- Arduino UNO
 - ODROID-C1+
 - ODROID-C2
 - Raspberry Pi 2 Model B
+- Raspberry Pi 3
 
 ##### Project requires
-- Windows 7+, Linux (tested on Debian, Raspbian and Ubuntu), or OS X (untested but should work).
+- Windows 7+, Linux (tested on Debian Jessie+, Raspiban, and Odrobian), or OS X (untested but should work).
 - CMake 2.8.7 or higher.
 - Python 3.5+ (usage of new async and await syntax).
 - Boost Python (sudo apt-get install libboost-dev-all should be good).
@@ -32,7 +34,7 @@ USB is quite interesting. Pololu's configuation software is written in C# and us
 
 For Windows, it is necessary after initial configuration to install a driver compatible with pyusb. This can be done using [zadig](http://zadig.akeo.ie/). Ensure that you replace the driver (which should be WinUSB) for the actual device and not its two virtual COM ports. To reuse the Pololu controller interface, open device manager and uninstall the device. After a refresh, the original driver should reappear. 
 
-If installing manually, you will need to compile `oculus`, which implements DSST and KCF corelation-based trackers and exposes them to Python3. Check the README in `src/theia/oculus` for more information.
+If installing manually, you will need to compile `oculus`, which implements DSST and KCF corelation-based trackers and exposes them to Python3. Check the README in `src/theia/oculus` for more information. You will also need to compile `slam`, which implements monocular location and mapping. Check `src/theia/slam` for more information.
 
 ## Deployment
   
