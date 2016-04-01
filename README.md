@@ -52,6 +52,5 @@ Deployment is done by first cloning the repository on a remote device. Execute `
 ##### Deployment process
 1. On the server, cd to the `crossbar` folder and run `crossbar start`.
 2. Edit the IP addresses (if dynamic) on all devices including the server.
-3. On the server, open `zeus` in a browser. Ensure that it can connect to the crossbar server on localhost.
-4. On each remote robot device, cd to `src` and execute `python3 main.py` to start the programs.
-5. View the command center (zeus) to ensure that all devices have connected.
+3. On the mission display, open `phi` in a browser. Ensure that it can connect to the crossbar server.
+4. On each remote robot device, cd to `src` and execute `python3 eclipse.py` to start the programs.
