@@ -21,9 +21,10 @@ After cloning the package, all the prerequisites for the project must be install
 - Raspberry Pi 2 Model B
 - Raspberry Pi 3
 
-##### Recommended Command Center Specifications
+##### Recommended command center specifications
 - Intel i7 (4th generation and up) if real-time multi-robot slam is desired.
 - 16 GB ram. 8 GB is risky for `slam`.
+- For `phi`, use a Mac because Macs have cool vnoices.
 
 ##### Project requires
 - Windows 7+, Linux (tested on Debian Jessie+, Raspiban, and Odrobian), or OS X (untested but should work).
