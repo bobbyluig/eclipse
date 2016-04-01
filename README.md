@@ -28,6 +28,7 @@ After cloning the package, all the prerequisites for the project must be install
 ##### Project requires
 - Windows 7+, Linux (tested on Debian Jessie+, Raspiban, and Odrobian), or OS X (untested but should work).
 - CMake 2.8.7 or higher.
+- Node.js and required components (for `phi` development).
 - Python 3.5+ (usage of new async and await syntax).
 - Boost Python (sudo apt-get install libboost-dev-all should be good).
 - OpenCV 3 and contrib module with Python3 binding.
