@@ -27,3 +27,12 @@ A = list(kinematics(L, P))
 for x in [0, 1, 2]:
     A[x] *= (180 / pi)
 print(A)
+
+def invkinematics(lengths, angles):
+    t1, t2, t3 = angles
+    l1, l2, l3 = lengths
+    i1 = (l2 * cos(t2)) + (l3 * cos(t2 + t3))
+    x = (i1 + l1) * cos(t1)
+    y = (i1 + l1) * sin(t1)
+    z = (l2 * sin(t2)) + (l3 * sin(t2 + t3))
+    return x, y, z
