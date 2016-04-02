@@ -18,6 +18,7 @@
   "dependencies": {
     "jquery": "^2.2.2",
     "autobahnjs": "autobahn#^0.9.9",
-    "rivets": "^0.8.1"
+    "rivets": "^0.8.1",
+    "annyang": "^2.3.0"
   }
 }

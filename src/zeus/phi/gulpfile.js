@@ -39,6 +39,12 @@ gulp.task('copy_html', function() {
        .pipe(gulp.dest('build'));
 });
 
+// Copy Images.
+gulp.task('copy_img', function() {
+   return gulp.src('main/img/**/*')
+       .pipe(gulp.dest('build/img'));
+});
+
 // Copy Semantic.
 gulp.task('copy_semantic', function() {
    return gulp.src('semantic/dist/**/*')
@@ -46,7 +52,7 @@ gulp.task('copy_semantic', function() {
 });
 
 // Complete copy.
-gulp.task('copy', ['copy_bower', 'copy_html', 'copy_semantic']);
+gulp.task('copy', ['copy_bower', 'copy_html', 'copy_img', 'copy_semantic']);
 
 // Compile SASS.
 gulp.task('sass', function() {
