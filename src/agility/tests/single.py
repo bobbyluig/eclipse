@@ -2,7 +2,7 @@ from agility.pololu.usc import Usc
 from agility.pololu.reader import BytecodeReader
 from agility.maestro import Maestro
 from agility.main import Servo
-from finesse.main import Finesse
+from finesse.eclipse import Finesse
 import math, time
 
 ###########################
@@ -35,7 +35,7 @@ def goHome():
 
 # Set position.
 def moveToEuclidean(position, a3=False):
-    angles = Finesse.inverse((7.5, 7.5), position, a3=a3)
+    angles = Finesse.inverse_pack((7.5, 7.5), position, a3=a3)
 
     if angles is not None:
         servo4.set_target(angles[0])

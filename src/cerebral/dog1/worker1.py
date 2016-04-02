@@ -2,7 +2,7 @@ from shared.queue import SharedMemory
 from cerebral.dog1.hippocampus import Manager, Android
 from cerebral.dog1.commands import Commands
 from agility.main import Agility, IR
-from finesse.main import Finesse
+from finesse.eclipse import Finesse
 from threading import Thread
 import time
 
@@ -46,7 +46,7 @@ class Target:
 
         for target in targets:
             for leg in range(4):
-                angles = Finesse.inverse(robot[leg].lengths, target)
+                angles = Finesse.inverse_pack(robot[leg].lengths, target)
                 instructions.append((IR.MOVE, leg, angles, tau/len(targets)))
             instructions.append((IR.WAIT_ALL,))
 
@@ -61,7 +61,7 @@ class Target:
         target = (-15, 0, 0)
 
         for leg in range(4):
-            angles = Finesse.inverse(robot[leg].lengths, target)
+            angles = Finesse.inverse_pack(robot[leg].lengths, target)
             instructions.append((IR.MOVE, leg, angles, 0))
 
         instructions.append((IR.WAIT_ALL,))

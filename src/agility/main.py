@@ -1,7 +1,7 @@
 from agility.maestro import Maestro
 from agility.pololu.enumeration import uscSerialMode, ChannelMode, HomeMode
 from agility.pololu.usc import Usc
-from finesse.main import Finesse
+from finesse.eclipse import Finesse
 from enum import IntEnum
 from bisect import bisect
 import numpy as np
@@ -229,14 +229,14 @@ class Agility:
 
         # Compute angles semi-efficiently. Needs improvement using numpy vectorization.
         if all(leg.lengths == self.robot.legs[0].lengths for leg in self.robot.legs):
-            angle = [np.array(Finesse.inverse(self.robot.legs[0].lengths, point)) for point in sequence]
+            angle = [np.array(Finesse.inverse_pack(self.robot.legs[0].lengths, point)) for point in sequence]
             angles = np.array([angle, angle, angle, angle])
         else:
             angles = np.array([
-                [np.array(Finesse.inverse(self.robot.legs[order[0]].lengths, point)) for point in sequence],
-                [np.array(Finesse.inverse(self.robot.legs[order[1]].lengths, point)) for point in sequence],
-                [np.array(Finesse.inverse(self.robot.legs[order[2]].lengths, point)) for point in sequence],
-                [np.array(Finesse.inverse(self.robot.legs[order[3]].lengths, point)) for point in sequence]
+                [np.array(Finesse.inverse_pack(self.robot.legs[order[0]].lengths, point)) for point in sequence],
+                [np.array(Finesse.inverse_pack(self.robot.legs[order[1]].lengths, point)) for point in sequence],
+                [np.array(Finesse.inverse_pack(self.robot.legs[order[2]].lengths, point)) for point in sequence],
+                [np.array(Finesse.inverse_pack(self.robot.legs[order[3]].lengths, point)) for point in sequence]
             ])
 
         # Compute animation key frames.
@@ -292,7 +292,7 @@ class Agility:
         for i in range(len(sequence)):
             x, y = zip(*sequence[i])
 
-            x = [Finesse.inverse(self.robot.legs[i].lengths, x[j]) for j in range(len(x))]
+            x = [Finesse.inverse_pack(self.robot.legs[i].lengths, x[j]) for j in range(len(x))]
 
             padding = length - len(x)
             angles.append(x + [(None, None, None)] * padding)
@@ -535,7 +535,7 @@ class Agility:
         :param a3: True to find alternate solution for theta3.
         """
 
-        angles = Finesse.inverse(leg.lengths, position, a2=a2, a3=a3)
+        angles = Finesse.inverse_pack(leg.lengths, position, a2=a2, a3=a3)
 
         if angles is not None:
             leg[0].set_target(angles[0])

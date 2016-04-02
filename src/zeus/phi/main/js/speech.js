@@ -31,5 +31,5 @@ ctrlSpeech.getVoice = function (voice) {
 };
 
 ctrlSpeech.commands = {
-    
+
 };

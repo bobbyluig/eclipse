@@ -15,9 +15,9 @@ if __name__ == '__main__':
     hostname = socket.gethostname()
 
     robots = {
-        'DOG-1E5': os.path.join(root, 'cerebral', 'dog1', 'main.py'),
-        'DOG-4S1': os.path.join(root, 'cerebral', 'dog4', 'main.py'),
-        'ALPHA': os.path.join(root, 'cerebral', 'alpha', 'main.py')
+        'DOG-1E5': os.path.join(root, 'cerebral', 'dog1', 'eclipse.py'),
+        'DOG-4S1': os.path.join(root, 'cerebral', 'dog4', 'eclipse.py'),
+        'ALPHA': os.path.join(root, 'cerebral', 'alpha', 'eclipse.py')
     }
 
     file = robots.get(hostname.upper())

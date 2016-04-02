@@ -1,4 +1,6 @@
 from math import *
+from finesse.paragon import Finesse
+import serial, struct, time
 
 
 def kinematics(lengths, pos):
@@ -21,13 +23,6 @@ def kinematics(lengths, pos):
     return t1, t2, t3
 
 
-L = [1.75, 4, 5]
-P = [0,-5.75,-5.5]
-A = list(kinematics(L, P))
-for x in [0, 1, 2]:
-    A[x] *= (180 / pi)
-print(A)
-
 def invkinematics(lengths, angles):
     t1, t2, t3 = angles
     l1, l2, l3 = lengths
@@ -36,3 +31,21 @@ def invkinematics(lengths, angles):
     y = (i1 + l1) * sin(t1)
     z = (l2 * sin(t2)) + (l3 * sin(t2 + t3))
     return x, y, z
+
+
+usb = serial.Serial('COM5')
+lengths = (1.75, 4, 5, 0.5)
+x, y, z = (4, -4, -5)
+t = 0
+k = 5
+r = 3
+a = 4
+
+while True:
+    target = (x + r * sin(k * t), y, z + (cos(k * t) / abs(cos(k * t))) * (1 - sin(k * t) ** a) ** (1 / a))
+    t1, t2, t3 = Finesse.inverse_pack(lengths, target)
+    # print(t1, t2, t3)
+    data = struct.pack('<fff', t1, t2, t3)
+    usb.write(data)
+    time.sleep(0.05)
+    t += 0.05

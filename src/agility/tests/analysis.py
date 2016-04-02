@@ -1,6 +1,6 @@
 from cerebral.dog1.hippocampus import Android
 from agility.main import Agility, IR
-from finesse.main import Finesse
+from finesse.eclipse import Finesse
 import time
 
 # Robot by reference.
@@ -91,7 +91,7 @@ def transform():
     time.sleep(3)
 
     for leg in range(2, 4):
-        angles = Finesse.inverse(robot.legs[leg].lengths, target)
+        angles = Finesse.inverse_pack(robot.legs[leg].lengths, target)
         instructions.append((IR.MOVE, leg, angles, 0))
 
     instructions.append((IR.WAIT_ALL,))
@@ -106,7 +106,7 @@ def lift(leg):
     agility.zero()
     time.sleep(3)
 
-    angles = Finesse.inverse(robot.legs[leg].lengths, target)
+    angles = Finesse.inverse_pack(robot.legs[leg].lengths, target)
     instructions.append((IR.MOVE, leg, angles, 0))
 
     instructions.append((IR.WAIT_ALL,))
@@ -118,8 +118,8 @@ def jump():
     agility.zero()
     time.sleep(3)
 
-    a0 = Finesse.inverse(robot.legs[0].lengths, (0, 0, -12))
-    a1 = Finesse.inverse(robot.legs[1].lengths, (0, 0, -12))
+    a0 = Finesse.inverse_pack(robot.legs[0].lengths, (0, 0, -12))
+    a1 = Finesse.inverse_pack(robot.legs[1].lengths, (0, 0, -12))
 
     instructions = []
     instructions.append((IR.MOVE, 0, a0, 500))
@@ -127,10 +127,10 @@ def jump():
 
     instructions.append((IR.WAIT_ALL,))
 
-    a0 = Finesse.inverse(robot.legs[0].lengths, (0, 0, -15))
-    a1 = Finesse.inverse(robot.legs[1].lengths, (0, 0, -15))
-    a2 = Finesse.inverse(robot.legs[2].lengths, (14, 0, 0))
-    a3 = Finesse.inverse(robot.legs[3].lengths, (14, 0, 0))
+    a0 = Finesse.inverse_pack(robot.legs[0].lengths, (0, 0, -15))
+    a1 = Finesse.inverse_pack(robot.legs[1].lengths, (0, 0, -15))
+    a2 = Finesse.inverse_pack(robot.legs[2].lengths, (14, 0, 0))
+    a3 = Finesse.inverse_pack(robot.legs[3].lengths, (14, 0, 0))
 
     instructions.append((IR.MOVE, 0, a0, 1))
     instructions.append((IR.MOVE, 1, a1, 1))

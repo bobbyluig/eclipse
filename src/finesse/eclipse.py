@@ -4,12 +4,12 @@ from math import sin, cos, asin, acos, atan2, pi, degrees
 
 class Finesse:
     @staticmethod
-    def forward_alpha(lengths, angles):
+    def forward_wolf(lengths, angles):
         """
         Computes the forward kinematics for the back legs of Alpha.
         :param lengths: An array of lengths (l1, l2).
         :param angles: An array of angles (theta1, theta2, theta3).
-        :return: (x1, y1, z1), (x2, y2, z2), (x3, y3, z3)
+        :return: (x3, y3, z3)
         """
 
         l1, l2 = lengths
@@ -25,15 +25,15 @@ class Finesse:
         y3 = y2 - l2 * sin(theta2) * sin(theta3)
         z3 = z2 + l2 * sin(theta1) * sin(theta3) * cos(theta2) - l2 * cos(theta1) * cos(theta3)
 
-        return (x1, y1, z1), (x2, y2, z2), (x3, y3, z3)
+        return x3, y3, z3
 
     @staticmethod
-    def forward_dog(lengths, angles):
+    def forward_pack(lengths, angles):
         """
         Computes the forward kinematics for the legs of DOG.
         :param lengths: An array of lengths (l1, l2).
         :param angles: An array of angles (theta1, theta2, theta3).
-        :return: (x1, y1, z1), (x2, y2, z2), (x3, y3, z3)
+        :return: (x3, y3, z3)
         """
 
         l1, l2 = lengths
@@ -49,10 +49,10 @@ class Finesse:
         y3 = y2 + l2 * cos(theta3) * sin(theta2)
         z3 = z2 + l2 * sin(theta1) * sin(theta3) - l2 * cos(theta1) * cos(theta2) * cos(theta3)
 
-        return (x1, y1, z1), (x2, y2, z2), (x3, y3, z3)
+        return x3, y3, z3
 
     @staticmethod
-    def inverse(lengths, target, a2=False, a3=False, deg=True):
+    def inverse_pack(lengths, target, a2=False, a3=False, deg=True):
         """
         Computes the inverse kinematics for the legs of DOG and Alpha
         For the back legs of Alpha, pass 0 for y.
@@ -77,7 +77,7 @@ class Finesse:
         # theta3 *= -1
         # Returns [0, 180]. +/- expands solution to [-180, 180].
         try:
-            theta3 = (l1**2 + l2**2 - dist**2) / (2 * l1 * l2)
+            theta3 = (l1 ** 2 + l2 ** 2 - dist ** 2) / (2 * l1 * l2)
             theta3 = acos(theta3) - pi
             if a3:
                 theta3 *= -1
