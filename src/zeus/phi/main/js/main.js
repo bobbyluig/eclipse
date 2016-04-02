@@ -13,6 +13,7 @@ var ctrlModal = {};
 var ctrlWamp = {};
 var ctrlRpc = {};
 var ctrlLog = {};
+var ctrlSpeech = {};
 
 // Main
 $(document).ready(function() {

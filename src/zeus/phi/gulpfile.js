@@ -14,7 +14,8 @@ var webserver = require('gulp-webserver');
 var bower = [
     'bower_components/jquery/dist/jquery.min.js',
     'bower_components/autobahnjs/autobahn.min.js',
-    'bower_components/rivets/dist/rivets.bundled.min.js'
+    'bower_components/rivets/dist/rivets.bundled.min.js',
+    'bower_components/annyang/annyang.min.js'
 ];
 
 // Semantic.

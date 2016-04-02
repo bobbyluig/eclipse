@@ -16,6 +16,12 @@ defaults.style = {
     link: 'http://google.com'
 };
 
+defaults.speech = {
+    volume: 1,
+    rate: 1,
+    pitch: 1
+};
+
 defaults.mission = {
 
 };
