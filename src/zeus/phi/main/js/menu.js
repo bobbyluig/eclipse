@@ -93,6 +93,6 @@ ctrlMenu.loadSettings = function () {
         settings = JSON.parse(data);
     }
     else {
-        this.reset();
+        this.hardReset();
     }
 };

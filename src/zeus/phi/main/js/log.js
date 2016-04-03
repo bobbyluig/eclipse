@@ -18,6 +18,8 @@ ctrlLog.log = function (logger, message, level) {
         display = $(display);
         display.scrollTop(display.prop("scrollHeight"));
     }
+    
+    ctrlSpeech.speak(settings.speech.phi, message);
 
     /*
     selector.find('.item.hidden').each(function () {

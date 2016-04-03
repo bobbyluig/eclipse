@@ -39,6 +39,7 @@ ctrlModal.modal = function (name, force, context) {
 
     var settings = {
         closable: !force,
+        allowMultiple: true,
         selector: {
             close: '.close, .actions .button'
         }

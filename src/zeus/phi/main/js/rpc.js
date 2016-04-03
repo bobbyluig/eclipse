@@ -20,6 +20,8 @@ ctrlRpc.basicDecision = function (args, kwargs, details) {
     ctrlLog.log('system', 'A user decision has been requested.', 0);
     ctrlModal.modal('choice', true, context);
 
+    ctrlSpeech.speak(settings.speech.robot1, args[1]);
+
     return d.promise;
 };
 
