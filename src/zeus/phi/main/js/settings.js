@@ -19,7 +19,11 @@ defaults.style = {
 defaults.speech = {
     volume: 1,
     rate: 1,
-    pitch: 1
+    pitch: 1,
+    phi: 'native',
+    robot1: 'native',
+    robot2: 'native',
+    robot3: 'native'
 };
 
 defaults.mission = {

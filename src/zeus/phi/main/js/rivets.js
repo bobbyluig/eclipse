@@ -40,7 +40,7 @@ var rivets;
                 return Cache.get(cacheKey)(value);
             }
 
-            if (args[0][args[0].length - 1] == ':') {
+            if (args[0] && args[0][args[0].length - 1] == ':') {
                 binding = ".bind(" + args[0].substr(0, args[0].length - 1) + ");";
                 args.shift();
             }
@@ -48,7 +48,7 @@ var rivets;
             var exp = args.join(' ').replace('{{value}}', '__$value');
 
             exp = "(function(__$value){return " + exp + ";})" + binding;
-
+            
             var f = eval(exp);
             Cache.add(cacheKey, f);
 

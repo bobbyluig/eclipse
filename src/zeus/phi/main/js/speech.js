@@ -1,10 +1,10 @@
 ctrlSpeech.speak = function (voice, text) {
-    if (!window.speechSynthesis) {
+    if (!('speechSynthesis' in window)) {
         return;
     }
 
     var msg = new SpeechSynthesisUtterance();
-    var v = this.getVoice(v);
+    var v = this.getVoice(voice);
 
     if (v) {
         msg.voice = v;
@@ -13,22 +13,26 @@ ctrlSpeech.speak = function (voice, text) {
         msg.voice = this.getVoice('native');
     }
 
-    msg.volume = settings.voice.volume;
-    msg.rate = settings.voice.rate;
-    msg.pitch = settings.voice.pitch;
+    msg.volume = settings.speech.volume;
+    msg.rate = settings.speech.rate;
+    msg.pitch = settings.speech.pitch;
 
     msg.text = text;
-    msg.lang = 'en-US';
 
     window.speechSynthesis.speak(msg);
 };
 
 ctrlSpeech.getVoice = function (voice) {
-    var voices = window.speechSynthesis.getVoices();
-    return voices.find(function (x) {
+    return this.voices.find(function (x) {
         return x.name === voice;
     });
 };
+
+window.speechSynthesis.onvoiceschanged = function () {
+    ctrlSpeech.voices = window.speechSynthesis.getVoices();
+};
+
+ctrlSpeech.voices = [];
 
 ctrlSpeech.commands = {
 

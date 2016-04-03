@@ -14,19 +14,38 @@ ctrlMenu.changeTeam = function () {
     ctrlModal.modal('team', false, context);
 };
 
+ctrlMenu.resetOne = function (category) {
+    for (var property in settings[category]) {
+        if (settings[category].hasOwnProperty(property) && defaults[category].hasOwnProperty(property)) {
+            settings[category][property] = defaults[category][property];
+        }
+    }
+};
+
 ctrlMenu.comSettings = function () {
     var functions = {};
-    var context = {run: functions, data: settings.com};
+    var context = {run: functions, com: settings.com};
 
     functions.reset = function () {
-        for (var property in settings.com) {
-            if (settings.com.hasOwnProperty(property) && defaults.com.hasOwnProperty(property)) {
-                settings.com[property] = defaults.com[property];
-            }
-        }
+        ctrlMenu.resetOne('com');
     };
 
     ctrlModal.modal('com', false, context);
+};
+
+ctrlMenu.speechSettings = function () {
+    var functions = {};
+    var context = {
+        voices: ctrlSpeech.voices,
+        speech: settings.speech,
+        run: functions
+    };
+
+    functions.reset = function () {
+        ctrlMenu.resetOne('speech');
+    };
+
+    ctrlModal.modal('speech', false, context);
 };
 
 ctrlMenu.saveSettings = function () {
