@@ -1,29 +1,40 @@
 from multiprocessing.managers import BaseManager
 import queue
-import os
-from psutil import pid_exists
 
 
-class QueueManager(BaseManager):
+class MemoryManager(BaseManager):
     pass
 
+
+#################
+# Vision systems.
+#################
+
+vision = {
+    'target': (0, 0),           # Position of tracked target, in (x, y).
+}
+
+MemoryManager.register('db.vision', callable=lambda: vision)
+
+##################
+# Walking systems.
+##################
+
+motion = {
+    'gait': 0,                  # Gait number, as defined by Agility.
+    'vector': (0, 0),           # Walking target. Either (x, y) or (dx/dt, dy/dt, dr/dt).
+}
+
+MemoryManager.register('db.motion', callable=lambda: motion)
+
+###########################
+# Create server, and serve!
+###########################
+
 if __name__ == '__main__':
-    q1 = queue.Queue()
-    q2 = queue.Queue()
-    q3 = queue.Queue()
-    q4 = queue.Queue()
-    QueueManager.register('queue1', callable=lambda: q1)
-    QueueManager.register('queue2', callable=lambda: q2)
-    QueueManager.register('queue3', callable=lambda: q3)
-    QueueManager.register('queue4', callable=lambda: q4)
+    address = ('127.0.0.1', 31415)
+    authkey = b'cMAmn85PwdU8gUAc'
 
-    if os.name == 'nt':
-        # Running on Windows, create a pipe.
-        address = '\\\\.\\pipe\\eclipse'
-    else:
-        # Running on Linux, create a socket.
-        address = 'listener-eclipse'
-
-    m = QueueManager(address=address, authkey=b'eclipse4lyfe')
+    m = MemoryManager(address=address, authkey=authkey)
     s = m.get_server()
     s.serve_forever()

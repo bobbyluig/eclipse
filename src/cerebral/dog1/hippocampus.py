@@ -52,14 +52,8 @@ class Crossbar:
 ###########################
 
 class Manager:
-    if os.name == 'nt':
-        # Running on Windows, create a pipe.
-        address = '\\\\.\\pipe\\eclipse'
-    else:
-        # Running on Linux, create a socket.
-        address = 'listener-eclipse'
-
-    authkey = b'eclipse4lyfe'
+    address = ('127.0.0.1', 31415)
+    authkey = b'cMAmn85PwdU8gUAc'
 
 
 #############################

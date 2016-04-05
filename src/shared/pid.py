@@ -32,3 +32,5 @@ def pid_spawn(path, name):
             with open(pid_path, 'w') as f:
                 f.write(str(process.pid))
             return True
+
+    return True
