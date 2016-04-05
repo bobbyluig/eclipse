@@ -12,6 +12,14 @@ For JavaScript (`phi`), functions and objects should use *mixedCase*.
 
 After cloning the package, all the prerequisites for the project must be installed. This project has not been tested in Mac but should work fine due to the versatility of Python.
 
+Logging for all modules is done to a proxy-based queue. Import `cerebral.logger` at root of every process for which logging is desired. Logging can be parsed by a `QueueListener` or sent to the command center.
+
+It is much easier to obtain proxy objects. Registration can be done normally. However, no registration is necessary to get a proxy object.
+
+```python
+from cerebral.database import manager
+```
+
 ##### Test with the following hardware
 - Pololu Mini Maestro 18
 - SparkFun RedBoard
