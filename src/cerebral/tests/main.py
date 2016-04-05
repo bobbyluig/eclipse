@@ -1,20 +1,19 @@
 #!/usr/bin/env python3.5
 
-import os
-from cerebral.manager import SharedManager
+from cerebral.database import manager
+from cerebral import logger as l
+import logging
 
 
 if __name__ == '__main__':
-    # Change directory.
-    root = os.path.dirname(__file__)
+    manager.connect()
 
-    address = ('127.0.0.1', 31415)
-    authkey = b'cMAmn85PwdU8gUAc'
+    logger = logging.getLogger('universe')
+    logger.debug('Hello! This is an info log.')
 
-    m = SharedManager(address=address, authkey=authkey)
-    m.connect()
+    gps = manager.get('db.gps')
+    print(gps)
 
-    proxy = m.pub_proxy()
+    queue = manager.get('queue.logging')
+    print(queue.get())
 
-    proxy.publish('a', 'b')
-    print(dir(proxy))
