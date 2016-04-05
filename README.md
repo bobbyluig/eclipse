@@ -14,10 +14,18 @@ After cloning the package, all the prerequisites for the project must be install
 
 Logging for all modules is done to a proxy-based queue. Import `cerebral.logger` at root of every process for which logging is desired. Logging can be parsed by a `QueueListener` or sent to the command center.
 
-It is much easier to obtain proxy objects. Registration can be done normally. However, no registration is necessary to get a proxy object.
+It is much easier to obtain proxy objects by importing the shared manager rather than using the native Python module. Registration on the server can be done normally. However, no registration is necessary to get a proxy object from a client.
 
 ```python
 from cerebral.database import manager
+from cerebral import logger as l
+
+logger = logging.getLogger('universe')
+logger.debug('Hello World!')
+
+manager.connect()
+queue = manager.get('queue.logging')
+print(queue.get())
 ```
 
 ##### Test with the following hardware
