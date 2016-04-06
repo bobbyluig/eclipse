@@ -1,4 +1,4 @@
-from cerebral.dog1.hippocampus import Android
+from cerebral.pack.hippocampus import Android
 from agility.main import Agility, IR
 from finesse.eclipse import Finesse
 import time

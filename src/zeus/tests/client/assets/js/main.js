@@ -69,7 +69,7 @@ app.controller('MainCtrl', function ($scope, $timeout, $wamp, FoundationApi, Ann
   ];
 
   $scope.callConverse = function () {
-    $wamp.call('dog1.converse', [$scope.selectedTopic]);
+    $wamp.call('pack.converse', [$scope.selectedTopic]);
   };
 
   $scope.saySomething = function () {
@@ -78,7 +78,7 @@ app.controller('MainCtrl', function ($scope, $timeout, $wamp, FoundationApi, Ann
       SpeechService.speak($scope.sayItText);
     }
     else {
-      $wamp.publish('dog1.info', [$scope.sayItText]);
+      $wamp.publish('pack.info', [$scope.sayItText]);
     }
   };
 
@@ -98,25 +98,25 @@ app.controller('MainCtrl', function ($scope, $timeout, $wamp, FoundationApi, Ann
 
   $scope.startAnnyang = function () {
     AnnyangService.addCommand('DOG (go) home', function () {
-      $wamp.call('dog1.home');
+      $wamp.call('pack.home');
     });
     AnnyangService.addCommand('DOG walk (forward)', function () {
-      $wamp.call('dog1.walk');
+      $wamp.call('pack.walk');
     });
     AnnyangService.addCommand('DOG (do) pushups', function () {
-      $wamp.call('dog1.pushup');
+      $wamp.call('pack.pushup');
     });
     AnnyangService.addCommand('DOG stand (up)', function () {
-      $wamp.call('dog1.stand');
+      $wamp.call('pack.stand');
     });
     AnnyangService.addCommand('DOG stop', function () {
-      $wamp.call('dog1.stop');
+      $wamp.call('pack.stop');
     });
     AnnyangService.addCommand('DOG initialize', function () {
-      $wamp.call('dog1.initialize');
+      $wamp.call('pack.initialize');
     });
     AnnyangService.addCommand('DOG *phrase', function (phrase) {
-      $wamp.call('dog1.converse', [phrase]);
+      $wamp.call('pack.converse', [phrase]);
     });
 
     if (AnnyangService.isListening()) {
@@ -133,7 +133,7 @@ app.controller('MainCtrl', function ($scope, $timeout, $wamp, FoundationApi, Ann
   $scope.startAudio = function () {
     if (!$scope.audioIsRegistered) {
       $scope.audioIsRegistered = true;
-      $wamp.subscribe('dog1.info', SpeechService.speak);
+      $wamp.subscribe('pack.info', SpeechService.speak);
       FoundationApi.publish('main-notifications', {
         title: 'Audio',
         content: 'Audio registered!',
@@ -153,22 +153,22 @@ app.controller('MainCtrl', function ($scope, $timeout, $wamp, FoundationApi, Ann
 
   // Buttons just in case.
   $scope.dogWalk = function () {
-    $wamp.call('dog1.walk');
+    $wamp.call('pack.walk');
   };
   $scope.dogPushup = function () {
-    $wamp.call('dog1.pushup');
+    $wamp.call('pack.pushup');
   };
   $scope.dogStand = function () {
-    $wamp.call('dog1.stand');
+    $wamp.call('pack.stand');
   };
   $scope.dogStop = function () {
-    $wamp.call('dog1.stop');
+    $wamp.call('pack.stop');
   };
   $scope.dogInitialize = function () {
-    $wamp.call('dog1.initialize');
+    $wamp.call('pack.initialize');
   };
   $scope.dogHome = function () {
-    $wamp.call('dog1.home');
+    $wamp.call('pack.home');
   }
 });
 
@@ -288,4 +288,4 @@ app.factory('wampInterceptor', function ($q, FoundationApi) {
   };
 });
 
-// angular.element(document.body).injector().get('$wamp').call('dog1.');
+// angular.element(document.body).injector().get('$wamp').call('pack.');

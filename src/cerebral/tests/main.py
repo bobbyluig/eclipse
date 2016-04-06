@@ -3,6 +3,7 @@
 from cerebral.database import manager
 from cerebral import logger as l
 import logging
+import time
 
 
 if __name__ == '__main__':
@@ -12,8 +13,11 @@ if __name__ == '__main__':
     logger.debug('Hello! This is an info log.')
 
     gps = manager.get('db.gps')
-    print(gps)
+
+    start = time.time()
+    for i in range(10000):
+        x = gps['valid']
+    print(time.time() - start)
 
     queue = manager.get('queue.logging')
-    print(queue.get())
-
+    print(dir(queue))

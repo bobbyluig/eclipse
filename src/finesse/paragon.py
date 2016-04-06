@@ -4,7 +4,7 @@ from math import sin, cos, asin, acos, atan2, pi, degrees
 
 class Finesse:
     @staticmethod
-    def inverse_pack(lengths, target, deg=True):
+    def inverse_pack(lengths, target, a2=False, a3=False, deg=True):
         """
         Computes the inverse kinematics for the legs of Amadeus and Mozart.
         :param lengths: An array of lengths (l1, l2, l3, l5).

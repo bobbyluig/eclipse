@@ -1,6 +1,21 @@
 from cerebral.manager import manager
+from multiprocessing.managers import DictProxy, ListProxy
 import queue
 
+
+#######################
+# Registration helpers.
+#######################
+
+def register(cls, item):
+    if type(item) is list:
+        manager.register(cls, callable=lambda: item, proxytype=ListProxy)
+    elif type(item) is dict:
+        manager.register(cls, callable=lambda: item, proxytype=DictProxy)
+    elif not callable(item):
+        manager.register(cls, callable=lambda: item)
+    else:
+        manager.register(cls, item)
 
 ##################
 # Logging systems.
@@ -8,7 +23,7 @@ import queue
 
 logging_queue = queue.Queue()
 
-manager.register('queue.logging', callable=lambda: logging_queue)
+register('queue.logging', logging_queue)
 
 ###################
 # Position systems.
@@ -20,7 +35,7 @@ gps = {
     'last_update': 0,           # When position was last valid. A cache for time.time() at acquisition.
 }
 
-manager.register('db.gps', callable=lambda: gps)
+register('db.gps', gps)
 
 #################
 # Vision systems.
@@ -31,7 +46,7 @@ vision = {
     'valid': False,             # Whether the tracking was successful.
 }
 
-manager.register('db.vision', callable=lambda: vision)
+register('db.vision', vision)
 
 ##################
 # Walking systems.
@@ -42,15 +57,12 @@ motion = {
     'vector': (0, 0),           # Walking target. Either (x, y) or (dx/dt, dy/dt, dr/dt).
 }
 
-manager.register('db.motion', callable=lambda: motion)
+register('db.motion', motion)
 
 ###########################
 # Create server, and serve!
 ###########################
 
 if __name__ == '__main__':
-    address = ('127.0.0.1', 31415)
-    authkey = b'cMAmn85PwdU8gUAc'
-
     server = manager.get_server()
     server.serve_forever()

@@ -41,19 +41,11 @@ class Android:
 
 class Crossbar:
     # Crossbar.
-    ip = '192.168.193.1'
+    ip = '127.0.0.1'
     realm = 'lycanthrope'
     authid = 'DOG-1E5'
     secret = 'de2432k,/s-=/8Eu'
-
-
-###########################
-# Shared manager variables.
-###########################
-
-class Manager:
-    address = ('127.0.0.1', 31415)
-    authkey = b'cMAmn85PwdU8gUAc'
+    prefix = 'pack1'
 
 
 #############################

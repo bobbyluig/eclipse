@@ -1,6 +1,6 @@
 from shared.queue import SharedMemory
-from cerebral.dog1.hippocampus import Manager, Android
-from cerebral.dog1.commands import Commands
+from cerebral.pack.hippocampus import Manager, Android
+from cerebral.pack.commands import Commands
 from agility.main import Agility, IR
 from finesse.eclipse import Finesse
 from threading import Thread
