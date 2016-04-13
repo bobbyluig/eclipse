@@ -66,6 +66,8 @@ If installing manually, you will need to compile `oculus`, which implements DSST
   
 Deployment is done by first cloning the repository on a remote device. Execute `chmod +x install.sh` and then `./install.sh` in a support distibution indicated by `deploy/install.sh` to automatically install and compile all required libraries/software.
 
+If security is important, please change all passwords and regenerate server certificates!
+
 ##### Deployment process
 1. On the server, cd to the `crossbar` folder and run `crossbar start`.
 2. Edit the IP addresses (if dynamic) on all devices including the server.
