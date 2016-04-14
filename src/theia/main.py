@@ -98,13 +98,15 @@ class Oculus:
 
         else:
             if self.count % self.insert_interval == 0:
-                # Reached insert interval.
+                # Reached insert interval. Priority over rank.
                 roi = self.get_roi(frame, bb)
                 self.executor.submit(self.insert_template, roi)
-            elif self.count % self.rank_interval == 0:
+
+            if self.count % self.rank_interval == 0:
                 # Reached rank interval.
                 self.executor.submit(self.rank, frame)
-            elif self.count > max(self.rank_interval, self.insert_interval):
+
+            if self.count > max(self.rank_interval, self.insert_interval):
                 # Reset counter.
                 self.count = 1
 
