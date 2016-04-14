@@ -158,7 +158,10 @@ class Oculus:
         :return: The ROI.
         """
 
-        return image[bb[1]:bb[1] + bb[3], bb[0]:bb[0] + bb[2]]
+        y0, y1 = int(round(bb[1])), int(round(bb[1] + bb[3]))
+        x0, x1 = int(round(bb[0])), int(round(bb[0] + bb[2]))
+
+        return image[y0:y1, x0:x1]
 
     def clean(self):
         """

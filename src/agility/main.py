@@ -201,7 +201,7 @@ class Agility:
         x = k * (x - 0.5 * w)
         y = k * (y - 0.5 * h)
 
-        
+
 
     def generate_crawl(self, tau, beta):
         """
