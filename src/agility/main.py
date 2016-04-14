@@ -196,6 +196,13 @@ class Agility:
         # Set up virtual COM and TTL ports.
         self.maestro = Maestro()
 
+    def center_head(self, x, y, w, h):
+        k = 2
+        x = k * (x - 0.5 * w)
+        y = k * (y - 0.5 * h)
+
+        
+
     def generate_crawl(self, tau, beta):
         """
         Generate a crawl gait from a base sequence.

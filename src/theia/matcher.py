@@ -30,7 +30,7 @@ class LineMatcher:
         return self.matcher.exportTemplate(class_id, template_id)
 
     def import_template(self, data):
-        return self.matcher.exportClass(data)
+        return self.matcher.importTemplate(data)
 
     def export_class(self, class_id):
         return self.matcher.exportClass(class_id)

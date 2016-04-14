@@ -20,6 +20,8 @@ bb = (tl[0], tl[1], br[0] - tl[0], br[1] - tl[1])
 
 oculus.initialize(frame, bb)
 
+complete = False
+
 while True:
     frame = eye.get_color_frame()
     found, pos = oculus.track(frame)
