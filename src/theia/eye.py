@@ -45,7 +45,7 @@ class Eye:
         self.width = self.cap.get(cv2.CAP_PROP_FRAME_WIDTH)
         self.height = self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
 
-        logger.info('Opening capture at {:d}x{:d}'.format(self.width, self.height))
+        logger.info('Opening capture at {}x{}'.format(self.width, self.height))
 
     def close(self):
         self.cap.release()

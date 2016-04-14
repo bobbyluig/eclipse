@@ -1252,9 +1252,12 @@ namespace cv
 #if CV_NEON
 				if (haveNEON)
 				{
-					int8x16_t responses = vld1q_s8(reinterpret_cast<const int8_t*>(lm_ptr + j));
-					int8x16_t* dst_ptr_neon = reinterpret_cast<int8x16_t*>(dst_ptr + j);
-					*dst_ptr_neon = vaddq_s8(*dst_ptr_neon, responses);
+					for (; j < template_positions - 15; j += 16)
+					{
+						int8x16_t responses = vld1q_s8(reinterpret_cast<const int8_t*>(lm_ptr + j));
+						int8x16_t* dst_ptr_neon = reinterpret_cast<int8x16_t*>(dst_ptr + j);
+						*dst_ptr_neon = vaddq_s8(*dst_ptr_neon, responses);
+					}
 				}
 #endif
 
@@ -1538,12 +1541,12 @@ namespace cv
 			const std::vector<Size>& sizes,
 			float threshold, std::vector<Match>& matches,
 			const String& class_id,
-			const std::vector<TemplatePyramid>& template_pyramids) const
+			const TemplatesEntry& template_entries) const
 		{
-			// For each template...
-			for (size_t template_id = 0; template_id < template_pyramids.size(); ++template_id)
+			// For each template entry...
+			for (auto it = template_entries.begin(); it != template_entries.end(); ++it)
 			{
-				const TemplatePyramid& tp = template_pyramids[template_id];
+				const TemplatePyramid& tp = it->second;
 
 				// First match over the whole image at the lowest pyramid level
 				/// @todo Factor this out into separate function
@@ -1588,7 +1591,7 @@ namespace cv
 							int width = tp[0].width;
 							int height = tp[0].height;
 							float score = (raw_score * 100.f) / (4 * num_features) + 0.5f;
-							candidates.push_back(Match(x, y, width, height, score, class_id, static_cast<int>(template_id)));
+							candidates.push_back(Match(x, y, width, height, score, class_id, it->first));
 						}
 					}
 				}
@@ -1668,8 +1671,13 @@ namespace cv
 			const Mat& object_mask, Rect* bounding_box)
 		{
 			int num_modalities = static_cast<int>(modalities.size());
-			std::vector<TemplatePyramid>& template_pyramids = class_templates[class_id];
-			int template_id = static_cast<int>(template_pyramids.size());
+			TemplatesEntry& template_entries = class_templates[class_id];
+
+			int template_id;
+			if (template_entries.empty())
+				template_id = 0;
+			else
+				template_id = template_entries.rbegin()->first + 1;
 
 			TemplatePyramid tp;
 			tp.resize(num_modalities * pyramid_levels);
@@ -1696,15 +1704,21 @@ namespace cv
 				*bounding_box = bb;
 
 			/// @todo Can probably avoid a copy of tp here with swap
-			template_pyramids.push_back(tp);
+			template_entries[template_id] = tp;
 			return template_id;
 		}
 
 		int Detector::addSyntheticTemplate(const std::vector<Template>& templates, const String& class_id)
 		{
-			std::vector<TemplatePyramid>& template_pyramids = class_templates[class_id];
-			int template_id = static_cast<int>(template_pyramids.size());
-			template_pyramids.push_back(templates);
+			TemplatesEntry& template_entries = class_templates[class_id];
+
+			int template_id;
+			if (template_entries.empty())
+				template_id = 0;
+			else
+				template_id = template_entries.rbegin()->first + 1;
+
+			template_entries[template_id] = templates;
 			return template_id;
 		}
 
@@ -1712,8 +1726,9 @@ namespace cv
 		{
 			TemplatesMap::const_iterator i = class_templates.find(class_id);
 			CV_Assert(i != class_templates.end());
-			CV_Assert(i->second.size() > size_t(template_id));
-			return i->second[template_id];
+			TemplatesEntry::const_iterator j = i->second.find(template_id);
+			CV_Assert(j != i->second.end());
+			return j->second;
 		}
 
 		int Detector::numTemplates() const
@@ -1799,25 +1814,22 @@ namespace cv
 				class_id = class_id_override;
 			}
 
-			TemplatesMap::value_type v(class_id, std::vector<TemplatePyramid>());
-			std::vector<TemplatePyramid>& tps = v.second;
-			int expected_id = 0;
+			TemplatesEntry tes;
+			TemplatesMap::value_type v(class_id, tes);
 
-			FileNode tps_fn = fn["template_pyramids"];
-			tps.resize(tps_fn.size());
-			FileNodeIterator tps_it = tps_fn.begin(), tps_it_end = tps_fn.end();
-			for (; tps_it != tps_it_end; ++tps_it, ++expected_id)
+			FileNode tes_fn = fn["template_entries"];
+			FileNodeIterator tes_it = tes_fn.begin(), tes_it_end = tes_fn.end();
+			for (; tes_it != tes_it_end; ++tes_it)
 			{
-				int template_id = (*tps_it)["template_id"];
-				CV_Assert(template_id == expected_id);
-				FileNode templates_fn = (*tps_it)["templates"];
-				tps[template_id].resize(templates_fn.size());
+				int template_id = (*tes_it)["template_id"];
+				FileNode templates_fn = (*tes_it)["templates"];
+				tes[template_id].resize(templates_fn.size());
 
 				FileNodeIterator templ_it = templates_fn.begin(), templ_it_end = templates_fn.end();
 				int idx = 0;
 				for (; templ_it != templ_it_end; ++templ_it)
 				{
-					tps[template_id][idx++].read(*templ_it);
+					tes[template_id][idx++].read(*templ_it);
 				}
 			}
 
@@ -1829,7 +1841,7 @@ namespace cv
 		{
 			TemplatesMap::const_iterator it = class_templates.find(class_id);
 			CV_Assert(it != class_templates.end());
-			const std::vector<TemplatePyramid>& tps = it->second;
+			const TemplatesEntry& tes = it->second;
 
 			fs << "class_id" << it->first;
 			fs << "modalities" << "[:";
@@ -1837,12 +1849,12 @@ namespace cv
 				fs << modalities[i]->name();
 			fs << "]"; // modalities
 			fs << "pyramid_levels" << pyramid_levels;
-			fs << "template_pyramids" << "[";
-			for (size_t i = 0; i < tps.size(); ++i)
+			fs << "template_entries" << "[";
+			for (auto it = tes.begin(); it != tes.end(); ++it)
 			{
-				const TemplatePyramid& tp = tps[i];
+				const TemplatePyramid& tp = it->second;
 				fs << "{";
-				fs << "template_id" << int(i); //TODO is this cast correct? won't be good if rolls over...
+				fs << "template_id" << static_cast<int>(it->first); //TODO is this cast correct? won't be good if rolls over...
 				fs << "templates" << "[";
 				for (size_t j = 0; j < tp.size(); ++j)
 				{
@@ -1901,8 +1913,9 @@ namespace cv
 		{
 			TemplatesMap::iterator i = class_templates.find(class_id);
 			CV_Assert(i != class_templates.end());
-			CV_Assert(i->second.size() > size_t(template_id));
-			i->second.erase(i->second.begin() + template_id);
+			TemplatesEntry::iterator j = i->second.find(template_id);
+			CV_Assert(j != i->second.end());
+			i->second.erase(j);
 		}
 
 		void Detector::removeClass(const String& class_id)
@@ -1941,8 +1954,8 @@ namespace cv
 			// Create if class doesn't already exist
 			if (class_templates.find(class_id) == class_templates.end())
 			{
-				TemplatesMap::value_type v(class_id, std::vector<TemplatePyramid>());
-				v.second.push_back(tp);
+				TemplatesMap::value_type v(class_id, TemplatesEntry());
+				v.second[return_index] = tp;
 				class_templates.insert(v);
 			}
 			else
@@ -1958,9 +1971,10 @@ namespace cv
 		{
 			TemplatesMap::const_iterator it = class_templates.find(class_id);
 			CV_Assert(it != class_templates.end());
-			CV_Assert(it->second.size() > size_t(template_id));
-			const std::vector<TemplatePyramid>& tps = it->second;
-			const TemplatePyramid& tp = tps[template_id];
+			const TemplatesEntry& tes = it->second;
+			TemplatesEntry::const_iterator jt = tes.find(template_id);
+			CV_Assert(jt != it->second.end());
+			const TemplatePyramid& tp = jt->second;
 
 			fs << "class_id" << it->first;
 			fs << "modalities" << "[:";

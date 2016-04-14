@@ -4,6 +4,8 @@ import numpy as np
 from cerebral import logger as l
 import logging
 
+import time
+
 from theia.tracker import DSST
 from theia.matcher import LineMatcher
 from theia.util import CIE76
@@ -15,32 +17,31 @@ logger = logging.getLogger('universe')
 
 
 class Oculus:
-    def __init__(self, eye):
+    def __init__(self):
         # Create tracker.
         self.tracker = DSST(enableTrackingLossDetection=True, psrThreshold=10, cellSize=4, padding=2)
 
         # Create matcher.
         self.matcher = LineMatcher()
 
-        # Create camera object.
-        self.eye = eye
-
         # Template scoring dictionary.
         self.scores = {}
 
         # Threading.
-        self.lock = Lock()
-        self.executor = ThreadPoolExecutor(max_workers=1)
+        self.matcher_lock = Lock()
+        self.executor = ThreadPoolExecutor(max_workers=2)
 
         # Variables.
         self.count = 0
         self.initialized = False
+        self.found = False
 
         # Settings.
         self.class_id = 'prey'          # Class ID for tracker.
         self.max_templates = 200        # Maximum number of templates in the database.
-        self.threshold = 75             # Minimum acceptable matcher threshold.
-        self.min_interval = 10          # Minimum number of frames before template insertion.
+        self.threshold = 80             # Minimum acceptable matcher threshold.
+        self.insert_interval = 10       # Minimum number of frames between template insertion.
+        self.rank_interval = 5          # Minimum number of frames between rank.
 
     def initialize(self, frame, bb):
         """
@@ -54,12 +55,78 @@ class Oculus:
 
         # Initialize tracker.
         self.tracker.init(frame, bb)
+        self.count = 1
+        self.found = True
 
         # Initialize matcher.
         roi = self.get_roi(frame, bb)
 
-        # High bias on initial template.
-        self.executor.submit(self.insert_template, score=10)
+        # Create initial template with high bias.
+        self.executor.submit(self.insert_template, roi, score=10)
+
+        # Initialization is complete.
+        self.initialized = True
+
+    def track(self, frame):
+        """
+        Track one frame. Must be used after initialization.
+        :param frame: A color image.
+        :return: (success, bb) where bb is (x, y, w, h).
+        """
+
+        if not self.initialized:
+            return None, None
+
+        if len(self.scores) >= self.max_templates:
+            self.executor.submit(self.clean)
+
+        self.found = self.tracker.update(frame)
+        bb = self.tracker.get_bounding_box()
+
+        if not self.found:
+            # Tracking lost. Attempt recovery.
+            matches = self.matcher.match(frame, self.threshold)
+
+            if len(matches) > 0:
+                best = matches[0]
+                self.found = self.tracker.update_at(frame, (best.x, best.y, best.width, best.height))
+
+                if self.found:
+                    template_id = best.template_id
+                    score = 2 * best.similarity / self.matcher.num_templates_in_class(self.class_id)
+                    self.scores[template_id] += score
+
+        else:
+            if self.count % self.insert_interval == 0:
+                # Reached insert interval.
+                roi = self.get_roi(frame, bb)
+                self.executor.submit(self.insert_template, roi)
+            elif self.count % self.rank_interval == 0:
+                # Reached rank interval.
+                self.executor.submit(self.rank, frame)
+            elif self.count > max(self.rank_interval, self.insert_interval):
+                # Reset counter.
+                self.count = 1
+
+        # Advance one.
+        self.count += 1
+
+        return self.found, bb
+
+    def rank(self, frame):
+        """
+        Rank templates currently in database.
+        :param frame: The current frame, where target is known to exist.
+        """
+
+        with self.matcher_lock:
+            matches = self.matcher.match(frame, self.threshold)
+
+            for match in matches:
+                # Scale score based on number of entries.
+                score = (match.similarity - self.threshold) / self.matcher.num_templates_in_class(self.class_id)
+                template_id = match.template_id
+                self.scores[template_id] += score
 
     def insert_template(self, template, score=0):
         """
@@ -68,7 +135,7 @@ class Oculus:
         :param score: Initial score. Change to bias.
         """
 
-        with self.lock:
+        with self.matcher_lock:
             template_id = self.matcher.add_template(template, self.class_id)
             self.scores[template_id] = score
 
@@ -78,7 +145,7 @@ class Oculus:
         :param template_id: The template ID.
         """
 
-        with self.lock:
+        with self.matcher_lock:
             self.matcher.remove_template(self.class_id, template_id)
             del self.scores[template_id]
 
@@ -99,15 +166,19 @@ class Oculus:
         Call when there is some time and templates are either full or about to be full.
         """
 
-        if len(self.scores) < 5:
-            return
+        with self.matcher_lock:
+            if len(self.scores) < 5:
+                return
 
-        # Compute mean.
-        mean = sum(self.scores.values) / len(self.scores)
+            # Compute mean.
+            mean = sum(self.scores.values()) / len(self.scores)
 
-        for template_id in self.scores:
-            if self.scores[template_id] < mean:
-                self.executor.submit(self.remove_template, template_id)
+            # Get bad indices.
+            bad = [template_id for (template_id, score) in self.scores.items() if score < mean]
+
+            for template_id in bad:
+                self.matcher.remove_template(self.class_id, template_id)
+                del self.scores[template_id]
 
 
 class Theia:
@@ -281,3 +352,45 @@ class Theia:
         bgr = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
 
         return bgr
+
+    @staticmethod
+    def get_rect(im, title='get_rect'):
+        mouse_params = {'tl': None, 'br': None, 'current_pos': None,
+                        'released_once': False}
+
+        cv2.namedWindow(title)
+        cv2.moveWindow(title, 100, 100)
+
+        def onMouse(event, x, y, flags, param):
+
+            param['current_pos'] = (x, y)
+
+            if param['tl'] is not None and not (flags & cv2.EVENT_FLAG_LBUTTON):
+                param['released_once'] = True
+
+            if flags & cv2.EVENT_FLAG_LBUTTON:
+                if param['tl'] is None:
+                    param['tl'] = param['current_pos']
+                elif param['released_once']:
+                    param['br'] = param['current_pos']
+
+        cv2.setMouseCallback(title, onMouse, mouse_params)
+        cv2.imshow(title, im)
+
+        while mouse_params['br'] is None:
+            im_draw = np.copy(im)
+
+            if mouse_params['tl'] is not None:
+                cv2.rectangle(im_draw, mouse_params['tl'], mouse_params['current_pos'], (255, 0, 0))
+
+            cv2.imshow(title, im_draw)
+            _ = cv2.waitKey(10)
+
+        cv2.destroyWindow(title)
+
+        tl = (min(mouse_params['tl'][0], mouse_params['br'][0]),
+              min(mouse_params['tl'][1], mouse_params['br'][1]))
+        br = (max(mouse_params['tl'][0], mouse_params['br'][0]),
+              max(mouse_params['tl'][1], mouse_params['br'][1]))
+
+        return tl, br

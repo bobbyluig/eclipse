@@ -56,13 +56,13 @@ class KCF:
     def update(self, image):
         return self.tracker.update(image)
 
-    def updateAt(self, image, boundingBox):
+    def update_at(self, image, boundingBox):
         return self.tracker.updateAt(image, boundingBox)
 
-    def getBoundingBox(self):
+    def get_bounding_box(self):
         return self.tracker.getBoundingBox()
 
-    def getCenter(self):
+    def get_center(self):
         return self.tracker.getCenter()
 
 
@@ -106,14 +106,17 @@ class DSST:
         else:
             raise Exception('Unable to initialize DSST tracker with given frame.')
 
+    def reinit(self, image, boundingBox):
+        self.tracker.reinit(image, boundingBox)
+
     def update(self, image):
         return self.tracker.update(image)
 
-    def updateAt(self, image, boundingBox):
+    def update_at(self, image, boundingBox):
         return self.tracker.updateAt(image, boundingBox)
 
-    def getBoundingBox(self):
+    def get_bounding_box(self):
         return self.tracker.getBoundingBox()
 
-    def getCenter(self):
+    def get_center(self):
         return self.tracker.getCenter()

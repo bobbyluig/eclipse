@@ -436,7 +436,8 @@ namespace cv {
 			std::vector<int> T_at_level;
 
 			typedef std::vector<Template> TemplatePyramid;
-			typedef std::map<String, std::vector<TemplatePyramid> > TemplatesMap;
+			typedef std::map<int, TemplatePyramid> TemplatesEntry;
+			typedef std::map<String, TemplatesEntry> TemplatesMap;
 			TemplatesMap class_templates;
 
 			typedef std::vector<Mat> LinearMemories;
@@ -447,7 +448,7 @@ namespace cv {
 				const std::vector<Size>& sizes,
 				float threshold, std::vector<Match>& matches,
 				const String& class_id,
-				const std::vector<TemplatePyramid>& template_pyramids) const;
+				const TemplatesEntry& template_entries) const;
 		};
 
 		/**
