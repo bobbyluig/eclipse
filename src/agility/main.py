@@ -45,6 +45,13 @@ class Servo:
         self.k_vel2mae = (60 * self.k_deg2mae) / self.max_vel * 10
         self.k_mae2vel = self.max_vel / ((60 * self.k_deg2mae) * 10)
 
+    def zero(self):
+        """
+        Set the servo to zero, ignoring bias.
+        """
+
+        self.target = self.deg_to_maestro(0)
+
     def set_target(self, deg):
         """
         Set the target for the servo.
@@ -179,7 +186,12 @@ class Agility:
         self.robot = robot
 
         # Set up Usc.
-        self.usc = Usc()
+        try:
+            self.usc = Usc()
+            logger.info('Successfully attached to Maestro low-level interface.')
+        except:
+            self.usc = None
+            logger.warn('Failed to attached to Maestro low-level interface. Skipping.')
 
         # Set up virtual COM and TTL ports.
         self.maestro = Maestro()
@@ -195,11 +207,11 @@ class Agility:
 
         # Points in the gait.
         sequence = np.array([
-            (5, 0, -12),
-            (1, 0, -12),
-            (-3, 0, -12),
-            (-3, 0, -9),
-            (1, 0, -9)
+            (3, 0, -13),
+            (0, 0, -13),
+            (-3, 0, -13),
+            (-3, 0, -10),
+            (3, 0, -10)
         ])
 
         # Order of legs.
@@ -542,12 +554,16 @@ class Agility:
             leg[1].set_target(angles[1])
             leg[2].set_target(angles[2])
         else:
-            logger.warn('Unable to reach position (%s, %s, %s).' % position)
+            logger.warning('Unable to reach position ({}, {}, {}).'.format(*position))
 
     def configure(self):
         """
         Configure the Maestro by writing home positions and other configuration data to the device.
         """
+
+        if self.usc is None:
+            logger.warning('Low-level interface not attached!')
+            return
 
         settings = self.usc.getUscSettings()
         settings.serialMode = uscSerialMode.SERIAL_MODE_USB_DUAL_PORT

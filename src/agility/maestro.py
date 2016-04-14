@@ -44,9 +44,9 @@ class Maestro:
         # Start a connection using pyserial.
         try:
             self.usb = serial.Serial(self.port)
-            logger.debug('Using command port "%s".' % self.usb.port)
+            logger.debug('Using command port "{}".'.format(self.usb.port))
         except:
-            raise Exception('Unable to connect to servo controller at %s.' % self.port)
+            raise Exception('Unable to connect to servo controller at {}.'.format(self.port))
 
         # Struct objects are faster.
         self.struct = struct.Struct('<H')

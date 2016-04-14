@@ -472,6 +472,7 @@ def correlation_template_test(camera, start=None, bb=None, sequence=False):
             matches = line.match(frame, 90)
             if len(matches) > 0:
                 bestMatch = list(matches)[0]
+                print(bestMatch.similarity)
                 found = tracker.updateAt(frame, (bestMatch.x, bestMatch.y, bestMatch.width, bestMatch.height))
 
                 if found:

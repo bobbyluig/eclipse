@@ -1,15 +1,116 @@
 import cv2
-import time, logging
 import numpy as np
-from theia.eye import Eye
+
+from cerebral import logger as l
+import logging
+
 from theia.tracker import DSST
+from theia.matcher import LineMatcher
 from theia.util import CIE76
+
+from concurrent.futures import ThreadPoolExecutor
+from threading import Lock
 
 logger = logging.getLogger('universe')
 
 
-class Theia:
+class Oculus:
+    def __init__(self, eye):
+        # Create tracker.
+        self.tracker = DSST(enableTrackingLossDetection=True, psrThreshold=10, cellSize=4, padding=2)
 
+        # Create matcher.
+        self.matcher = LineMatcher()
+
+        # Create camera object.
+        self.eye = eye
+
+        # Template scoring dictionary.
+        self.scores = {}
+
+        # Threading.
+        self.lock = Lock()
+        self.executor = ThreadPoolExecutor(max_workers=1)
+
+        # Variables.
+        self.count = 0
+        self.initialized = False
+
+        # Settings.
+        self.class_id = 'prey'          # Class ID for tracker.
+        self.max_templates = 200        # Maximum number of templates in the database.
+        self.threshold = 75             # Minimum acceptable matcher threshold.
+        self.min_interval = 10          # Minimum number of frames before template insertion.
+
+    def initialize(self, frame, bb):
+        """
+        Initialize the Oculus tracking system.
+        :param frame: The input frame.
+        :param bb: The bounding box in (x, y, w, h).
+        """
+
+        if self.initialized:
+            return
+
+        # Initialize tracker.
+        self.tracker.init(frame, bb)
+
+        # Initialize matcher.
+        roi = self.get_roi(frame, bb)
+
+        # High bias on initial template.
+        self.executor.submit(self.insert_template, score=10)
+
+    def insert_template(self, template, score=0):
+        """
+        Insert a template.
+        :param template: The template to be inserted.
+        :param score: Initial score. Change to bias.
+        """
+
+        with self.lock:
+            template_id = self.matcher.add_template(template, self.class_id)
+            self.scores[template_id] = score
+
+    def remove_template(self, template_id):
+        """
+        Remove a template.
+        :param template_id: The template ID.
+        """
+
+        with self.lock:
+            self.matcher.remove_template(self.class_id, template_id)
+            del self.scores[template_id]
+
+    @staticmethod
+    def get_roi(image, bb):
+        """
+        Gets ROI from bounding box.
+        :param image: Input image.
+        :param bb: Bounding box in (x, y, w, h).
+        :return: The ROI.
+        """
+
+        return image[bb[1]:bb[1] + bb[3], bb[0]:bb[0] + bb[2]]
+
+    def clean(self):
+        """
+        Purge low rank templates.
+        Call when there is some time and templates are either full or about to be full.
+        """
+
+        if len(self.scores) < 5:
+            return
+
+        # Compute mean.
+        mean = sum(self.scores.values) / len(self.scores)
+
+        for template_id in self.scores:
+            if self.scores[template_id] < mean:
+                self.executor.submit(self.remove_template, template_id)
+
+
+class Theia:
     @staticmethod
     def get_sand_color(image):
         """
@@ -53,12 +154,12 @@ class Theia:
         ksize = (5, 5)
 
         for i in range(frames):
-            frame = eye.getColorFrame()
+            frame = eye.get_color_frame()
             if blur:
                 frame = cv2.GaussianBlur(frame, ksize, 0)
             subtractor.apply(frame)
 
-        frame = eye.getColorFrame()
+        frame = eye.get_color_frame()
         if blur:
             frame = cv2.GaussianBlur(frame, ksize, 0)
         mask = subtractor.apply(frame)

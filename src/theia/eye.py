@@ -1,7 +1,9 @@
 import numpy as np
 import cv2
+from cerebral import logger as l
 import logging
 import urllib.request
+from collections import deque
 
 logger = logging.getLogger('universe')
 
@@ -27,52 +29,41 @@ class IPCamera:
                 jpg = np.asarray(jpg, dtype=np.uint8)
                 i = cv2.imdecode(jpg, cv2.IMREAD_UNCHANGED)
 
-                return None, i
-
-    @staticmethod
-    def set(self, *args, **kwargs):
-        return
-
-    @staticmethod
-    def isOpened(self):
-        return True
-
+                return True, i
 
 
 class Eye:
     def __init__(self, source):
-        self.optogram = None
+        self.history = deque(maxlen=5)
         self.frame = None
 
-        if 'http' in str(source):
-            self.cap = IPCamera(source)
-        else:
-            self.cap = cv2.VideoCapture(source)
+        self.cap = cv2.VideoCapture(source)
 
-            if not self.cap.isOpened():
-                raise Exception("Unable to connect to video source '%s'." % source)
+        if not self.cap.isOpened():
+            raise Exception('Unable to connect to video source "{}".'.format(source))
 
-            self.width = self.cap.get(cv2.CAP_PROP_FRAME_WIDTH)
-            self.height = self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
+        self.width = self.cap.get(cv2.CAP_PROP_FRAME_WIDTH)
+        self.height = self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
 
-            logger.info('Opening capture at %sx%s' % (self.width, self.height))
+        logger.info('Opening capture at {:d}x{:d}'.format(self.width, self.height))
 
     def close(self):
         self.cap.release()
 
-    def updateFrame(self):
+    def update_frame(self):
         if self.frame is not None:
-            self.optogram = self.frame.copy()
+            self.history.appendleft(self.frame.copy())
+
         _, self.frame = self.cap.read()
 
-    def getGrayFrame(self):
-        self.updateFrame()
+    def get_gray_frame(self):
+        self.update_frame()
         return cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
 
-    def getColorFrame(self):
-        self.updateFrame()
+    def get_color_frame(self):
+        self.update_frame()
         return self.frame.copy()
 
-    def getBothFrames(self):
-        self.updateFrame()
+    def get_both_frames(self):
+        self.update_frame()
         return self.frame.copy(), cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)

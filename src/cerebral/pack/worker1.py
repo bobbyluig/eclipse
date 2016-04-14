@@ -1,15 +1,10 @@
-from shared.queue import SharedMemory
-from cerebral.pack.hippocampus import Manager, Android
+from cerebral.pack.hippocampus import Android
 from cerebral.pack.commands import Commands
 from agility.main import Agility, IR
 from finesse.eclipse import Finesse
 from threading import Thread
 import time
 
-# Get queues.
-memory = SharedMemory(Manager.address, Manager.authkey)
-q_out = memory.get_queue(2)     # To main
-q_in = memory.get_queue(1)      # From main
 
 # Define agility.
 robot = Android.robot
@@ -25,7 +20,7 @@ class Target:
         global run
 
         tau = 1000
-        beta = 0.75
+        beta = 0.8
         x, y = agility.generate_crawl(tau, beta)
         intro, main = agility.generate_ir(tau, x, y)
         agility.execute_ir(intro)
@@ -39,14 +34,14 @@ class Target:
 
         instructions = []
         targets = [
-            (0, 0, -9),
-            (0, 0, -14)
+            (0, 0, -8),
+            (0, 0, -13)
         ]
-        tau = 1500
+        tau = 750
 
         for target in targets:
             for leg in range(4):
-                angles = Finesse.inverse_pack(robot[leg].lengths, target)
+                angles = Finesse.inverse_pack(robot.legs[leg].lengths, target)
                 instructions.append((IR.MOVE, leg, angles, tau/len(targets)))
             instructions.append((IR.WAIT_ALL,))
 
@@ -58,10 +53,10 @@ class Target:
         global run
 
         instructions = []
-        target = (-15, 0, 0)
+        target = (-14, 0, 0)
 
         for leg in range(4):
-            angles = Finesse.inverse_pack(robot[leg].lengths, target)
+            angles = Finesse.inverse_pack(robot.legs[leg].lengths, target)
             instructions.append((IR.MOVE, leg, angles, 0))
 
         instructions.append((IR.WAIT_ALL,))
@@ -81,55 +76,7 @@ class Target:
 thread = Thread()
 
 # Worker is ready.
-q_out.put(Commands.READY)
-
-# Main.
-while True:
-    # Block main thread until a command is received.
-    cmd = q_in.get()
-
-    if cmd == Commands.WALK_FORWARD:
-        if not run:
-            run = True
-            q_out.put(Commands.SUCCESS)
-            thread = Thread(target=Target.crawl)
-            thread.start()
-        else:
-            q_out.put(Commands.FAILURE)
-
-    elif cmd == Commands.HOME:
-        if not run:
-            run = True
-            q_out.put(Commands.SUCCESS)
-            thread = Thread(target=Target.go_home)
-            thread.start()
-        else:
-            q_out.put(Commands.FAILURE)
-
-    elif cmd == Commands.DO_PUSHUPS:
-        if not run:
-            run = True
-            q_out.put(Commands.SUCCESS)
-            thread = Thread(target=Target.pushup)
-            thread.start()
-        else:
-            q_out.put(Commands.FAILURE)
-
-    elif cmd == Commands.STAND_UP:
-        if not run:
-            run = True
-            q_out.put(Commands.SUCCESS)
-            thread = Thread(target=Target.transform)
-            thread.start()
-        else:
-            q_out.put(Commands.FAILURE)
-
-    elif cmd == Commands.STOP:
-        if run:
-            run = False
-            q_out.put(Commands.SUCCESS)
-        else:
-            q_out.put(Commands.FAILURE)
-
+run = True
+Target.crawl()
 
 

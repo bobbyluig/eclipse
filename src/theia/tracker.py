@@ -1,5 +1,4 @@
 from oculus import DsstParameters, DsstTracker, KcfParameters, KcfTracker
-import cv2
 
 
 class KCF:
