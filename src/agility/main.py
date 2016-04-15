@@ -189,19 +189,41 @@ class Agility:
         try:
             self.usc = Usc()
             logger.info('Successfully attached to Maestro low-level interface.')
-        except:
+        except ConnectionError:
             self.usc = None
             logger.warn('Failed to attached to Maestro low-level interface. Skipping.')
 
         # Set up virtual COM and TTL ports.
         self.maestro = Maestro()
 
-    def center_head(self, x, y, w, h):
-        k = 2
-        x = k * (x - 0.5 * w)
-        y = k * (y - 0.5 * h)
+    def move_head(self, x, y, w, h):
+        k = 0.2
 
+        x1, y1 = w, h
+        v = (x - 0.5 * x1) * k
 
+        servo = self.robot.head[0]
+        self.maestro.get_position(servo)
+        self.maestro.set_speed(servo, int(abs(round(v))))
+
+        if -1 < v < 1:
+            servo.target = servo.pwm
+        elif v > 0:
+            # Target is on left. Servo target is minimum degrees.
+            servo.set_target(servo.min_deg)
+        else:
+            # Target is on right. Servo target is maximum degrees.
+            servo.set_target(servo.max_deg)
+
+        self.maestro.set_target(servo)
+        self.maestro.flush()
+
+    def center_head(self):
+        servo = self.robot.head[0]
+        self.maestro.set_speed(servo, 20)
+        servo.set_target(0)
+        self.maestro.set_target(servo)
+        self.maestro.flush()
 
     def generate_crawl(self, tau, beta):
         """

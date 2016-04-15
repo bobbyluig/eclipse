@@ -30,7 +30,7 @@ class Maestro:
                     else:
                         self.port = ports[1][0]
                 else:
-                    raise Exception('Unable to determine the Command port automatically. Please specify.')
+                    raise ConnectionError('Unable to determine the Command port automatically. Please specify.')
             else:
                 if len(ports) == 2:
                     # Assuming nothing was messed with, the command port is the lower port.
@@ -39,14 +39,14 @@ class Maestro:
                     else:
                         self.port = ports[1][0]
                 else:
-                    raise Exception('Unable to determine the Command port automatically. Please specify.')
+                    raise ConnectionError('Unable to determine the Command port automatically. Please specify.')
 
         # Start a connection using pyserial.
         try:
             self.usb = serial.Serial(self.port)
             logger.debug('Using command port "{}".'.format(self.usb.port))
         except:
-            raise Exception('Unable to connect to servo controller at {}.'.format(self.port))
+            raise ConnectionError('Unable to connect to servo controller at {}.'.format(self.port))
 
         # Struct objects are faster.
         self.struct = struct.Struct('<H')

@@ -54,7 +54,7 @@ class Usc:
         self.dev = usb.core.find(idVendor=self.vendorID)
 
         if self.dev is None:
-            raise Exception('Unable to connect to Mini Maestro.')
+            raise ConnectionError('Unable to connect to Mini Maestro.')
 
         self.productID = self.dev.idProduct
 

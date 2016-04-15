@@ -77,6 +77,6 @@ thread = Thread()
 
 # Worker is ready.
 run = True
-Target.crawl()
+Target.go_home()
 
 

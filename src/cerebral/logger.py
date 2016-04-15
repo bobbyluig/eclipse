@@ -1,7 +1,7 @@
 from cerebral.manager import manager
 import logging
-import asyncio
 from logging.handlers import QueueHandler
+from concurrent.futures import ThreadPoolExecutor
 
 
 class Handler(QueueHandler):
@@ -9,17 +9,16 @@ class Handler(QueueHandler):
     An asyncio friendly logging handler that also works outside of the event loop.
     """
 
+    def __init__(self, *args, **kwargs):
+        self.executor = ThreadPoolExecutor(max_workers=2)
+        super().__init__(*args, **kwargs)
+
     def prepare(self, record):
         msg = self.format(record)
         return msg
 
     def enqueue(self, record):
-        loop = asyncio.get_event_loop()
-
-        if loop.is_running():
-            loop.run_in_executor(None, self.queue.put_nowait, record)
-        else:
-            self.queue.put_nowait(record)
+        self.executor.submit(self.queue.put_nowait, record)
 
 
 # Register and connect to manager.

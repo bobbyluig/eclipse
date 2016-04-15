@@ -19,7 +19,7 @@ logger = logging.getLogger('universe')
 class Oculus:
     def __init__(self):
         # Create tracker.
-        self.tracker = DSST(enableTrackingLossDetection=True, psrThreshold=10, cellSize=4, padding=2)
+        self.tracker = DSST(enableTrackingLossDetection=True, psrThreshold=13, cellSize=4, padding=2)
 
         # Create matcher.
         self.matcher = LineMatcher()
@@ -82,6 +82,7 @@ class Oculus:
 
         self.found = self.tracker.update(frame)
         bb = self.tracker.get_bounding_box()
+        center = self.tracker.get_center()
 
         if not self.found:
             # Tracking lost. Attempt recovery.
@@ -113,7 +114,7 @@ class Oculus:
         # Advance one.
         self.count += 1
 
-        return self.found, bb
+        return self.found, bb, center
 
     def rank(self, frame):
         """

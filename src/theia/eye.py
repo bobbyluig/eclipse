@@ -64,6 +64,10 @@ class Eye:
         self.update_frame()
         return self.frame.copy()
 
+    def get_flipped_frame(self):
+        frame = self.get_color_frame()
+        return cv2.flip(frame, flipCode=-1)
+
     def get_both_frames(self):
         self.update_frame()
         return self.frame.copy(), cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
