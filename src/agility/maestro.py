@@ -3,6 +3,7 @@ import os
 import re
 import serial
 import struct
+from threading import Lock
 from serial.tools import list_ports
 
 logger = logging.getLogger('universe')
@@ -51,22 +52,22 @@ class Maestro:
         # Struct objects are faster.
         self.struct = struct.Struct('<H')
 
-        # Data buffer.
-        self.data = bytearray()
+        # Locks.
+        self.read_lock = Lock()
 
-    def flush(self):
+    def write(self, buffer):
         """
-        Flush data buffer and clear. Send the data buffer to the Maestro.
+        Send data to the Maestro.
+        :param buffer: The data to send.
         """
 
-        if len(self.data) > 0:
-            self.usb.write(self.data)
-            self.data.clear()
+        self.usb.write(buffer)
 
     def close(self):
         """
         Close the USB port.
         """
+
         self.usb.close()
 
     ##########################################
@@ -86,59 +87,79 @@ class Maestro:
     # Begin implementation of buffer-capable compact protocol.
     ##########################################################
 
-    def set_target(self, servo):
+    def set_target(self, servo, send=True):
         """
         Move a servo to its target.
         :param servo: A servo object.
+        :param send: Whether or not to send instruction immediately.
+        :return: The instruction tuple.
         """
+
         # Logging.
-        logger.debug('Setting servo %s\'s position to %s.' % (servo.channel, servo.target))
+        logger.debug('Setting servo {}\'s position to {}.'.format(servo.channel, servo.target))
 
         # Use endian format suitable for Maestro.
         lsb, msb = self.endianize(servo.target)
 
-        # Compose and add to buffer.
-        self.data.extend((0x84, servo.channel, lsb, msb))
+        # Compose and send or return.
+        ins = (0x84, servo.channel, lsb, msb)
 
-    # Set servo speed.
-    def set_speed(self, servo, speed):
+        if send:
+            self.usb.write(ins)
+
+        return ins
+
+    def set_speed(self, servo, speed, send=True):
         """
         Set the servo speed.
         :param servo: A servo object.
         :param speed: The speed in 0.25 us / 10 ms.
+        :param send: Whether or not to send instruction immediately.
+        :return: The instruction tuple.
         """
 
         # Logging.
-        logger.debug('Setting servo %s\'s speed to %s.' % (servo.channel, speed))
+        logger.debug('Setting servo {}\'s speed to {}.'.format(servo.channel, speed))
 
         # Use endian format suitable for Maestro.
         lsb, msb = self.endianize(speed)
 
-        # Compose and add to buffer.
-        self.data.extend((0x87, servo.channel, lsb, msb))
-
-        # Update object. However, this will not be accurate until flush.
+        # Update object. However, this will not be accurate until send.
         servo.vel = speed
 
-    # Set servo acceleration.
-    def set_acceleration(self, servo, accel):
+        # Compose and send or return.
+        ins = (0x87, servo.channel, lsb, msb)
+
+        if send:
+            self.usb.write(ins)
+
+        return ins
+
+    def set_acceleration(self, servo, accel, send=True):
         """
         Set the servo acceleration.
         :param servo: A servo object.
         :param accel: The acceleration in 0.25 us / 10 ms / 80 ms. See documentation for different PWM.
+        :param send: Whether or not to send instruction immediately.
+        :return: The instruction tuple.
         """
 
         # Logging.
-        logger.debug('Setting servo %s\'s acceleration to %s.' % (servo.channel, accel))
+        logger.debug('Setting servo {}\'s acceleration to {}.'.format(servo.channel, accel))
 
         # Use endian format suitable for Maestro.
         lsb, msb = self.endianize(accel)
 
-        # Compose and add to buffer.
-        self.data.extend((0x89, servo.channel, lsb, msb))
-
         # Update object. However, this will not be accurate until flush.
         servo.accel = accel
+
+        # Compose and add to buffer.
+        ins = (0x89, servo.channel, lsb, msb)
+
+        if send:
+            self.usb.write(ins)
+
+        return ins
 
     ##########################################
     # Begin implementation of bulk operations.
@@ -151,15 +172,18 @@ class Maestro:
         """
 
         data = bytearray()
+        count = len(servos)
 
         for servo in servos:
             data.extend((0x90, servo.channel))
 
-        self.usb.write(data)
+        with self.read_lock:
+            self.usb.write(data)
+            reply = self.usb.read(size=2 * count)[0]
 
-        for servo in servos:
-            reply = self.usb.read(size=2)
-            servo.pwm = self.struct.unpack(reply)[0]
+        for i in range(count):
+            data = reply[2 * i: 2 * i + 2]
+            servos[i].pwm = self.struct.unpack(data)
 
     def set_multiple_targets(self, servos):
         """
@@ -172,7 +196,7 @@ class Maestro:
         count = len(servos)
 
         # Sort.
-        servos = sorted(servos, key=lambda servo: servo.channel)
+        servos = sorted(servos, key=lambda s: s.channel)
 
         # Start channel
         start = servos[0].channel
@@ -209,11 +233,12 @@ class Maestro:
         :param servo: A servo object.
         """
 
-        # Send command.
-        self.usb.write((0x90, servo.channel))
+        with self.read_lock:
+            # Send command and get reply.
+            self.usb.write((0x90, servo.channel))
+            reply = self.usb.read(size=2)
 
-        # Receive 2 bytes of data and unpack
-        reply = self.usb.read(size=2)
+        # Unpack data.
         pwm = self.struct.unpack(reply)[0]
 
         # Set servo data.
@@ -225,11 +250,13 @@ class Maestro:
         :return: Returns True if one or more servos are moving, else False.
         """
 
-        # Send command.
-        self.usb.write((0x93,))
+        with self.read_lock:
+            # Send command and receive.
+            self.usb.write((0x93,))
+            reply = self.usb.read()
 
         # Check and return.
-        if self.usb.read() == b'\x00':
+        if reply == chr(0):
             return False
         else:
             return True
@@ -240,11 +267,11 @@ class Maestro:
         :return: Returns an integer reprenstation of an error or None if there are no errors.
         """
 
-        # Send command.
-        self.usb.write((0xA1,))
+        with self.read_lock:
+            # Send command and receive.
+            self.usb.write((0xA1,))
+            reply = self.usb.read(size=2)
 
-        # Process and return.
-        reply = self.usb.read(size=2)
         if reply:
             return self.struct.unpack(reply)[0]
         else:
@@ -314,11 +341,13 @@ class Maestro:
         :return: Returns True if script is running and False if it is not.
         """
 
-        # Send command.
-        self.usb.write((0xAE,))
+        with self.read_lock:
+            # Send command and receive.
+            self.usb.write((0xAE,))
+            reply = self.usb.read()
 
         # Check and return.
-        if self.usb.read() == chr(0):
+        if reply == chr(0):
             return False
         else:
             return True
@@ -336,36 +365,41 @@ class Maestro:
         :param update: Whether of not to update servo positions.
         """
 
-        # Flush buffer.
-        self.flush()
-
         # Update servo positions as needed.
         if update:
-            for servo in servos:
-                self.get_position(servo)
+            self.get_multiple_positions(servos)
 
         # Max speed.
         if time == 0:
             time = max([abs(servo.target - servo.pwm) / servo.max_vel * 10 for servo in servos])
 
+        # Faster send.
+        buffer = bytearray()
+
         # Compute and set the velocity for every servo.
         for servo in servos:
             # Set acceleration to zero.
-            self.set_acceleration(servo, 0)
+            ins = self.set_acceleration(servo, 0, send=False)
+            buffer.extend(ins)
 
             # Compute velocity as a change in 0.25us PWM / 10ms.
             delta = abs(servo.target - servo.pwm)
             vel = int(round(delta / time * 10))
 
             # Set velocity.
-            self.set_speed(servo, vel)
+            ins = self.set_speed(servo, vel, send=False)
+            buffer.extend(ins)
 
-        # Flush buffer to execute settings.
-        self.flush()
+        # Send data.
+        self.write(buffer)
+
+        # Synchronize instructions.
+        buffer = bytearray()
 
         # Move all servos to their respective targets.
         for servo in servos:
-            self.set_target(servo)
+            ins = self.set_target(servo, send=False)
+            buffer.extend(ins)
 
-        # Flush to execute move.
-        self.flush()
+        # Send to execute move.
+        self.write(buffer)
