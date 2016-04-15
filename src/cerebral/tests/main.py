@@ -12,12 +12,6 @@ if __name__ == '__main__':
     logger = logging.getLogger('universe')
     logger.debug('Hello! This is an info log.')
 
-    gps = manager.get('db.gps')
-
-    start = time.time()
-    for i in range(10000):
-        x = gps['valid']
-    print(time.time() - start)
-
     queue = manager.get('queue.logging')
-    print(dir(queue))
+    while True:
+        print(queue.get())

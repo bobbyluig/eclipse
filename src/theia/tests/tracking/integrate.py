@@ -1,4 +1,5 @@
 import cv2
+from cerebral import logger as l
 from theia.main import Oculus, Theia
 from theia.eye import Eye
 from concurrent.futures import ThreadPoolExecutor
@@ -7,7 +8,7 @@ from agility.main import Agility
 
 executor = ThreadPoolExecutor(max_workers=1)
 
-agility = Agility(Android.robot)
+# agility = Agility(Android.robot)
 oculus = Oculus()
 eye = Eye(0)
 
