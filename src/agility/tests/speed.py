@@ -27,8 +27,6 @@ def set_and_send():
     for servo in leg:
         maestro.set_target(servo)
 
-    maestro.flush()
-
 
 data = bytearray(b'\x84\x00J@\x84\x01NE\x84\x03\x11D')
 
@@ -36,7 +34,6 @@ data = bytearray(b'\x84\x00J@\x84\x01NE\x84\x03\x11D')
 @time_it(10000)
 def send_only():
     maestro.data = data
-    maestro.flush()
 
 
 @time_it(10000)

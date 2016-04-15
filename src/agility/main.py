@@ -216,14 +216,12 @@ class Agility:
             servo.set_target(servo.max_deg)
 
         self.maestro.set_target(servo)
-        self.maestro.flush()
 
     def center_head(self):
         servo = self.robot.head[0]
         self.maestro.set_speed(servo, 20)
         servo.set_target(0)
         self.maestro.set_target(servo)
-        self.maestro.flush()
 
     def generate_crawl(self, tau, beta):
         """
@@ -626,8 +624,6 @@ class Agility:
                 servo.set_target(0)
                 self.maestro.set_speed(servo, 30)
                 self.maestro.set_target(servo)
-
-        self.maestro.flush()
 
         # Wait until completion.
         while not self.is_at_target():

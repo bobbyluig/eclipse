@@ -55,7 +55,6 @@ p = [
 # Configure velocity.
 for servo in leg1 + leg2 + leg3 + leg4:
     maestro.set_speed(servo, servo.max_vel)
-maestro.flush()
 
 
 # Go home.
@@ -64,8 +63,6 @@ def go_home(servos):
         servo.set_target(0)
         maestro.set_speed(servo, servo.max_vel)
         maestro.set_target(servo)
-
-    maestro.flush()
 
 
 # Set position.

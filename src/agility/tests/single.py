@@ -23,7 +23,6 @@ servos = [servo4, servo5, servo6]
 maestro.set_speed(servo4, servo4.max_vel)
 maestro.set_speed(servo5, servo5.max_vel)
 maestro.set_speed(servo6, servo6.max_vel)
-maestro.flush()
 
 # Go home.
 def goHome():
@@ -31,7 +30,6 @@ def goHome():
         servo.set_target(0)
         maestro.set_target(servo)
 
-    maestro.flush()
 
 # Set position.
 def moveToEuclidean(position, a3=False):

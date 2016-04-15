@@ -17,8 +17,6 @@ def goHome():
         servo.set_target(0)
         maestro.set_target(servo)
 
-    maestro.flush()
-
 
 def moveToEuclidean(position, time):
     lengths = (1.75, 4, 5, 0.5)
