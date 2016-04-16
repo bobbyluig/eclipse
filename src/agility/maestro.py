@@ -2,6 +2,7 @@ import logging
 import os
 import re
 import serial
+from serial import SerialTimeoutException
 import struct
 from threading import Lock
 from serial.tools import list_ports
@@ -10,7 +11,16 @@ logger = logging.getLogger('universe')
 
 
 class Maestro:
-    def __init__(self, port=None, timeout=0):
+    """
+    Implementation of the controller for Pololu Mini Maestro Controller.
+    This class communicates with only one maestro on the virtual command port.
+
+    This implementation is thread-safe.
+    However, a servo can only belong to at most one thread.
+    Having a servo in multiple threads will cause errors.
+    """
+
+    def __init__(self, port=None, timeout=2):
         """
         :param port: The virtual port number.
         :param timeout: Timeout option for each transfer.
@@ -44,7 +54,7 @@ class Maestro:
 
         # Start a connection using pyserial.
         try:
-            self.usb = serial.Serial(self.port)
+            self.usb = serial.Serial(self.port, timeout=timeout, write_timeout=timeout)
             logger.debug('Using command port "{}".'.format(self.usb.port))
         except:
             raise ConnectionError('Unable to connect to servo controller at {}.'.format(self.port))
@@ -54,6 +64,9 @@ class Maestro:
 
         # Locks.
         self.read_lock = Lock()
+
+        # Exceptions.
+        self.read_error = SerialTimeoutException('Read timeout')
 
     def write(self, buffer):
         """
@@ -173,13 +186,17 @@ class Maestro:
 
         data = bytearray()
         count = len(servos)
+        size = 2 * count
 
         for servo in servos:
             data.extend((0x90, servo.channel))
 
         with self.read_lock:
             self.usb.write(data)
-            reply = self.usb.read(size=2 * count)[0]
+            reply = self.usb.read(size=size)[0]
+
+        if len(reply) != size:
+            raise self.read_error
 
         for i in range(count):
             data = reply[2 * i: 2 * i + 2]
@@ -238,6 +255,9 @@ class Maestro:
             self.usb.write((0x90, servo.channel))
             reply = self.usb.read(size=2)
 
+        if len(reply) != 2:
+            raise self.read_error
+
         # Unpack data.
         pwm = self.struct.unpack(reply)[0]
 
@@ -255,6 +275,9 @@ class Maestro:
             self.usb.write((0x93,))
             reply = self.usb.read()
 
+        if len(reply) != 1:
+            raise self.read_error
+
         # Check and return.
         if reply == chr(0):
             return False
@@ -271,6 +294,9 @@ class Maestro:
             # Send command and receive.
             self.usb.write((0xA1,))
             reply = self.usb.read(size=2)
+
+        if len(reply) != 2:
+            raise self.read_error
 
         if reply:
             return self.struct.unpack(reply)[0]
@@ -345,6 +371,9 @@ class Maestro:
             # Send command and receive.
             self.usb.write((0xAE,))
             reply = self.usb.read()
+
+        if len(reply) != 1:
+            raise self.read_error
 
         # Check and return.
         if reply == chr(0):
