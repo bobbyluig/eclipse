@@ -11,6 +11,10 @@ import logging
 logger = logging.getLogger('universe')
 
 
+class ServoError(Exception):
+    pass
+
+
 class Servo:
     def __init__(self, channel, min_deg, max_deg, min_pwm, max_pwm, max_vel,
                  bias=0, direction=1):
@@ -78,7 +82,7 @@ class Servo:
             deg += 360
 
         if deg > self.max_deg or deg < self.min_deg:
-            raise Exception('Target out of range!')
+            raise ServoError('Target out of range!')
 
         return deg
 
