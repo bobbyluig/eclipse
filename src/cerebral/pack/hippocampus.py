@@ -1,4 +1,4 @@
-from agility.main import Servo, Leg, Robot, Head
+from agility.main import Servo, Leg, Robot, Head, Body
 from finesse.eclipse import Finesse
 from theia.eye import Eye
 import os
@@ -36,11 +36,15 @@ class Android:
     servo12 = Servo(11, -135, 135, 500, 2500, 150, bias=-6, direction=1)
     leg4 = Leg(servo10, servo11, servo12, (6.5, 7.5), 3, Finesse.inverse_pack, Finesse.forward_pack)
 
+    # Head
     servo17 = Servo(17, -90, 90, 500, 2500, 150, bias=10, direction=1)
     head = Head(servo17, None, eye)
 
+    # Body
+    body = Body(2, 2, 0, 0)
+
     # Robot.
-    robot = Robot(leg1, leg2, leg3, leg4, head=head)
+    robot = Robot(leg1, leg2, leg3, leg4, body, head=head)
 
 
 #######################

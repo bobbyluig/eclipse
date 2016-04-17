@@ -318,7 +318,7 @@ class Head:
 
 
 class Robot:
-    def __init__(self, leg1, leg2, leg3, leg4, head=None):
+    def __init__(self, leg1, leg2, leg3, leg4, body, head=None):
         self.legs = [leg1, leg2, leg3, leg4]
         self.head = head
 
