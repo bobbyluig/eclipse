@@ -262,7 +262,7 @@ class Leg:
             self.servos[0].set_target(angles[0])
             self.servos[1].set_target(angles[1])
             self.servos[2].set_target(angles[2])
-        except (ServoError, ValueError):
+        except (ServoError, ValueError, ZeroDivisionError):
             return False
 
         return True

@@ -76,30 +76,21 @@ class Finesse:
 
         # theta3 *= -1
         # Returns [0, 180]. +/- expands solution to [-180, 180].
-        try:
-            theta3 = (l1 ** 2 + l2 ** 2 - dist ** 2) / (2 * l1 * l2)
-            theta3 = acos(theta3) - pi
-            if a3:
-                theta3 *= -1
-        except (ValueError, ZeroDivisionError):
-            raise ValueError
+        theta3 = (l1 ** 2 + l2 ** 2 - dist ** 2) / (2 * l1 * l2)
+        theta3 = acos(theta3) - pi
+        if a3:
+            theta3 *= -1
 
         # theta2 = (pi - theta2)
         # Returns [-90, 90]. (pi - theta2) expands solution to [-180, 180].
-        try:
-            theta2 = y / (l1 + l2 * cos(theta3))
-            theta2 = asin(theta2)
-            if a2:
-                theta2 = pi - theta2
-        except (ValueError, ZeroDivisionError):
-            raise ValueError
+        theta2 = y / (l1 + l2 * cos(theta3))
+        theta2 = asin(theta2)
+        if a2:
+            theta2 = pi - theta2
 
         # theta1 -= 2 * pi
         # Sometimes (theta1 - 2 * pi). Doesn't matter. Either is cool.
-        try:
-            theta1 = atan2(z, -x) + atan2((l1 + l2 * cos(theta3)) * cos(theta2), l2 * sin(theta3))
-        except (ValueError, ZeroDivisionError):
-            raise ValueError
+        theta1 = atan2(z, -x) + atan2((l1 + l2 * cos(theta3)) * cos(theta2), l2 * sin(theta3))
 
         if deg:
             return degrees(theta1), degrees(theta2), degrees(theta3)
