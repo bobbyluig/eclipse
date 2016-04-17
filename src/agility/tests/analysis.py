@@ -68,8 +68,8 @@ def test1():
 
 def crawl():
     # Constants.
-    beta = 0.75     # Percent of time each leg is on the ground.
-    tau = 2000      # Time (in ms) for an entire frame of all 4 legs.
+    beta = 0.50     # Percent of time each leg is on the ground.
+    tau = 5000      # Time (in ms) for an entire frame of all 4 legs.
 
     x, y = agility.generate_crawl(tau, beta)
     intro, main = agility.generate_ir(tau, x, y)
@@ -137,10 +137,21 @@ def jump():
     instructions.append((IR.MOVE, 2, a2, 130))
     instructions.append((IR.MOVE, 3, a3, 130))
 
-
     instructions.append((IR.WAIT_ALL,))
 
     agility.execute_ir(instructions)
 
+
+def body():
+    from math import cos, sin
+
+    agility.zero()
+    time.sleep(3)
+
+    agility.move_body(0, 0, -3, t=1000)
+
+    for t in range(100000):
+        agility.move_body(2*cos(0.05 * t), 2*sin(0.05* t), -3)
+
 if __name__ == '__main__':
-    crawl()
+    body()

@@ -33,17 +33,18 @@ class IPCamera:
 
 
 class Eye:
-    def __init__(self, source):
+    def __init__(self, source, fov):
         self.history = deque(maxlen=5)
         self.frame = None
 
         self.cap = cv2.VideoCapture(source)
 
         if not self.cap.isOpened():
-            raise Exception('Unable to connect to video source "{}".'.format(source))
+            raise ConnectionError('Unable to connect to video source "{}".'.format(source))
 
         self.width = int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         self.height = int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        self.fov = fov
 
         logger.info('Opening capture "{}" at {:d} x {:d}.'.format(source, self.width, self.height))
 

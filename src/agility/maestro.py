@@ -193,14 +193,14 @@ class Maestro:
 
         with self.read_lock:
             self.usb.write(data)
-            reply = self.usb.read(size=size)[0]
+            reply = self.usb.read(size=size)
 
         if len(reply) != size:
             raise self.read_error
 
         for i in range(count):
             data = reply[2 * i: 2 * i + 2]
-            servos[i].pwm = self.struct.unpack(data)
+            servos[i].pwm = self.struct.unpack(data)[0]
 
     def set_multiple_targets(self, servos):
         """
@@ -279,7 +279,7 @@ class Maestro:
             raise self.read_error
 
         # Check and return.
-        if reply == chr(0):
+        if reply == b'\x00':
             return False
         else:
             return True
@@ -376,7 +376,7 @@ class Maestro:
             raise self.read_error
 
         # Check and return.
-        if reply == chr(0):
+        if reply == b'\x00':
             return False
         else:
             return True

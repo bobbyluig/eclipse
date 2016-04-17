@@ -65,14 +65,14 @@ class Finesse:
         """
 
         if lengths is None or target is None:
-            return None
+            raise ValueError
 
         l1, l2 = lengths
         x, y, z = target
         dist = norm(target)
 
         if dist > sum(lengths):
-            return None
+            raise ValueError
 
         # theta3 *= -1
         # Returns [0, 180]. +/- expands solution to [-180, 180].
@@ -82,7 +82,7 @@ class Finesse:
             if a3:
                 theta3 *= -1
         except (ValueError, ZeroDivisionError):
-            return None
+            raise ValueError
 
         # theta2 = (pi - theta2)
         # Returns [-90, 90]. (pi - theta2) expands solution to [-180, 180].
@@ -92,16 +92,17 @@ class Finesse:
             if a2:
                 theta2 = pi - theta2
         except (ValueError, ZeroDivisionError):
-            return None
+            raise ValueError
 
         # theta1 -= 2 * pi
         # Sometimes (theta1 - 2 * pi). Doesn't matter. Either is cool.
         try:
             theta1 = atan2(z, -x) + atan2((l1 + l2 * cos(theta3)) * cos(theta2), l2 * sin(theta3))
         except (ValueError, ZeroDivisionError):
-            return None
+            raise ValueError
 
         if deg:
             return degrees(theta1), degrees(theta2), degrees(theta3)
         else:
             return theta1, theta2, theta3
+

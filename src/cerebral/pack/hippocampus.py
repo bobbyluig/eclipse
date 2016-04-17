@@ -1,4 +1,6 @@
 from agility.main import Servo, Leg, Robot, Head
+from finesse.eclipse import Finesse
+from theia.eye import Eye
 import os
 
 
@@ -7,32 +9,35 @@ import os
 ################
 
 class Android:
+    # Camera.
+    eye = Eye(0, 90)
+
     # Leg 1.
     servo1 = Servo(0, -180, 90, 500, 2500, 150, bias=0, direction=1)
-    servo2 = Servo(1, -45, 225, 500, 2500, 150, bias=-8, direction=1)
-    servo3 = Servo(2, -135, 135, 500, 2500, 150, bias=-5, direction=-1)
-    leg1 = Leg(servo1, servo2, servo3, (6.5, 7.5), 0)
+    servo2 = Servo(1, -45, 225, 500, 2500, 150, bias=-10, direction=1)
+    servo3 = Servo(2, -135, 135, 500, 2500, 150, bias=-6, direction=-1)
+    leg1 = Leg(servo1, servo2, servo3, (6.5, 7.5), 0, Finesse.inverse_pack, Finesse.forward_pack)
 
     # Leg 2.
-    servo4 = Servo(3, -90, 180, 500, 2500, 150, bias=3, direction=-1)
-    servo5 = Servo(4, -225, 45, 500, 2500, 150, bias=-3, direction=1)
+    servo4 = Servo(3, -90, 180, 500, 2500, 150, bias=0, direction=-1)
+    servo5 = Servo(4, -225, 45, 500, 2500, 150, bias=0, direction=1)
     servo6 = Servo(5, -135, 135, 500, 2500, 150, bias=0, direction=1)
-    leg2 = Leg(servo4, servo5, servo6, (6.5, 7.5), 1)
+    leg2 = Leg(servo4, servo5, servo6, (6.5, 7.5), 1, Finesse.inverse_pack, Finesse.forward_pack)
 
     # Leg 3.
     servo7 = Servo(6, -90, 180, 500, 2500, 150, bias=-10, direction=1)
-    servo8 = Servo(7, -45, 225, 500, 2500, 150, bias=0, direction=1)
-    servo9 = Servo(8, -135, 135, 500, 2500, 150, bias=10, direction=-1)
-    leg3 = Leg(servo7, servo8, servo9, (6.5, 7.5), 2)
+    servo8 = Servo(7, -45, 225, 500, 2500, 150, bias=3, direction=1)
+    servo9 = Servo(8, -135, 135, 500, 2500, 150, bias=6, direction=-1)
+    leg3 = Leg(servo7, servo8, servo9, (6.5, 7.5), 2, Finesse.inverse_pack, Finesse.forward_pack)
 
     # Leg 4 .
     servo10 = Servo(9, -180, 90, 500, 2500, 150, bias=0, direction=-1)
-    servo11 = Servo(10, -225, 45, 500, 2500, 150, bias=0, direction=1)
-    servo12 = Servo(11, -135, 135, 500, 2500, 150, bias=-10, direction=1)
-    leg4 = Leg(servo10, servo11, servo12, (6.5, 7.5), 3)
+    servo11 = Servo(10, -225, 45, 500, 2500, 150, bias=6, direction=1)
+    servo12 = Servo(11, -135, 135, 500, 2500, 150, bias=-6, direction=1)
+    leg4 = Leg(servo10, servo11, servo12, (6.5, 7.5), 3, Finesse.inverse_pack, Finesse.forward_pack)
 
-    servo17 = Servo(17, -90, 90, 500, 2500, 150, bias=0, direction=1)
-    head = Head(servo17, None)
+    servo17 = Servo(17, -90, 90, 500, 2500, 150, bias=10, direction=1)
+    head = Head(servo17, None, eye)
 
     # Robot.
     robot = Robot(leg1, leg2, leg3, leg4, head=head)

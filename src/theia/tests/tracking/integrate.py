@@ -8,9 +8,12 @@ from agility.main import Agility
 
 executor = ThreadPoolExecutor(max_workers=1)
 
-# agility = Agility(Android.robot)
+agility = Agility(Android.robot)
+eye = Android.eye
 oculus = Oculus()
-eye = Eye(0)
+
+agility.configure()
+agility.zero()
 
 while True:
     frame = eye.get_flipped_frame()
@@ -33,7 +36,8 @@ while True:
     if found:
         frame = cv2.rectangle(frame, (int(pos[0]), int(pos[1])), (int(pos[0] + pos[2]), int(pos[1] + pos[3])),
                               (0, 255, 0), 3)
-        executor.submit(agility.move_head, center[0], center[1], 640, 480)
+        data = agility.look_at(center[0], center[1])
+        executor.submit(agility.move_head, *data)
     else:
         frame = cv2.rectangle(frame, (int(pos[0]), int(pos[1])), (int(pos[0] + pos[2]), int(pos[1] + pos[3])),
                               (0, 0, 255), 3)

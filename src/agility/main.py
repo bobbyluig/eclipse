@@ -5,6 +5,7 @@ from finesse.eclipse import Finesse
 from enum import IntEnum
 from bisect import bisect
 import numpy as np
+from matplotlib.path import Path
 import time
 import logging
 
@@ -56,6 +57,17 @@ class Servo:
 
         self.target = self.deg_to_maestro(0)
 
+    def get_range(self):
+        """
+        Get the maximum and minimum with bias.
+        :return: (min, max)
+        """
+
+        low = self.min_deg - self.bias
+        high = self.max_deg - self.bias
+
+        return low, high
+
     def set_target(self, deg):
         """
         Set the target for the servo.
@@ -83,6 +95,17 @@ class Servo:
 
         if deg > self.max_deg or deg < self.min_deg:
             raise ServoError('Target out of range!')
+
+        return deg
+
+    def get_position(self):
+        """
+        Get the servo's current position in degrees.
+        :return: Output degrees.
+        """
+
+        deg = self.maestro_to_deg(self.pwm)
+        deg = (deg - self.bias) * self.direction
 
         return deg
 
@@ -131,8 +154,84 @@ class Servo:
         return self.min_deg + self.k_mae2deg * (pwm - self.min_pwm)
 
 
+class Body:
+    def __init__(self, length, width, cx, cy):
+        """
+        Create a body object.
+        Note that dimensions are between kinematic roots.
+        :param length: Length of body (along x-axis).
+        :param width: Width of body (along y-axis).
+        :param cx: Bias of center of mass along x.
+        :param cy: Bias of center of mass along y.
+        """
+
+        self.length = length
+        self.width = width
+        self.cx = cx
+        self.cy = cy
+
+        self.com = np.array([cx, cy, 0])
+
+        x = 0.5 * self.length
+        y = 0.5 * self.width
+        self.vertices = np.array([
+            (x, y, 0),
+            (x, -y, 0),
+            (-x, y, 0),
+            (-x, -y, 0)
+        ])
+
+        self.bias = np.zeros((4, 3))
+
+    def translate(self, x, y, z):
+        """
+        Translate the body and thus the center of mass.
+        :param x: Motion along x.
+        :param y: Motion along y.
+        :param z: Motion along z.
+        """
+
+        t = np.array([x, y, z])
+
+        self.com = np.array([self.cx, self.cy, 0]) + t
+        self.bias = t
+
+        x = 0.5 * self.length
+        y = 0.5 * self.width
+        vertices = np.array([
+            (x, y, 0),
+            (x, -y, 0),
+            (-x, y, 0),
+            (-x, -y, 0)
+        ])
+        self.vertices = vertices + t
+
+    def is_supported(self, leg1, leg2, leg3):
+        """
+        Checks if a given support triangle contains the center of mass.
+        This assumes the robot is not on a slant or hill.
+        :param leg1: The first leg object.
+        :param leg2: The second leg object.
+        :param leg3: The third leg object.
+        :return: True if center of mass is in triangle, else False.
+        """
+
+        a = leg1.get_position()[:2]
+        b = leg2.get_position()[:2]
+        c = leg3.get_position()[:2]
+
+        vertices = np.array([a, b, c])
+        vertices[0] += self.vertices[leg1.index - 1][:2]
+        vertices[1] += self.vertices[leg2.index - 1][:2]
+        vertices[2] += self.vertices[leg3.index - 1][:2]
+
+        triangle = Path(vertices)
+
+        return triangle.contains_point(self.com[:2])
+
+
 class Leg:
-    def __init__(self, servo1, servo2, servo3, lengths, index):
+    def __init__(self, servo1, servo2, servo3, lengths, index, ik, fk):
         """
         Create a leg object.
         :param servo1: The first hip servo object.
@@ -140,11 +239,45 @@ class Leg:
         :param servo3: The knee servo object.
         :param lengths: The leg segment lengths l1 and l2.
         :param index: The leg index (1 - 4).
+        :param ik: Inverse kinematics solver.
+        :param fk: Forward kinematics solver.
         """
 
         self.servos = [servo1, servo2, servo3]
         self.lengths = lengths
         self.index = index
+
+        self.ik_solver = ik
+        self.fk_solver = fk
+
+    def target(self, point):
+        """
+        Target a point in space.
+        :param point: (x, y, z).
+        :return: True if target is reachable, else False.
+        """
+
+        try:
+            angles = self.ik_solver(self.lengths, point)
+            self.servos[0].set_target(angles[0])
+            self.servos[1].set_target(angles[1])
+            self.servos[2].set_target(angles[2])
+        except (ServoError, ValueError):
+            return False
+
+        return True
+
+    def get_position(self):
+        """
+        Compute current leg position based on servo data.
+        :return: (x, y, z).
+        """
+
+        a = self.servos[0].get_position()
+        b = self.servos[0].get_position()
+        c = self.servos[0].get_position()
+
+        return self.fk_solver(self.lengths, (a, b, c))
 
     def __getitem__(self, key):
         return self.servos[key]
@@ -155,19 +288,33 @@ class Leg:
     def __radd__(self, other):
         return other + self.servos
 
+    def __len__(self):
+        return len(self.servos)
+
 
 class Head:
-    def __init__(self, servo1, servo2):
+    def __init__(self, servo1, servo2, eye):
         """
         Create a head object.
         :param servo1: Servo object controlling left and right head turns.
         :param servo2: Servo object controlling up and down head turns.
+        :param eye: An eye object for configuration.
         """
 
-        self.servos = [servo1, servo2]
+        if servo2 is None:
+            self.servos = [servo1]
+        else:
+            self.servos = [servo1, servo2]
+
+        self.width = eye.width
+        self.height = eye.height
+        self.fov = eye.fov
 
     def __getitem__(self, item):
         return self.servos[item]
+
+    def __len__(self):
+        return len(self.servos)
 
 
 class Robot:
@@ -200,32 +347,98 @@ class Agility:
         # Set up virtual COM and TTL ports.
         self.maestro = Maestro()
 
-    def move_head(self, x, y, w, h):
-        k = 0.2
+    def look_at(self, x, y):
+        """
+        Move the head to look at a given target.
+        :param x: x-coordinate of target.
+        :param y: y-coordinate of target.
+        :return: (dt, vt, dp, vp)
+        """
 
-        x1, y1 = w, h
-        v = (x - 0.5 * x1) * k
+        head = self.robot.head
 
-        servo = self.robot.head[0]
-        self.maestro.get_position(servo)
-        self.maestro.set_speed(servo, int(abs(round(v))))
+        # Define velocity constant.
+        k = 1.5
 
-        if -1 < v < 1:
-            servo.target = servo.pwm
-        elif v > 0:
-            # Target is on left. Servo target is minimum degrees.
-            servo.set_target(servo.min_deg)
+        # Compute deltas.
+        dx = (x - 0.5 * head.width) * -1
+        dy = (y - 0.5 * head.height) * -1
+
+        dt = dx / head.width * (head.fov / 2)
+        dp = dy / head.height * (head.fov / 2)
+
+        # Compute suggested velocity. Balance between blur and speed.
+        vt = int(round(abs(dt * k)))
+        vp = int(round(abs(dt * k)))
+
+        return dt, vt, dp, vp
+
+    def move_head(self, dt, vt, dp, vp):
+        head = self.robot.head
+        sx = head[0]
+
+        self.maestro.get_position(sx)
+        current = sx.get_position()
+        print(sx.target, sx.pwm)
+
+        if vt == 0:
+            sx.target = sx.pwm
+            target = current
         else:
-            # Target is on right. Servo target is maximum degrees.
-            servo.set_target(servo.max_deg)
+            low, high = sx.get_range()
+            target = current + dt
 
-        self.maestro.set_target(servo)
+            if target < low:
+                target = low
+            elif target > high:
+                target = high
+
+            sx.set_target(target)
+            print(sx.target)
+
+        self.maestro.set_speed(sx, vt)
+        self.maestro.set_target(sx)
+
+        return target
+
+    def scan(self, direction=None):
+        """
+        Scan the head either right or left. Ignores direction
+        :param direction: -1 towards minimum, +1 towards maximum.
+        """
+
+        head = self.robot.head
+        sx = head[0]
+
+        self.maestro.get_position(sx)
+        current = sx.get_position()
+        low, high = sx.get_range()
 
     def center_head(self):
         servo = self.robot.head[0]
         self.maestro.set_speed(servo, 20)
         servo.set_target(0)
         self.maestro.set_target(servo)
+
+    def move_body(self, x, y, z, t=0):
+        legs = self.robot.legs
+        servos = legs[0] + legs[1] + legs[2] + legs[3]
+
+        self.maestro.get_multiple_positions(servos)
+
+        for leg in legs:
+            angles = [l.get_position() for l in leg]
+            a, b, c = Finesse.forward_pack(leg.lengths, angles)
+            a -= x
+            b -= y
+            c -= z
+            self.target_euclidean(leg, (-x, -y, -sum(leg.lengths) - z))
+
+        self.maestro.end_together(servos, time=t)
+
+        while not self.is_at_target():
+            # Sleep for a short time to drastically save CPU cycles.
+            time.sleep(0.0005)
 
     def generate_crawl(self, tau, beta):
         """
@@ -599,15 +812,24 @@ class Agility:
         settings = self.usc.getUscSettings()
         settings.serialMode = uscSerialMode.SERIAL_MODE_USB_DUAL_PORT
 
-        for leg in self.robot:
+        for leg in self.robot.legs:
             for servo in leg:
                 servo.set_target(0)
                 channel = settings.channelSettings[servo.channel]
                 channel.mode = ChannelMode.Servo
                 channel.homeMode = HomeMode.Goto
                 channel.home = servo.target
-                channel.minimum = servo.min_pwm
-                channel.maximum = servo.max_pwm
+                channel.minimum = (servo.min_pwm // 64) * 64
+                channel.maximum = -(-servo.max_pwm // 64) * 64
+
+        for servo in self.robot.head:
+            servo.set_target(0)
+            channel = settings.channelSettings[servo.channel]
+            channel.mode = ChannelMode.Servo
+            channel.homeMode = HomeMode.Goto
+            channel.home = servo.target
+            channel.minimum = (servo.min_pwm // 64) * 64
+            channel.maximum = -(-servo.max_pwm // 64) * 64
 
         self.usc.setUscSettings(settings, False)
 
@@ -620,7 +842,7 @@ class Agility:
 
     def zero(self):
         """
-        Manual return home by resetting all servo targets.
+        Manual return home by resetting all leg servo targets.
         """
 
         for leg in self.robot.legs:
@@ -628,6 +850,11 @@ class Agility:
                 servo.set_target(0)
                 self.maestro.set_speed(servo, 30)
                 self.maestro.set_target(servo)
+
+        for servo in self.robot.head:
+            servo.set_target(0)
+            self.maestro.set_speed(servo, 50)
+            self.maestro.set_target(servo)
 
         # Wait until completion.
         while not self.is_at_target():
