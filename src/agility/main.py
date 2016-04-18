@@ -181,7 +181,7 @@ class Body:
             (-x, -y, 0)
         ])
 
-        self.bias = np.zeros((4, 3))
+        self.bias = np.zeros(3)
 
     def translate(self, x, y, z):
         """
@@ -191,20 +191,10 @@ class Body:
         :param z: Motion along z.
         """
 
-        t = np.array([x, y, z])
+        t = np.array([x, y, z], dtype=float)
 
-        self.com = np.array([self.cx, self.cy, 0]) + t
-        self.bias = t
-
-        x = 0.5 * self.length
-        y = 0.5 * self.width
-        vertices = np.array([
-            (x, y, 0),
-            (x, -y, 0),
-            (-x, y, 0),
-            (-x, -y, 0)
-        ])
-        self.vertices = vertices + t
+        self.com = np.array([self.cx, self.cy, 0], dtype=float) + t
+        self.bias = self.com
 
     def is_supported(self, leg1, leg2, leg3):
         """
@@ -221,9 +211,7 @@ class Body:
         c = leg3.get_position()[:2]
 
         vertices = np.array([a, b, c])
-        vertices[0] += self.vertices[leg1.index - 1][:2]
-        vertices[1] += self.vertices[leg2.index - 1][:2]
-        vertices[2] += self.vertices[leg3.index - 1][:2]
+        vertices += self.bias
 
         triangle = Path(vertices)
 
@@ -250,6 +238,8 @@ class Leg:
         self.ik_solver = ik
         self.fk_solver = fk
 
+        self.position = None
+
     def target(self, point):
         """
         Target a point in space.
@@ -262,6 +252,7 @@ class Leg:
             self.servos[0].set_target(angles[0])
             self.servos[1].set_target(angles[1])
             self.servos[2].set_target(angles[2])
+            self.position = point
         except (ServoError, ValueError, ZeroDivisionError):
             return False
 
@@ -270,14 +261,13 @@ class Leg:
     def get_position(self):
         """
         Compute current leg position based on servo data.
-        :return: (x, y, z).
         """
 
         a = self.servos[0].get_position()
         b = self.servos[0].get_position()
         c = self.servos[0].get_position()
 
-        return self.fk_solver(self.lengths, (a, b, c))
+        self.position = self.fk_solver(self.lengths, (a, b, c))
 
     def __getitem__(self, key):
         return self.servos[key]
@@ -321,6 +311,7 @@ class Robot:
     def __init__(self, leg1, leg2, leg3, leg4, body, head=None):
         self.legs = [leg1, leg2, leg3, leg4]
         self.head = head
+        self.body = body
 
 
 class IR(IntEnum):
@@ -379,7 +370,6 @@ class Agility:
 
         self.maestro.get_position(sx)
         current = sx.get_position()
-        print(sx.target, sx.pwm)
 
         if vt == 0:
             sx.target = sx.pwm
@@ -394,7 +384,6 @@ class Agility:
                 target = high
 
             sx.set_target(target)
-            print(sx.target)
 
         self.maestro.set_speed(sx, vt)
         self.maestro.set_target(sx)
@@ -413,6 +402,98 @@ class Agility:
         self.maestro.get_position(sx)
         current = sx.get_position()
         low, high = sx.get_range()
+
+    def execute(self, gait):
+        """
+        Execute a given gait class.
+        This class is (will be) thread safe.
+        :param gait: The gait class.
+        """
+
+        body = self.robot.body
+        ground = gait.ground()
+        tau = gait.time()
+        length = 100
+        dt = tau / length
+        legs = [self.robot.legs[i] for i in gait.legs()]
+        servos = [servo for leg in legs for servo in leg]
+
+        frames = np.zeros((length, len(legs), 3), dtype=float)
+
+        # Debug. Currently only supports crawl.
+        assert(gait.num_supports() == 3)
+
+        # Run static analysis.
+        for t in range(length):
+            frame = frames[t]
+
+            for i in range(len(legs)):
+                frame[i] = gait.evaluate(legs[i], t)
+
+        # Update initial leg locations.
+        self.maestro.get_multiple_positions(servos)
+
+        for leg in legs:
+            leg.get_position()
+
+        prev = np.array([])
+
+        # Assume that current leg positions are accurate.
+        for t in range(length):
+            off = frames[(t + 1) % length][:, 2] > ground
+
+            if np.any(off):
+                # Compute body translation.
+                index = int(np.where(off == True)[0])
+                index = legs[index].index
+                if index == 0:
+                    body.bias = np.array([
+                        [0, 0, 0],
+                        [-0.7, -0.5, 0],
+                        [-0.7, -0.5, 0],
+                        [-0.7, -0.5, -1]
+                    ], dtype=float)
+                elif index == 1:
+                    body.bias = np.array([
+                        [-0.7, 0.5, 0],
+                        [0, 0, 0],
+                        [-0.7, 0.5, -1],
+                        [-0.7, 0.5, 0]
+                    ], dtype=float)
+                elif index == 2:
+                    body.bias = np.array([
+                        [0.7, -0.5, 0],
+                        [0.7, -0.5, -1],
+                        [0, 0, 0],
+                        [0.7, -0.5, 0]
+                    ], dtype=float)
+                elif index == 3:
+                    body.bias = np.array([
+                        [0.7, 0.5, -1],
+                        [0.7, 0.5, 0],
+                        [0.7, 0.5, 0],
+                        [0, 0, 0]
+                    ], dtype=float)
+            else:
+                body.bias = np.zeros((4, 3), dtype=float)
+
+            frame = frames[t] - (body.bias + body.com)
+
+            # Do nothing if current frame is the same as the last frame.
+            if np.array_equal(frame, prev):
+                time.sleep(dt / 1000)
+                continue
+
+            for i in range(len(legs)):
+                target = frame[i]
+                legs[i].target(target)
+
+            self.maestro.end_together(servos, time=dt)
+
+            while not self.is_at_target(servos):
+                time.sleep(0.01)
+
+            prev = frame.copy()
 
     def center_head(self):
         servo = self.robot.head[0]
@@ -871,8 +952,7 @@ class Agility:
         if servos is None:
             return not self.maestro.get_moving_state()
         else:
-            for servo in servos:
-                self.maestro.get_position(servo)
+            self.maestro.get_multiple_positions(servos)
 
             if all(servo.at_target() for servo in servos):
                 return True
