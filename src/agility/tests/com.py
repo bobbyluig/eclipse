@@ -1,4 +1,4 @@
-from agility.gait import LiftLeg
+from agility.gait import LiftLeg, Crawl
 from cerebral.pack.hippocampus import Android
 from agility.main import Agility
 import time
@@ -12,9 +12,7 @@ gait0 = LiftLeg(0)
 gait1 = LiftLeg(1)
 gait2 = LiftLeg(2)
 gait3 = LiftLeg(3)
+crawl = Crawl()
 
 # Main
-agility.execute(gait0)
-agility.execute(gait1)
-agility.execute(gait2)
-agility.execute(gait3)
+agility.execute(crawl)

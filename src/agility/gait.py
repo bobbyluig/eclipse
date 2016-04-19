@@ -16,14 +16,6 @@ class Gait:
 
         raise NotImplementedError
 
-    def legs(self):
-        """
-        Define the legs used. Array contains at least one and at most 4 integers from 0-3.
-        :return: An array of leg indices.
-        """
-
-        raise NotImplementedError
-
     def time(self):
         """
         The amount of time the gait should last in ms.
@@ -55,11 +47,41 @@ class LiftLeg(Gait):
     def time(self):
         return 5000
 
-    def legs(self):
-        return [0, 1, 2, 3]
-
     def evaluate(self, leg, t):
         if t < 25 or t > 75 or leg.index != self.lift:
             return 0, 0, -12
         else:
             return 0, 0, -7
+
+
+class Crawl(Gait):
+    def ground(self):
+        return -12
+
+    def num_supports(self):
+        return 3
+
+    def time(self):
+        return 3000
+
+    def evaluate(self, leg, t):
+        t = (t + 25 * leg.index) % 100
+
+        if t < 5:
+            x = -2
+            y = 0
+            z = -12 + 2 / 5 * t
+        elif t < 20:
+            x = -2 + 4 / 15 * (t - 5)
+            y = 0
+            z = -10
+        elif t < 25:
+            x = 2
+            y = 0
+            z = -10 - 2 / 5 * (t - 20)
+        else:
+            x = 2 - 4 / 75 * (t - 25)
+            y = 0
+            z = -12
+
+        return x, y, z
