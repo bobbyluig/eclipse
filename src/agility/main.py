@@ -5,6 +5,7 @@ from finesse.eclipse import Finesse
 from enum import IntEnum
 from bisect import bisect
 import numpy as np
+import math
 from matplotlib.path import Path
 import time
 import logging
@@ -165,15 +166,17 @@ class Body:
         :param cy: Bias of center of mass along y.
         """
 
+        # Define constants.
         self.length = length
         self.width = width
         self.cx = cx
         self.cy = cy
-
         self.com = np.array([cx, cy, 0])
 
+        # Define static vertices.
         x = 0.5 * self.length
         y = 0.5 * self.width
+
         self.vertices = np.array([
             (x, y, 0),
             (x, -y, 0),
@@ -181,55 +184,117 @@ class Body:
             (-x, -y, 0)
         ])
 
-        self.bias = np.zeros(3)
+        # Dynamic bias.
+        self.bias = None
+        self.default_bias()
 
-    def adjust_com(self, off, next_frame):
+    def default_bias(self):
+        """
+        Zeros vertices and bias.
+        """
+
+        self.bias = np.zeros((4, 3)) - self.com
+
+    @staticmethod
+    def rotation_matrix(axis, theta):
+        """
+        Return the rotation matrix associated with counterclockwise rotation about the given axis by theta radians.
+        http://stackoverflow.com/questions/6802577/python-rotation-of-3d-vector (by unutbu).
+        :param axis: A numpy vector.
+        :param theta: A float.
+        :return: The quaternion.
+        """
+
+        axis /= math.sqrt(np.dot(axis, axis))
+        a = math.cos(theta / 2.0)
+        b, c, d = -axis * math.sin(theta / 2.0)
+        aa, bb, cc, dd = a * a, b * b, c * c, d * d
+        bc, ad, ac, ab, bd, cd = b * c, a * d, a * c, a * b, b * d, c * d
+        return np.array([[aa + bb - cc - dd, 2 * (bc + ad), 2 * (bd - ac)],
+                         [2 * (bc - ad), aa + cc - bb - dd, 2 * (cd + ab)],
+                         [2 * (bd + ac), 2 * (cd - ab), aa + dd - bb - cc]])
+
+    def tilt_body(self, vertices, air, next_frame, theta, lock=True):
+        """
+        Tilt the body to give additional stability.
+        :param vertices: Vertices of the translated rectangle
+        :param air: The index of the leg lifted in the air.
+        :param next_frame: An array representing the next frame (4 x 3).
+        :param theta: Degrees to rotate in radians.
+        :param lock: Whether or not to lock z-value (usually 0) of the lifted leg.
+        :return: The tilted vertices.
+        """
+
+        # Ensure that index is an integer.
+        air = int(air)
+
+        legs = [
+            [2, 3],
+            [1, 4],
+            [4, 1],
+            [3, 2]
+        ]
+
+        # Compute rotation axis.
+        r0, r1 = next_frame[legs[air]]
+        axis = r1 - r0
+
+        # Rotate about axis.
+        q = self.rotation_matrix(axis, theta)
+        r = np.dot(vertices, q.T)
+
+        if lock:
+            # Lock the lifted leg back to original position.
+            delta = vertices[air] - r[air]
+            vertices = r + delta
+        else:
+            # No need to lock. Vertices is simply r.
+            vertices = r
+
+        return vertices
+
+    def adjust_com(self, off, next_frame, sigma):
         """
         Adjust the center of mass based on grounded leg positions.
         :param off: An array of True or False indicating if a leg is up.
         :param next_frame: An array representing the next frame (4 x 3).
+        :param sigma: Safety boundary.
         """
 
         # Get indices.
-        air = np.where(off == True)[0]
-        ground = np.where(off == False)[0]
+        air = np.where(off)[0]
+
+        # Relative to absolute.
+        next_frame += self.vertices
+        print(next_frame)
 
         # No static com adjustments can be made for trot.
         if len(air) != 1:
             return
 
-        index = int(ground)
+        # Definitions.
+        j = np.array([
+            [0, 1, 1, 0],
+            [1, 0, 0, 1],
+            [1, 0, 0, 1],
+            [0, 1, 1, 0]
+        ])
 
-        if index == 0:
-            self.bias = np.array([
-                [0, 0, 0],
-                [-0.7, -0.5, 0],
-                [-0.7, -0.5, 0],
-                [-0.7, -0.5, -1]
-            ], dtype=float)
-        elif index == 1:
-            self.bias = np.array([
-                [-0.7, 0.5, 0],
-                [0, 0, 0],
-                [-0.7, 0.5, -1],
-                [-0.7, 0.5, 0]
-            ], dtype=float)
-        elif index == 2:
-            self.bias = np.array([
-                [0.7, -0.5, 0],
-                [0.7, -0.5, -1],
-                [0, 0, 0],
-                [0.7, -0.5, 0]
-            ], dtype=float)
-        elif index == 3:
-            self.bias = np.array([
-                [0.7, 0.5, -1],
-                [0.7, 0.5, 0],
-                [0.7, 0.5, 0],
-                [0, 0, 0]
-            ], dtype=float)
+        p0 = j[air][0]
+        p1 = next_frame[np.where(p0)][:, :2]
+        print(p1)
 
-        # next_pose = [next_frame[i] for i in air]
+        x1, y1 = p1[0]
+        x2, y2 = p1[1]
+
+        theta = math.atan2((y2 - y1), (x2 - x1))
+
+        rho = np.array([
+            [math.sin(theta)],
+            [math.cos(theta)]
+        ])
+
+        return sigma + rho
 
     def translate(self, x, y, z):
         """
@@ -519,21 +584,12 @@ class Agility:
 
             if np.any(off):
                 # If any legs are off, perform center of mass adjustments accordingly.
-                body.adjust_com(off, next_frame)
+                bias = body.adjust_com(off, next_frame, 1)
+                print(bias)
             else:
                 body.bias = np.zeros((4, 3), dtype=float)
 
             frame = frames[t] - (body.bias + body.com)
-
-            # Do nothing if current frame is the same as the last frame.
-            for i in range(len(legs)):
-                target = frame[i]
-                legs[i].target(target)
-
-            self.maestro.end_together(servos, time=dt)
-
-            while not self.is_at_target(servos):
-                time.sleep(0.01)
 
     def center_head(self):
         servo = self.robot.head[0]
