@@ -8,10 +8,6 @@ robot = Android.robot
 agility = Agility(robot)
 
 # Gait.
-gait0 = LiftLeg(0)
-gait1 = LiftLeg(1)
-gait2 = LiftLeg(2)
-gait3 = LiftLeg(3)
 crawl = Crawl()
 
 # Main

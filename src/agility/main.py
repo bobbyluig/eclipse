@@ -2,6 +2,7 @@ from agility.maestro import Maestro
 from agility.pololu.enumeration import uscSerialMode, ChannelMode, HomeMode
 from agility.pololu.usc import Usc
 from finesse.eclipse import Finesse
+from shared.debug import Dummy
 from enum import IntEnum
 from bisect import bisect
 import numpy as np
@@ -173,6 +174,21 @@ class Body:
         self.cy = cy
         self.com = np.array([cx, cy, 0])
 
+        # Define quick access array.
+        self.j0 = np.array([
+            (2, 1),
+            (3, 0),
+            (3, 0),
+            (2, 1)
+        ])
+
+        self.j1 = np.array([
+            (2, 1),
+            (3, 0),
+            (0, 3),
+            (1, 2)
+        ])
+
         # Define static vertices.
         x = 0.5 * self.length
         y = 0.5 * self.width
@@ -225,18 +241,9 @@ class Body:
         :return: The tilted vertices.
         """
 
-        # Ensure that index is an integer.
-        air = int(air)
-
-        legs = [
-            [2, 3],
-            [1, 4],
-            [4, 1],
-            [3, 2]
-        ]
-
         # Compute rotation axis.
-        r0, r1 = next_frame[legs[air]]
+        legs = self.j1[air]
+        r0, r1 = next_frame[legs]
         axis = r1 - r0
 
         # Rotate about axis.
@@ -264,37 +271,45 @@ class Body:
         # Get indices.
         air = np.where(off)[0]
 
-        # Relative to absolute.
-        next_frame += self.vertices
-        print(next_frame)
-
         # No static com adjustments can be made for trot.
         if len(air) != 1:
             return
 
-        # Definitions.
-        j = np.array([
-            [0, 1, 1, 0],
-            [1, 0, 0, 1],
-            [1, 0, 0, 1],
-            [0, 1, 1, 0]
-        ])
+        air = int(air)
 
-        p0 = j[air][0]
-        p1 = next_frame[np.where(p0)][:, :2]
-        print(p1)
+        # Relative to absolute.
+        original = next_frame + self.vertices
 
-        x1, y1 = p1[0]
-        x2, y2 = p1[1]
+        # Get points.
+        legs = self.j0[air]
+        p = original[legs]
+        x1, y1, z1 = p[0]
+        x2, y2, z2 = p[1]
 
+        # Compute Alastair's magic.
+        ox = (x1 + x2) / 2
+        oy = (y1 + y2) / 2
+
+        # Compute theta.
         theta = math.atan2((y2 - y1), (x2 - x1))
 
-        rho = np.array([
-            [math.sin(theta)],
-            [math.cos(theta)]
-        ])
+        # Compute rho.
+        rx = sigma * math.sin(theta) + ox
+        ry = -sigma * math.cos(theta) + oy
+        rz = 0
 
-        return sigma + rho
+        rho = np.array([rx, ry, rz])
+
+        # Adjust vertices.
+        new = original + rho
+
+        # Perform tilt.
+        new = self.tilt_body(new, air, next_frame, 0.05)
+
+        # Compute bias.
+        self.bias = new - original
+
+        return self.bias
 
     def translate(self, x, y, z):
         """
@@ -433,13 +448,20 @@ class Agility:
         # Set up Usc.
         try:
             self.usc = Usc()
-            logger.info('Successfully attached to Maestro low-level interface.')
+            logger.info("Successfully attached to Maestro's low-level interface.")
         except ConnectionError:
-            self.usc = None
-            logger.warn('Failed to attached to Maestro low-level interface. Skipping.')
+            self.usc = Dummy()
+            logger.warn("Failed to attached to Maestro's low-level interface. "
+                        "If not debugging, consider this a fatal error.")
 
         # Set up virtual COM and TTL ports.
-        self.maestro = Maestro()
+        try:
+            self.maestro = Maestro()
+            logger.info("Successfully attached to Maestro's command port.")
+        except ConnectionError:
+            self.maestro = Dummy()
+            logger.warn("Failed to attached to Maestro's command port. "
+                        "If not debugging, consider this a fatal error.")
 
     def look_at(self, x, y):
         """
@@ -585,7 +607,6 @@ class Agility:
             if np.any(off):
                 # If any legs are off, perform center of mass adjustments accordingly.
                 bias = body.adjust_com(off, next_frame, 1)
-                print(bias)
             else:
                 body.bias = np.zeros((4, 3), dtype=float)
 
