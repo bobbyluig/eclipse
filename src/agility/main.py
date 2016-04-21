@@ -286,16 +286,22 @@ class Body:
         x1, y1, z1 = p[0]
         x2, y2, z2 = p[1]
 
+        # Define center of mass as (0, 0).
+        cx, cy = 0, 0
+
         # Compute Alastair's magic.
-        ox = (x1 + x2) / 2
-        oy = (y1 + y2) / 2
+        m = (y2 - y1) / (x2 - x1)
+        b1 = y1 - m * x1
+        b3 = cy + (cx / m)
+        x0 = (b3 - b1) / (m + 1 / m)
+        y0 = m * x0 + b1
 
         # Compute theta.
         theta = math.atan2((y2 - y1), (x2 - x1))
 
         # Compute rho.
-        rx = sigma * math.sin(theta) + ox
-        ry = -sigma * math.cos(theta) + oy
+        rx = sigma * math.sin(theta) + x0
+        ry = -sigma * math.cos(theta) + y0
         rz = 0
 
         rho = np.array([rx, ry, rz])
@@ -308,6 +314,10 @@ class Body:
 
         # Compute bias.
         self.bias = new - original
+
+        if air == 2:
+            print(original)
+            print(rho)
 
         return self.bias
 
