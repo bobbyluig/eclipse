@@ -175,17 +175,10 @@ class Body:
         self.com = np.array([cx, cy, 0])
 
         # Define quick access array.
-        self.j0 = np.array([
+        self.j = np.array([
             (2, 1),
-            (3, 0),
-            (3, 0),
-            (2, 1)
-        ])
-
-        self.j1 = np.array([
-            (2, 1),
-            (3, 0),
             (0, 3),
+            (3, 0),
             (1, 2)
         ])
 
@@ -230,20 +223,19 @@ class Body:
                          [2 * (bc - ad), aa + cc - bb - dd, 2 * (cd + ab)],
                          [2 * (bd + ac), 2 * (cd - ab), aa + dd - bb - cc]])
 
-    def tilt_body(self, vertices, air, next_frame, theta, lock=True):
+    def tilt_body(self, vertices, air, theta, lock=True):
         """
         Tilt the body to give additional stability.
-        :param vertices: Vertices of the translated rectangle
+        :param vertices: Vertices of the translated rectangle (4 x 3).
         :param air: The index of the leg lifted in the air.
-        :param next_frame: An array representing the next frame (4 x 3).
         :param theta: Degrees to rotate in radians.
         :param lock: Whether or not to lock z-value (usually 0) of the lifted leg.
         :return: The tilted vertices.
         """
 
         # Compute rotation axis.
-        legs = self.j1[air]
-        r0, r1 = next_frame[legs]
+        legs = self.j[air]
+        r0, r1 = vertices[legs]
         axis = r1 - r0
 
         # Rotate about axis.
@@ -281,7 +273,7 @@ class Body:
         original = next_frame + self.vertices
 
         # Get points.
-        legs = self.j0[air]
+        legs = self.j[air]
         p = original[legs]
         x1, y1, z1 = p[0]
         x2, y2, z2 = p[1]
@@ -310,14 +302,14 @@ class Body:
         new = original + rho
 
         # Perform tilt.
-        new = self.tilt_body(new, air, next_frame, 0.05)
+        new = self.tilt_body(new, air, 0.05)
 
         # Compute bias.
         self.bias = new - original
 
-        if air == 2:
-            print(original)
-            print(rho)
+        print(original)
+        print(rho)
+        print(self.bias)
 
         return self.bias
 
