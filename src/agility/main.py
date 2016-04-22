@@ -172,26 +172,26 @@ class Body:
         self.width = width
         self.cx = cx
         self.cy = cy
-        self.com = np.array([cx, cy, 0])
+        self.com = np.array((cx, cy, 0))
 
         # Define quick access array.
-        self.j = np.array([
+        self.j = np.array((
             (2, 1),
             (0, 3),
             (3, 0),
             (1, 2)
-        ])
+        ))
 
         # Define static vertices.
         x = 0.5 * self.length
         y = 0.5 * self.width
 
-        self.vertices = np.array([
+        self.vertices = np.array((
             (x, y, 0),
             (x, -y, 0),
             (-x, y, 0),
             (-x, -y, 0)
-        ])
+        ))
 
         # Dynamic bias.
         self.bias = None
@@ -219,9 +219,9 @@ class Body:
         b, c, d = -axis * math.sin(theta / 2.0)
         aa, bb, cc, dd = a * a, b * b, c * c, d * d
         bc, ad, ac, ab, bd, cd = b * c, a * d, a * c, a * b, b * d, c * d
-        return np.array([[aa + bb - cc - dd, 2 * (bc + ad), 2 * (bd - ac)],
-                         [2 * (bc - ad), aa + cc - bb - dd, 2 * (cd + ab)],
-                         [2 * (bd + ac), 2 * (cd - ab), aa + dd - bb - cc]])
+        return np.array(((aa + bb - cc - dd, 2 * (bc + ad), 2 * (bd - ac)),
+                         (2 * (bc - ad), aa + cc - bb - dd, 2 * (cd + ab)),
+                         (2 * (bd + ac), 2 * (cd - ab), aa + dd - bb - cc)))
 
     def tilt_body(self, vertices, air, theta, lock=True):
         """
@@ -306,10 +306,6 @@ class Body:
 
         # Compute bias.
         self.bias = new - original
-
-        print(original)
-        print(rho)
-        print(self.bias)
 
         return self.bias
 
@@ -429,8 +425,15 @@ class Head:
 
 class Robot:
     def __init__(self, leg1, leg2, leg3, leg4, body, head=None):
+        # Define legs.
         self.legs = [leg1, leg2, leg3, leg4]
+        self.leg_servos = [servo for leg in self.legs for servo in leg]
+
+        # Define head.
         self.head = head
+        self.head_servos = [servo for servo in head]
+
+        # Define body.
         self.body = body
 
 
@@ -569,23 +572,30 @@ class Agility:
         # Get gait properties.
         ground = gait.ground()
         dt = gait.time() / steps
+        ts = np.linspace(0, 100, num=steps, endpoint=False)
 
         # Get all legs and servos for quick access.
         legs = self.robot.legs
-        servos = [servo for leg in legs for servo in leg]
+        servos = self.robot.leg_servos
 
-        # Allocate array for frames.
-        frames = np.zeros((steps, len(legs), 3), dtype=float)
+        # Compute shape.
+        shape = (steps, len(legs), 3)
+        frames = np.zeros(shape, dtype=float)
 
         # Debug. Currently only supports crawl.
         assert(gait.num_supports() == 3)
 
         # Run static analysis.
-        for t in range(steps):
-            frame = frames[t]
-
-            for i in range(len(legs)):
-                frame[i] = gait.evaluate(legs[i], t)
+        if gait.bulk():
+            # Gait supports numpy-based evaluation.
+            f = [gait.evaluate(leg, ts) for leg in legs]
+            frames = np.concatenate(f).reshape(shape)
+        else:
+            # Fall back to manual iteration.
+            for l in range(len(legs)):
+                for i in range(steps):
+                    frame = frames[i]
+                    frame[l] = gait.evaluate(legs[l], ts[i])
 
         # Debugging.
         if debug:

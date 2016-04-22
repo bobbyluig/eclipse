@@ -1,9 +1,22 @@
+from scipy import interpolate
+import numpy as np
+from functools import partial
+
+
 class Gait:
     def ground(self):
         """
         Define the ground (z-axis). Usually a negative float.
         This helps Agility determine when center of mass should be shifted.
         :return: A float representing the ground.
+        """
+
+        raise NotImplementedError
+
+    def bulk(self):
+        """
+        Define if the gait can accept numpy arrays as t values for evaluate.
+        :return: True if the gait can, else False.
         """
 
         raise NotImplementedError
@@ -23,6 +36,8 @@ class Gait:
         :return: A float representing the total time for one cycle.
         """
 
+        raise NotImplementedError
+
     def evaluate(self, leg, t):
         """
         Evaluate a leg position at a time t.
@@ -34,24 +49,15 @@ class Gait:
         raise NotImplementedError
 
 
-class LiftLeg(Gait):
-    def __init__(self, leg):
-        self.lift = leg
+class Linear(Gait):
+    def __init__(self, sequence):
+        """
+        A sequence of key frames.
+        :param sequence:
+        """
 
-    def ground(self):
-        return -12
-
-    def num_supports(self):
-        return 3
-
-    def time(self):
-        return 5000
-
-    def evaluate(self, leg, t):
-        if t < 25 or t > 75 or leg.index != self.lift:
-            return 0, 0, -12
-        else:
-            return 0, 0, -7
+    def bulk(self):
+        return True
 
 
 class Crawl(Gait):

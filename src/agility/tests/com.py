@@ -1,4 +1,4 @@
-from agility.gait import LiftLeg, Crawl
+from agility.gait import Crawl
 from cerebral.pack.hippocampus import Android
 from agility.main import Agility
 import time
