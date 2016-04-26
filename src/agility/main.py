@@ -200,9 +200,11 @@ class Body:
     def default_bias(self):
         """
         Zeros vertices and bias.
+        :return: Bias.
         """
 
         self.bias = np.zeros((4, 3)) - self.com
+        return self.bias
 
     @staticmethod
     def rotation_matrix(axis, theta):
@@ -258,6 +260,7 @@ class Body:
         :param off: An array of True or False indicating if a leg is up.
         :param next_frame: An array representing the next frame (4 x 3).
         :param sigma: Safety boundary.
+        :return: Bias.
         """
 
         # Get indices.
@@ -557,13 +560,33 @@ class Agility:
         ax.plot(x, y, z, marker='o')
         plt.show()
 
-    def execute(self, gait, steps=100, debug=False):
+    def execute(self, frames, dt):
+        # Get all legs and servos for quick access.
+        legs = self.robot.legs
+        servos = self.robot.leg_servos
+
+        # Update initial leg locations.
+        self.maestro.get_multiple_positions(servos)
+
+        for leg in legs:
+            leg.get_position()
+
+        while True:
+            for frame in frames:
+                for i in range(len(legs)):
+                    legs[i].target(frame[i])
+
+                self.maestro.end_together(servos, t=dt)
+                self.wait(servos)
+
+    def prepare(self, gait, steps=100, debug=False):
         """
         Execute a given gait class.
         This class is (will be) thread safe.
         :param gait: The gait class.
         :param steps: Number of steps per iteration of the gait.
         :param debug: Show gait in a graph.
+        :return: (frames, dt) ready for execution.
         """
 
         # Define body for quick access.
@@ -574,38 +597,28 @@ class Agility:
         dt = gait.time() / steps
         ts = np.linspace(0, 100, num=steps, endpoint=False)
 
-        # Get all legs and servos for quick access.
+        # Get all legs for quick access.
         legs = self.robot.legs
-        servos = self.robot.leg_servos
 
         # Compute shape.
         shape = (steps, len(legs), 3)
         frames = np.zeros(shape, dtype=float)
 
-        # Debug. Currently only supports crawl.
-        assert(gait.num_supports() == 3)
-
         # Run static analysis.
         if gait.bulk():
             # Gait supports numpy-based evaluation.
             f = [gait.evaluate(leg, ts) for leg in legs]
-            frames = np.concatenate(f).reshape(shape)
+            frames = np.concatenate(f).reshape(shape, order='F')
         else:
             # Fall back to manual iteration.
-            for l in range(len(legs)):
+            for leg in legs:
                 for i in range(steps):
                     frame = frames[i]
-                    frame[l] = gait.evaluate(legs[l], ts[i])
+                    frame[leg.index] = gait.evaluate(leg, ts[i])
 
         # Debugging.
         if debug:
             self.plot_gait(frames)
-
-        # Update initial leg locations.
-        self.maestro.get_multiple_positions(servos)
-
-        for leg in legs:
-            leg.get_position()
 
         # Copy frames for comparison.
         original = frames.copy()
@@ -620,9 +633,11 @@ class Agility:
                 # If any legs are off, perform center of mass adjustments accordingly.
                 bias = body.adjust_com(off, next_frame, 1)
             else:
-                body.bias = np.zeros((4, 3), dtype=float)
+                bias = body.default_bias()
 
-            frame = frames[t] - (body.bias + body.com)
+            frames[t] -= bias
+
+        return frames, dt
 
     def center_head(self):
         servo = self.robot.head[0]
@@ -645,10 +660,7 @@ class Agility:
             self.target_euclidean(leg, (-x, -y, -sum(leg.lengths) - z))
 
         self.maestro.end_together(servos, time=t)
-
-        while not self.is_at_target():
-            # Sleep for a short time to drastically save CPU cycles.
-            time.sleep(0.0005)
+        self.wait(servos)
 
     def generate_crawl(self, tau, beta):
         """
@@ -1070,6 +1082,15 @@ class Agility:
         while not self.is_at_target():
             # Sleep for a short time to drastically save CPU cycles.
             time.sleep(0.0005)
+
+    def wait(self, servos=None):
+        """
+        Block until all servos have reached their targets.
+        :param servos: An array of servos. If None, checks if all servos have reached their targets (more efficient).
+        """
+
+        while not self.is_at_target(servos=servos):
+            time.sleep(0.005)
 
     def is_at_target(self, servos=None):
         """

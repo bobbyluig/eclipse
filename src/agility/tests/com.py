@@ -1,4 +1,4 @@
-from agility.gait import Crawl
+from agility.gait import Generic, Linear
 from cerebral.pack.hippocampus import Android
 from agility.main import Agility
 import time
@@ -8,7 +8,7 @@ robot = Android.robot
 agility = Agility(robot)
 
 # Gait.
-crawl = Crawl()
+gait = Linear()
 
 # Main
-agility.execute(crawl)
+frames, dt = agility.prepare(gait, debug=True)

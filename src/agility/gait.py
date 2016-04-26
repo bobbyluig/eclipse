@@ -21,14 +21,6 @@ class Gait:
 
         raise NotImplementedError
 
-    def num_supports(self):
-        """
-        Define the minimum number of support legs on ground at all times.
-        :return: An integer from 2 to 3.
-        """
-
-        raise NotImplementedError
-
     def time(self):
         """
         The amount of time the gait should last in ms.
@@ -50,25 +42,97 @@ class Gait:
 
 
 class Linear(Gait):
-    def __init__(self, sequence):
+    def __init__(self, sequence, ground, time):
         """
         A sequence of key frames.
         :param sequence:
         """
 
+        self._ground = ground
+        self._time = time
+
+        self._fn = [self.interpolate(s) for s in sequence]
+
+    @staticmethod
+    def interpolate(sequence):
+        # Sort.
+        s = sorted(sequence, key=lambda x: x[1])
+
+        # Fill in edge gaps.
+        first = s[0]
+        last = s[-1]
+
+        if first[1] > 0:
+            s.insert(0, (first[0], 100 - last[1]))
+
+        if last[1] < 100:
+            s.append((last[0], 100 + first[1]))
+
+        # Unzip.
+        p, t = zip(*sequence)
+        p = np.array(p, dtype=float)
+
+        # Interpolate.
+        tck, _ = interpolate.splprep(p.T, u=t, s=0, k=1)
+        return partial(interpolate.splev, tck=tck)
+
+    def evaluate(self, leg, t):
+        index = leg.index
+        fn = self._fn[index]
+        p = np.array(fn(t))
+
+        return p.T
+
+    def ground(self):
+        return self._ground
+
+    def time(self):
+        return self._time
+
     def bulk(self):
         return True
+
+
+class Generic(Gait):
+    def __init__(self, body, speed, rotation, ground):
+        self.l = body.length
+        self.w = body.width
+        self.g = ground
+        self.theta = rotation
+        self.v = speed
+
+    def ground(self):
+        return self.g
+
+    def time(self):
+        return 2000
+
+    def bulk(self):
+        return True
+
+    def evaluate(self, leg, t):
+        if leg.index % 2:
+            self.w *= -1
+
+        if leg.index > 1:
+            self.l *= -1
+
+        r = self.w ** 2 + self.l ** 2
+        w = self.w / r
+        l = self.l / r
+
+        
 
 
 class Crawl(Gait):
     def ground(self):
         return -12
 
-    def num_supports(self):
-        return 3
-
     def time(self):
         return 3000
+
+    def bulk(self):
+        return False
 
     def evaluate(self, leg, t):
         t = (t + 25 * leg.index) % 100
