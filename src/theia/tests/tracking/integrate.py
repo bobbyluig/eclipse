@@ -8,29 +8,28 @@ from agility.main import Agility
 
 executor = ThreadPoolExecutor(max_workers=1)
 
-agility = Agility(Android.robot)
+# agility = Agility(Android.robot)
 eye = Android.eye
 oculus = Oculus()
 
-agility.configure()
-agility.zero()
+# agility.zero()
 
 while True:
-    frame = eye.get_flipped_frame()
+    frame = eye.get_color_frame()
     cv2.imshow('preview', frame)
     k = cv2.waitKey(1)
 
     if not k == -1:
         break
 
-frame = eye.get_flipped_frame()
+frame = eye.get_color_frame()
 tl, br = Theia.get_rect(frame)
 bb = (tl[0], tl[1], br[0] - tl[0], br[1] - tl[1])
 
 oculus.initialize(frame, bb)
 
 while True:
-    frame = eye.get_flipped_frame()
+    frame = eye.get_color_frame()
     found, pos, center = oculus.track(frame)
 
     if found:

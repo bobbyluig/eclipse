@@ -4,38 +4,29 @@ from functools import partial
 
 
 class Gait:
-    def ground(self):
-        """
-        Define the ground (z-axis). Usually a negative float.
-        This helps Agility determine when center of mass should be shifted.
-        :return: A float representing the ground.
-        """
+    def __init__(self, ground, time):
+        # Define the ground (z-axis). Usually a negative float.
+        # This helps Agility determine when center of mass should be shifted.
+        self.ground = ground
 
-        raise NotImplementedError
-
-    def bulk(self):
-        """
-        Define if the gait can accept numpy arrays as t values for evaluate.
-        :return: True if the gait can, else False.
-        """
-
-        raise NotImplementedError
-
-    def time(self):
-        """
-        The amount of time the gait should last in ms.
-        Gait is guaranteed to be at least this long. However actual gait will be longer.
-        :return: A float representing the total time for one cycle.
-        """
-
-        raise NotImplementedError
+        # The amount of time the gait should last in ms.
+        # Gait is guaranteed to be at least this long. However actual gait will be longer.
+        self.time = time
 
     def evaluate(self, leg, t):
         """
-        Evaluate a leg position at a time t.
+        Evaluate a leg position at times t.
         :param leg: A leg object.
-        :param t: The time t, a float such that t is in [0, 100).
-        :return: A point (x, y, z).
+        :param t: An array containing t values to be evaluated where t is in [0, 1000).
+        :return: An array or points.
+
+        Return value is in the following format:
+        [
+         [x0, y0, z0],
+         [x1, y1, z1],
+         [x2, y2, z2],
+         ...
+        ]
         """
 
         raise NotImplementedError
@@ -48,29 +39,41 @@ class Linear(Gait):
         :param sequence:
         """
 
-        self._ground = ground
-        self._time = time
+        super().__init__(ground, time)
 
+        # Generate private functions called during evaluation.
         self._fn = [self.interpolate(s) for s in sequence]
 
     @staticmethod
     def interpolate(sequence):
+        # Create numpy array.
+        sequence = np.array(sequence, dtype=float)
+
+        # Boundary constraints.
+        t = sequence[:, 3]
+        t[t < 0] += 1000
+        t[t > 1000] -= 1000
+
         # Sort.
-        s = sorted(sequence, key=lambda x: x[1])
+        sequence = sequence[t.argsort()]
 
-        # Fill in edge gaps.
-        first = s[0]
-        last = s[-1]
+        # Create padding.
+        first = sequence[0]
+        last = sequence[-1]
 
-        if first[1] > 0:
-            s.insert(0, (first[0], 100 - last[1]))
+        if first[3] > 0:
+            value = last.copy()
+            value[3] = 1000 - value[3]
+            sequence = np.vstack((value, sequence))
 
-        if last[1] < 100:
-            s.append((last[0], 100 + first[1]))
+        if last[3] < 1000:
+            value = first.copy()
+            value[3] += 1000
+            sequence = np.vstack((sequence, value))
 
-        # Unzip.
-        p, t = zip(*sequence)
-        p = np.array(p, dtype=float)
+        # Unravel.
+        p = sequence[:, :3]
+        t = sequence[:, 3]
 
         # Interpolate.
         tck, _ = interpolate.splprep(p.T, u=t, s=0, k=1)
@@ -82,76 +85,3 @@ class Linear(Gait):
         p = np.array(fn(t))
 
         return p.T
-
-    def ground(self):
-        return self._ground
-
-    def time(self):
-        return self._time
-
-    def bulk(self):
-        return True
-
-
-class Generic(Gait):
-    def __init__(self, body, speed, rotation, ground):
-        self.l = body.length
-        self.w = body.width
-        self.g = ground
-        self.theta = rotation
-        self.v = speed
-
-    def ground(self):
-        return self.g
-
-    def time(self):
-        return 2000
-
-    def bulk(self):
-        return True
-
-    def evaluate(self, leg, t):
-        if leg.index % 2:
-            self.w *= -1
-
-        if leg.index > 1:
-            self.l *= -1
-
-        r = self.w ** 2 + self.l ** 2
-        w = self.w / r
-        l = self.l / r
-
-        
-
-
-class Crawl(Gait):
-    def ground(self):
-        return -12
-
-    def time(self):
-        return 3000
-
-    def bulk(self):
-        return False
-
-    def evaluate(self, leg, t):
-        t = (t + 25 * leg.index) % 100
-
-        if t < 5:
-            x = -2
-            y = 0
-            z = -12 + 2 / 5 * t
-        elif t < 20:
-            x = -2 + 4 / 15 * (t - 5)
-            y = 0
-            z = -10
-        elif t < 25:
-            x = 2
-            y = 0
-            z = -10 - 2 / 5 * (t - 20)
-        else:
-            x = 2 - 4 / 75 * (t - 25)
-            y = 0
-            z = -12
-
-        return x, y, z

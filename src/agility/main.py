@@ -576,7 +576,7 @@ class Agility:
                 for i in range(len(legs)):
                     legs[i].target(frame[i])
 
-                self.maestro.end_together(servos, t=dt)
+                self.maestro.end_together(servos, time=dt)
                 self.wait(servos)
 
     def prepare(self, gait, steps=100, debug=False):
@@ -593,9 +593,9 @@ class Agility:
         body = self.robot.body
 
         # Get gait properties.
-        ground = gait.ground()
-        dt = gait.time() / steps
-        ts = np.linspace(0, 100, num=steps, endpoint=False)
+        ground = gait.ground
+        dt = gait.time / steps
+        ts = np.linspace(0, 1000, num=steps, endpoint=False)
 
         # Get all legs for quick access.
         legs = self.robot.legs
@@ -605,16 +605,8 @@ class Agility:
         frames = np.zeros(shape, dtype=float)
 
         # Run static analysis.
-        if gait.bulk():
-            # Gait supports numpy-based evaluation.
-            f = [gait.evaluate(leg, ts) for leg in legs]
-            frames = np.concatenate(f).reshape(shape, order='F')
-        else:
-            # Fall back to manual iteration.
-            for leg in legs:
-                for i in range(steps):
-                    frame = frames[i]
-                    frame[leg.index] = gait.evaluate(leg, ts[i])
+        f = [gait.evaluate(leg, ts) for leg in legs]
+        frames = np.concatenate(f).reshape(shape, order='F')
 
         # Debugging.
         if debug:
@@ -631,10 +623,11 @@ class Agility:
 
             if np.any(off):
                 # If any legs are off, perform center of mass adjustments accordingly.
-                bias = body.adjust_com(off, next_frame, 1)
+                bias = body.adjust_com(off, next_frame, 0.5)
             else:
                 bias = body.default_bias()
 
+            print(frames[t])
             frames[t] -= bias
 
         return frames, dt
