@@ -36,13 +36,22 @@ class Linear(Gait):
     def __init__(self, sequence, ground, time):
         """
         A sequence of key frames.
-        :param sequence:
+        :param sequence: A sequence of points and times.
+
+        Sequence is in the following format:
+        [
+         [(x0, y0, z0, t0), (x1, y1, z1, t1), ...],
+         [(x0, y0, z0, t0), (x1, y1, z1, t1), ...],
+         [(x0, y0, z0, t0), (x1, y1, z1, t1), ...],
+         [(x0, y0, z0, t0), (x1, y1, z1, t1), ...]
+        ]
         """
 
         super().__init__(ground, time)
 
         # Generate private functions called during evaluation.
         self._fn = [self.interpolate(s) for s in sequence]
+        assert len(self._fn) == 4
 
     @staticmethod
     def interpolate(sequence):
@@ -85,3 +94,11 @@ class Linear(Gait):
         p = np.array(fn(t))
 
         return p.T
+
+
+def doggy_crawl(theta, velocity):
+    pass
+
+
+def doggy_trot(theta, velocity):
+    pass
