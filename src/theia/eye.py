@@ -1,6 +1,5 @@
 import numpy as np
 import cv2
-from cerebral import logger as l
 import logging
 import urllib.request
 from collections import deque

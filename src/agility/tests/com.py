@@ -1,4 +1,4 @@
-from agility.gait import Linear
+from agility.gait import doggy_crawl
 from cerebral.pack.hippocampus import Android
 from agility.main import Agility
 import time
@@ -8,16 +8,8 @@ import time
 robot = Android.robot
 agility = Agility(robot)
 
-# Sequence.
-sequence = (
-    [(3, 0, -10, 0), (-3, 0, -10, 750), (-3, 0, -8, 800), (2, 0, -8, 900)],
-    [(3, 0, -10, 0), (-3, 0, -10, 750), (-3, 0, -8, 800), (2, 0, -8, 900)],
-    [(3, 0, -10, 0), (-3, 0, -10, 750), (-3, 0, -8, 800), (2, 0, -8, 900)],
-    [(3, 0, -10, 0), (-3, 0, -10, 750), (-3, 0, -8, 800), (2, 0, -8, 900)]
-)
-
 # Gait.
-gait = Linear(sequence, -10, 1000)
+gait = doggy_crawl(0, 2, robot.body)
 
 # Main
 # agility.zero()

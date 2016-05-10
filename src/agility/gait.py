@@ -72,7 +72,7 @@ class Linear(Gait):
 
         if first[3] > 0:
             value = last.copy()
-            value[3] = 1000 - value[3]
+            value[3] -= 1000
             sequence = np.vstack((value, sequence))
 
         if last[3] < 1000:
@@ -96,9 +96,35 @@ class Linear(Gait):
         return p.T
 
 
-def doggy_crawl(theta, velocity):
-    pass
+def doggy_crawl(theta, stride, body):
+    width = body.width
+    length = body.length
+    ground = -10
 
+    b = np.array((width, length), dtype=float)
 
-def doggy_trot(theta, velocity):
-    pass
+    norm = np.array((
+        (1, 1),
+        (-1, 1),
+        (-1, -1),
+        (1, -1)
+    ))
+
+    sequence = []
+
+    for i in range(4):
+        offset = i * 250
+        x, y = theta * b * norm[i]
+        x += stride
+
+        s = [
+            (0, 0, ground, 0 + offset),
+            (-x, -y, ground, 375 + offset),
+            (-x, -y, ground + 2, 425 + offset),
+            (x, y, ground + 2, 575 + offset),
+            (x, y, ground, 625 + offset)
+        ]
+
+        sequence.append(s)
+
+    return Linear(sequence, ground, 1000)

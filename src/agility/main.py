@@ -10,6 +10,7 @@ import math
 from matplotlib.path import Path
 import time
 import logging
+import sys
 
 logger = logging.getLogger('universe')
 
@@ -268,7 +269,9 @@ class Body:
 
         # No static com adjustments can be made for trot.
         if len(air) != 1:
-            return
+            print("Unable to optimize COM!")
+            print(next_frame)
+            return self.default_bias()
 
         air = int(air)
 
@@ -602,7 +605,6 @@ class Agility:
 
         # Compute shape.
         shape = (steps, len(legs), 3)
-        frames = np.zeros(shape, dtype=float)
 
         # Run static analysis.
         f = [gait.evaluate(leg, ts) for leg in legs]
@@ -619,7 +621,8 @@ class Agility:
         for t in range(steps):
             # Look ahead to check which legs are about to lift. Compare to original.
             next_frame = original[(t + 1) % steps]
-            off = next_frame[:, 2] > ground
+            print(next_frame[0])
+            off = next_frame[:, 2] > (ground + 1e-6)
 
             if np.any(off):
                 # If any legs are off, perform center of mass adjustments accordingly.
@@ -627,7 +630,6 @@ class Agility:
             else:
                 bias = body.default_bias()
 
-            print(frames[t])
             frames[t] -= bias
 
         return frames, dt
