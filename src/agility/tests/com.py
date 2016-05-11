@@ -9,9 +9,9 @@ robot = Android.robot
 agility = Agility(robot)
 
 # Gait.
-gait = doggy_crawl(0, 2, robot.body)
+gait = doggy_crawl(0.1, 2, robot.body)
 
 # Main
 # agility.zero()
 frames, dt = agility.prepare(gait)
-agility.execute(frames, dt)
+# agility.execute(frames, dt)

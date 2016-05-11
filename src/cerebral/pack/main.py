@@ -1,6 +1,5 @@
 #!/usr/bin/env python3.5
 
-from cerebral.manager import manager
 from cerebral import logger as l
 
 import asyncio
@@ -31,10 +30,6 @@ class Cerebral(ApplicationSession):
         # Create a thread executor for slightly CPU-bound async functions.
         self.executor = ThreadPoolExecutor(20)
         self.loop.set_default_executor(self.executor)
-
-        # Get database manager.
-        self.manager = manager
-        self.manager.connect()
 
         # Init parent.
         super().__init__(*args, **kwargs)

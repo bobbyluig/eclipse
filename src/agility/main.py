@@ -19,6 +19,14 @@ class ServoError(Exception):
     pass
 
 
+class Stepper:
+    def __init__(self, c1, c2, steps, direction=1):
+        self.c1 = c1
+        self.c2 = c2
+        self.steps = steps
+        self.direction = direction
+
+
 class Servo:
     def __init__(self, channel, min_deg, max_deg, min_pwm, max_pwm, max_vel,
                  bias=0, direction=1):
@@ -405,22 +413,36 @@ class Leg:
 
 
 class Head:
-    def __init__(self, servo1, servo2, eye):
+    def __init__(self, servo1, servo2, camera):
         """
         Create a head object.
         :param servo1: Servo object controlling left and right head turns.
         :param servo2: Servo object controlling up and down head turns.
-        :param eye: An eye object for configuration.
+        :param camera: A camera object for configuration.
         """
 
-        if servo2 is None:
-            self.servos = [servo1]
-        else:
-            self.servos = [servo1, servo2]
+        self.servos = [servo1, servo2]
+        self.camera = camera
 
-        self.width = eye.width
-        self.height = eye.height
-        self.fov = eye.fov
+        self.angles = [0, 0]
+        self.target = [0, 0]
+
+    def at_bound(self):
+        """
+        Check if the head is at the left or right bound.
+        :return: 1 -> left bound, -1 -> right bound, 0 -> not at bound.
+        """
+
+        servo = self.servos[0]
+        low, high = servo.get_range()
+        position = servo.get_position()
+
+        if position == high:
+            return 1
+        elif position == low:
+            return -1
+        else:
+            return 0
 
     def __getitem__(self, item):
         return self.servos[item]
@@ -477,54 +499,142 @@ class Agility:
     def look_at(self, x, y):
         """
         Move the head to look at a given target.
+        Note that this is an approximation. Best used in a PID loop.
         :param x: x-coordinate of target.
         :param y: y-coordinate of target.
-        :return: (dt, vt, dp, vp)
         """
 
         head = self.robot.head
+        camera = head.camera
 
         # Define velocity constant.
         k = 1.5
 
         # Compute deltas.
-        dx = (x - 0.5 * head.width) * -1
-        dy = (y - 0.5 * head.height) * -1
+        dx = (x - 0.5 * camera.width) * -1
+        dy = (y - 0.5 * camera.height) * -1
 
-        dt = dx / head.width * (head.fov / 2)
-        dp = dy / head.height * (head.fov / 2)
+        dt = dx / camera.width * (camera.fx / 2)
+        dp = dy / camera.height * (camera.fy / 2)
 
         # Compute suggested velocity. Balance between blur and speed.
         vt = int(round(abs(dt * k)))
         vp = int(round(abs(dt * k)))
 
-        return dt, vt, dp, vp
+        # Construct array.
+        data = [dt, vt, dp, vp]
 
-    def move_head(self, dt, vt, dp, vp):
+        # Perform motion.
+        self.move_head(data)
+
+        # Update target.
+        head.target = [x, y]
+
+    def scan(self, t, direction=None):
+        """
+        Scans head in a direction. If no direction is given, scans toward bound of last known location.
+        If at minimum of maximum bounds, automatically selects opposite direction.
+        Blocks until completely scanned towards one direction.
+        :param direction: A direction, either None, 1, or -1.
+        """
+
+        # Obtain definitions.
         head = self.robot.head
-        sx = head[0]
+        camera = head.camera
+        servo = head.servos[0]
 
-        self.maestro.get_position(sx)
-        current = sx.get_position()
+        # Get bounds.
+        low, high = servo.get_range()
 
-        if vt == 0:
-            sx.target = sx.pwm
-            target = current
+        # Update servo.
+        self.maestro.get_position(servo)
+
+        # Check bound.
+        bound = head.at_bound()
+
+        # Create direction.
+        if bound != 0:
+            direction = bound * -1
+
+        if direction is None:
+            if head.target[0] < 0.5 * camera.width:
+                direction = 1
+            else:
+                direction = -1
+
+        # Execute.
+        if direction == 1:
+            servo.set_target(high)
         else:
-            low, high = sx.get_range()
-            target = current + dt
+            servo.set_target(low)
 
-            if target < low:
-                target = low
-            elif target > high:
-                target = high
+        self.maestro.end_together((servo,), t)
 
-            sx.set_target(target)
+    def center_head(self, t=0):
+        """
+        Returns head to original position.
+        :param time: The time in ms.
+        """
 
-        self.maestro.set_speed(sx, vt)
-        self.maestro.set_target(sx)
+        # Obtain definitions.
+        head = self.robot.head
+        servos = head.servos
 
-        return target
+        # Target zero.
+        for servo in servos:
+            servo.set_target(0)
+
+        # Reset to zero.
+        head.angles = [0, 0]
+
+        # Execute.
+        self.maestro.end_together(servos, t, True)
+
+    def move_head(self, data):
+        """
+        Move head based on data parameters.
+        :param data: An array given by look_at.
+        """
+
+        # Obtain definitions.
+        head = self.robot.head
+        servos = head.servos
+
+        # Update positions.
+        self.maestro.get_multiple_positions(servos)
+
+        for i in range(2):
+            servo = head[i]
+            current = servo.get_position()
+
+            # Get data.
+            delta = data[i * 2]
+            velocity = data[i * 2 + 1]
+
+            if velocity == 0:
+                # Already at target. Do nothing.
+                servo.target = servo.pwm
+                target = current
+            else:
+                # Ensure that head is within bounds.
+                low, high = servo.get_range()
+                target = current + delta
+
+                if target < low:
+                    target = low
+                elif target > high:
+                    target = high
+
+                servo.set_target(target)
+
+            # Update.
+            head.angles[i] = target
+
+            # Set speed.
+            self.maestro.set_speed(servo, velocity)
+
+        # Execute.
+        self.maestro.set_target(servos)
 
     def scan(self, direction=None):
         """
@@ -579,7 +689,7 @@ class Agility:
                 for i in range(len(legs)):
                     legs[i].target(frame[i])
 
-                self.maestro.end_together(servos, time=dt)
+                self.maestro.end_together(servos, dt)
                 self.wait(servos)
 
     def prepare(self, gait, steps=100, debug=False):
@@ -621,7 +731,6 @@ class Agility:
         for t in range(steps):
             # Look ahead to check which legs are about to lift. Compare to original.
             next_frame = original[(t + 1) % steps]
-            print(next_frame[0])
             off = next_frame[:, 2] > (ground + 1e-6)
 
             if np.any(off):
@@ -654,7 +763,7 @@ class Agility:
             c -= z
             self.target_euclidean(leg, (-x, -y, -sum(leg.lengths) - z))
 
-        self.maestro.end_together(servos, time=t)
+        self.maestro.end_together(servos, t)
         self.wait(servos)
 
     @staticmethod

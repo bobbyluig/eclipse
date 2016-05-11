@@ -104,8 +104,8 @@ def doggy_crawl(theta, stride, body):
     b = np.array((width, length), dtype=float)
 
     norm = np.array((
-        (1, 1),
         (-1, 1),
+        (1, 1),
         (-1, -1),
         (1, -1)
     ))
@@ -116,6 +116,8 @@ def doggy_crawl(theta, stride, body):
         offset = i * 250
         x, y = theta * b * norm[i]
         x += stride
+
+        print(x, y)
 
         s = [
             (0, 0, ground, 0 + offset),

@@ -1,32 +1,26 @@
-from cerebral.manager import manager
+import Pyro4
 import logging
 from logging.handlers import QueueHandler
-from concurrent.futures import ThreadPoolExecutor
+from cerebral.nameserver import lookup
 
 
 class Handler(QueueHandler):
     """
-    An asyncio friendly logging handler that also works outside of the event loop.
+    An asynchronous logger using a proxy-based queue.
     """
-
-    def __init__(self, *args, **kwargs):
-        self.executor = ThreadPoolExecutor(max_workers=2)
-        super().__init__(*args, **kwargs)
 
     def prepare(self, record):
         msg = self.format(record)
         return msg
 
-    def enqueue(self, record):
-        self.executor.submit(self.queue.put_nowait, record)
+# Configure pyro.
+Pyro4.config.SERIALIZER = 'pickle'
 
-
-# Register and connect to manager.
-manager.register('queue.logging')
-manager.connect()
-
-# Obtain logging queue.
-queue = manager.get('queue.logging')
+# Connect to queue.
+uri = lookup('database', 'logging')
+proxy = Pyro4.Proxy(uri)
+proxy._pyroTimeout = 1.0
+queue = Pyro4.async(proxy)
 
 # Configure logging.
 logger = logging.getLogger('universe')

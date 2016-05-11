@@ -31,21 +31,34 @@ class IPCamera:
                 return True, i
 
 
+class Camera:
+    def __init__(self, source, fx, fy, size=(640, 480)):
+        self.source = source
+        self.fx = fx
+        self.fy = fy
+        self.width, self.height = size
+
+
 class Eye:
-    def __init__(self, source, fov):
+    def __init__(self, camera):
         self.history = deque(maxlen=5)
         self.frame = None
 
+        source = camera.source
         self.cap = cv2.VideoCapture(source)
 
         if not self.cap.isOpened():
             raise ConnectionError('Unable to connect to video source "{}".'.format(source))
 
+        self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, camera.width)
+        self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, camera.height)
+
         self.width = int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         self.height = int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-        self.fov = fov
 
-        logger.info('Opening capture "{}" at {:d} x {:d}.'.format(source, self.width, self.height))
+        if self.width != camera.width or self.height != camera.height:
+            raise ConnectionError('Unable to open video source at {:d} x {:d}.'
+                                  .format(source, camera.width, camera.height))
 
     def close(self):
         self.cap.release()
