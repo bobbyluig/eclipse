@@ -55,6 +55,12 @@ class Linear(Gait):
 
     @staticmethod
     def interpolate(sequence):
+        """
+        Create parametric functions given a sequence of points.
+        :param sequence: A sequence of points.
+        :return: A function to interpolate points at times t.
+        """
+
         # Create numpy array.
         sequence = np.array(sequence, dtype=float)
 
@@ -96,37 +102,110 @@ class Linear(Gait):
         return p.T
 
 
-def doggy_crawl(theta, stride, body):
-    width = body.width
-    length = body.length
-    ground = -10
+class Crawl:
+    def __init__(self, body):
+        self.body = body
 
-    b = np.array((width, length), dtype=float)
+        # Cache reusable variables.
+        self.b = np.array((body.width, body.length), dtype=float)
+        self.n = np.array((
+            (-1 , 1),
+            (1, 1),
+            (-1, -1),
+            (1, -1)
+        ))
 
-    norm = np.array((
-        (-1, 1),
-        (1, 1),
-        (-1, -1),
-        (1, -1)
-    ))
+        # Cache for gait objects.
+        self.cache = {}
 
-    sequence = []
+    def clear(self):
+        """
+        Clear the cache.
+        """
 
-    for i in range(4):
-        offset = i * 250
-        x, y = theta * b * norm[i]
-        x += stride
+        self.cache.clear()
 
-        print(x, y)
+    def generate(self, forward, rotation):
+        """
+        Generate a gait.
+        :param forward: Forward speed in cm/second.
+        :param rotation: Rotation speed in degrees/second.
+        :return: A Linear object.
+        """
 
-        s = [
-            (0, 0, ground, 0 + offset),
-            (-x, -y, ground, 375 + offset),
-            (-x, -y, ground + 2, 425 + offset),
-            (x, y, ground + 2, 575 + offset),
-            (x, y, ground, 625 + offset)
-        ]
+        # Hash table lookup.
+        h = hash((forward, rotation))
 
-        sequence.append(s)
+        # If gait is in cache, return it.
+        if h in self.cache:
+            return self.cache[h]
 
-    return Linear(sequence, ground, 1000)
+        # Compute parameters here.
+        lift = 2
+        ground = -10
+        time = 1000
+        beta = 0.75
+        theta = rotation
+        v = forward
+
+        # Generate sequence.
+        sequence = self.get(theta, v, beta, ground, lift)
+
+        # Create object and add to cache.
+        gait = Linear(sequence, ground, time)
+        self.cache[h] = gait
+
+        return gait
+
+    def get(self, theta, v, beta, ground, lift):
+        """
+        Get a sequence. If none exists in cache, generate it.
+        :param theta: Rotation motion.
+        :param v: Forward motion.
+        :param beta: Amount of time that the leg is on the ground.
+        :param ground: Ground plane. Usually negative z.
+        :param lift: How much to lift the leg on return.
+        :return: A sequence to pass into Linear.
+        """
+
+        # Ground time of less than 75% is unstable.
+        assert beta >= 0.75
+
+        # Compute air and ground times.
+        at = (1 - beta) * 1000
+        gt = beta * 1000
+
+        # Create empty sequence.
+        sequence = []
+
+        # Iterate and generate.
+        for i in range(4):
+            # Compute offset.
+            o = i * 250
+
+            # Compute x and y.
+            x, y = theta * self.b * self.n[i]
+            x += v
+
+            # Generate times.
+            mag = (x**2 + y**2)**(1/2) * 2
+            unit = at / (mag + 2 * lift)
+
+            t0 = 0
+            t1 = gt / 2
+            t2 = t1 + unit * lift
+            t3 = t2 + unit * mag
+            t4 = 1000 - t1
+
+            # Generate points.
+            p0 = (0, 0, ground, t0 + o)
+            p1 = (-x, -y, ground, t1 + o)
+            p2 = (-x, -y, ground + lift, t2 + o)
+            p3 = (x, y, ground + lift, t3 + o)
+            p4 = (x, y, ground, t4 + o)
+
+            # Create and add sequence.
+            s = (p0, p1, p2, p3, p4)
+            sequence.append(s)
+
+        return sequence
