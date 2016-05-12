@@ -531,14 +531,6 @@ class Robot:
         self.body = body
 
 
-class IR(IntEnum):
-    WAIT_ALL = 1        # (Ins)
-    WAIT_GE = 2         # (Ins, Leg, Servo, Deg)
-    WAIT_LE = 3         # (Ins, Leg, Servo, Deg)
-    WAIT_FIN = 4        # (Ins, Leg)
-    MOVE = 5            # (Ins, Leg, (theta1, theta2, theta3), Time)
-
-
 class Agility:
     def __init__(self, robot):
         # Set up robot.
@@ -918,3 +910,4 @@ class Agility:
                 return True
 
             return False
+
