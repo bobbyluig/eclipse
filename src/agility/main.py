@@ -20,11 +20,77 @@ class ServoError(Exception):
 
 
 class Stepper:
-    def __init__(self, c1, c2, steps, direction=1):
+    def __init__(self, c1, c2, steps):
         self.c1 = c1
         self.c2 = c2
         self.steps = steps
-        self.direction = direction
+
+        self.step = 1
+        self.target = 1
+
+    def get_position(self):
+        """
+        Get the stepper's current position in degrees.
+        :return: Output degrees.
+        """
+
+        return self.steps_to_deg(self.step)
+
+    def deg_to_steps(self, deg):
+        """
+        Converts a normalized degree to the nearest integer step.
+        :param deg: The input degrees.
+        :return: The corresponding steps.
+        """
+
+        steps = int(round(deg * (self.steps / 360)))
+
+        if steps == 0:
+            return self.steps
+        else:
+            return steps
+
+    def steps_to_deg(self, steps):
+        """
+        Converts steps to a degree.
+        :param steps: The number of steps.
+        :return: The corresponding angle.
+        """
+
+        return steps * (360 / self.steps)
+
+    def step(self, direction):
+        """
+        Increment step counter.
+        :param direction: 1 steps up, -1 steps down.
+        """
+
+        n = self.step + direction
+
+        if n > self.steps or n < 1:
+            self.step = 1
+        else:
+            self.step = n
+
+    def set_target(self, deg):
+        """
+        Target a degree. Servo will attempt nearest path to target.
+        :param deg: The input degrees.
+        :return: The number of steps, either positive or negative.
+        """
+
+        # Normalize.
+        deg -= 360 * (deg // 360)
+
+        # Compute closest direction.
+        target = deg - self.step
+        delta = (self.steps / 2 - target) % self.steps - (self.steps / 2)
+
+        # Set target.
+        self.target = self.target
+
+        # Return.
+        return delta
 
 
 class Servo:
@@ -636,19 +702,6 @@ class Agility:
         # Execute.
         self.maestro.set_target(servos)
 
-    def scan(self, direction=None):
-        """
-        Scan the head either right or left. Ignores direction
-        :param direction: -1 towards minimum, +1 towards maximum.
-        """
-
-        head = self.robot.head
-        sx = head[0]
-
-        self.maestro.get_position(sx)
-        current = sx.get_position()
-        low, high = sx.get_range()
-
     @staticmethod
     def plot_gait(frames):
         """
@@ -733,7 +786,7 @@ class Agility:
             next_frame = original[(t + 1) % steps]
             off = next_frame[:, 2] > (ground + 1e-6)
 
-            if np.any(off):
+            if np.count_nonzero(off) == 1:
                 # If any legs are off, perform center of mass adjustments accordingly.
                 bias = body.adjust_com(off, next_frame, 0.5)
             else:
@@ -743,15 +796,9 @@ class Agility:
 
         return frames, dt
 
-    def center_head(self):
-        servo = self.robot.head[0]
-        self.maestro.set_speed(servo, 20)
-        servo.set_target(0)
-        self.maestro.set_target(servo)
-
     def move_body(self, x, y, z, t=0):
         legs = self.robot.legs
-        servos = legs[0] + legs[1] + legs[2] + legs[3]
+        servos = self.robot.leg_servos
 
         self.maestro.get_multiple_positions(servos)
 
