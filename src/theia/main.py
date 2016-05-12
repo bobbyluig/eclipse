@@ -260,7 +260,7 @@ class Theia:
 
         if len(areas) < count:
             count = len(areas)
-            logger.info('Requested %s blobs. Only found %s blobs.' % (count, len(areas)))
+            logger.info('Requested {} blobs. Only found {} blobs.'.format(count, len(areas)))
 
         if count == 0:
             return None
