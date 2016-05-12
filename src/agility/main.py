@@ -3,8 +3,6 @@ from agility.pololu.enumeration import uscSerialMode, ChannelMode, HomeMode
 from agility.pololu.usc import Usc
 from finesse.eclipse import Finesse
 from shared.debug import Dummy
-from enum import IntEnum
-from bisect import bisect
 import numpy as np
 import math
 from matplotlib.path import Path
@@ -340,13 +338,6 @@ class Body:
 
         # Get indices.
         air = np.where(off)[0]
-
-        # No static com adjustments can be made for trot.
-        if len(air) != 1:
-            print("Unable to optimize COM!")
-            print(next_frame)
-            return self.default_bias()
-
         air = int(air)
 
         # Relative to absolute.
