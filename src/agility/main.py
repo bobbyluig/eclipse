@@ -230,7 +230,7 @@ class Servo:
 
 
 class Body:
-    def __init__(self, length, width, cx, cy):
+    def __init__(self, length, width, cx, cy, mb, ml):
         """
         Create a body object.
         Note that dimensions are between kinematic roots.
@@ -238,6 +238,8 @@ class Body:
         :param width: Width of body (along y-axis).
         :param cx: Bias of center of mass along x.
         :param cy: Bias of center of mass along y.
+        :param mb: Mass of body.
+        :param ml: Mass of leg.
         """
 
         # Define constants.
@@ -245,6 +247,8 @@ class Body:
         self.width = width
         self.cx = cx
         self.cy = cy
+        self.mb = mb
+        self.ml = ml
         self.com = np.array((cx, cy, 0))
 
         # Compute default bias.
@@ -352,8 +356,10 @@ class Body:
         x1, y1, z1 = p[0]
         x2, y2, z2 = p[1]
 
-        # Define center of mass as (0, 0).
-        cx, cy = 0, 0
+        # Define center of mass as with leg positions.
+        # cx, cy = 0, 0
+        cx, cy = self.ml * np.sum(original[:, :2], axis=0) / (self.ml + self.mb)
+        print(cx, cy)
 
         # Compute Alastair's magic.
         m = (y2 - y1) / (x2 - x1)
