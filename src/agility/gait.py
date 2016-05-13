@@ -1,6 +1,7 @@
 from scipy import interpolate
 import numpy as np
 from functools import partial
+import math
 
 
 class Gait:
@@ -90,6 +91,9 @@ class Linear(Gait):
         p = sequence[:, :3]
         t = sequence[:, 3]
 
+        # Unique time assertion.
+        assert np.array_equiv(np.unique(t), t)
+
         # Interpolate.
         tck, _ = interpolate.splprep(p.T, u=t, s=0, k=1)
         return partial(interpolate.splev, tck=tck)
@@ -106,7 +110,7 @@ class Crawl:
     def __init__(self, body):
         self.body = body
 
-        # Cache reusable variables.
+        # General constants.
         self.b = np.array((body.width, body.length), dtype=float)
         self.n = np.array((
             (-1 , 1),
@@ -114,6 +118,19 @@ class Crawl:
             (-1, -1),
             (1, -1)
         ))
+
+        # Generation constants.
+        self.j0 = 2
+        self.j1 = math.radians(20)
+
+        self.ground = -10
+        self.lift = 2
+        self.beta = 0.8
+        self.t = 2
+
+        # Rotation constants.
+        self.r = self.b / np.linalg.norm(self.b)
+        self.k = 0.5 * np.linalg.norm(self.b)
 
         # Cache for gait objects.
         self.cache = {}
@@ -129,9 +146,12 @@ class Crawl:
         """
         Generate a gait.
         :param forward: Forward speed in cm/second.
-        :param rotation: Rotation speed in degrees/second.
+        :param rotation: Rotation speed in radians/second.
         :return: A Linear object.
         """
+
+        # Check for no solution.
+        # assert not (forward == 0 and rotation == 0)
 
         # Hash table lookup.
         h = hash((forward, rotation))
@@ -140,19 +160,32 @@ class Crawl:
         if h in self.cache:
             return self.cache[h]
 
-        # Compute parameters here.
-        lift = 2
-        ground = -10
-        time = 1000
-        beta = 0.75
-        theta = rotation
-        v = forward
+        # Create t decision array.
+        t = [0, 0]
+
+        # Compute parameters here. It is all Alastair's fault.
+        if forward <= self.j0:
+            t[0] = self.t
+        else:
+            t[0] = self.t * self.j0 / forward
+
+        if rotation <= self.j1:
+            t[1] = self.t
+        else:
+            t[1] = self.t * self.j1 / rotation
+
+        # Pick lower t. Minimize size.
+        t = min(t)
+
+        # Convert /second to /cycle.
+        v = forward * t
+        theta = rotation * t
 
         # Generate sequence.
-        sequence = self.get(theta, v, beta, ground, lift)
+        sequence = self.get(theta, v, self.beta, self.ground, self.lift)
 
         # Create object and add to cache.
-        gait = Linear(sequence, ground, time)
+        gait = Linear(sequence, self.ground, t * 1000)
         self.cache[h] = gait
 
         return gait
@@ -160,20 +193,24 @@ class Crawl:
     def get(self, theta, v, beta, ground, lift):
         """
         Get a sequence. If none exists in cache, generate it.
-        :param theta: Rotation motion.
-        :param v: Forward motion.
+        :param theta: Rotation (radian/iteration).
+        :param v: Forward (cm/iteration).
         :param beta: Amount of time that the leg is on the ground.
         :param ground: Ground plane. Usually negative z.
         :param lift: How much to lift the leg on return.
         :return: A sequence to pass into Linear.
         """
 
-        # Ground time of less than 75% is unstable.
+        # Check for feasibility.
         assert beta >= 0.75
+        assert theta < 50
 
         # Compute air and ground times.
         at = (1 - beta) * 1000
         gt = beta * 1000
+
+        # Forward motion is half on each side.
+        v /= 2
 
         # Create empty sequence.
         sequence = []
@@ -183,8 +220,10 @@ class Crawl:
             # Compute offset.
             o = i * 250
 
-            # Compute x and y.
-            x, y = theta * self.b * self.n[i]
+            # Compute rotation.
+            x, y = self.n[i] * math.tan(0.5 * theta) * self.k * self.r
+
+            # Add in linear motion.
             x += v
 
             # Generate times.
@@ -199,6 +238,7 @@ class Crawl:
 
             # Generate points.
             p0 = (0, 0, ground, t0 + o)
+
             p1 = (-x, -y, ground, t1 + o)
             p2 = (-x, -y, ground + lift, t2 + o)
             p3 = (x, y, ground + lift, t3 + o)

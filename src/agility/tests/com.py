@@ -1,7 +1,7 @@
 from agility.gait import Crawl
 from cerebral.pack.hippocampus import Android
 from agility.main import Agility
-import time
+import time, math
 
 
 # Robot by reference.
@@ -10,7 +10,7 @@ agility = Agility(robot)
 
 # Gait.
 crawl = Crawl(robot.body)
-gait = crawl.generate(3, 0)
+gait = crawl.generate(1, 0)
 
 # Main
 # agility.zero()

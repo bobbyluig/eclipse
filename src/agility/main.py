@@ -247,6 +247,9 @@ class Body:
         self.cy = cy
         self.com = np.array((cx, cy, 0))
 
+        # Compute default bias.
+        self.default = np.zeros((4, 3)) - self.com
+
         # Define quick access array.
         self.j = np.array((
             (2, 1),
@@ -267,8 +270,7 @@ class Body:
         ))
 
         # Dynamic bias.
-        self.bias = None
-        self.default_bias()
+        self.bias = self.default.copy()
 
     def default_bias(self):
         """
@@ -276,7 +278,8 @@ class Body:
         :return: Bias.
         """
 
-        self.bias = np.zeros((4, 3)) - self.com
+        self.bias = self.default.copy()
+
         return self.bias
 
     @staticmethod
@@ -386,12 +389,15 @@ class Body:
         :param x: Motion along x.
         :param y: Motion along y.
         :param z: Motion along z.
+        :return: Bias.
         """
 
         t = np.array([x, y, z], dtype=float)
 
         self.com = np.array([self.cx, self.cy, 0], dtype=float) + t
         self.bias = self.com
+
+        return self.bias
 
     def is_supported(self, vertices):
         """
