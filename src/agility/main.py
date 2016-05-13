@@ -832,16 +832,12 @@ class Agility:
         Configure the Maestro by writing home positions and other configuration data to the device.
         """
 
-        if self.usc is None:
-            logger.warning('Low-level interface not attached!')
-            return
-
         settings = self.usc.getUscSettings()
         settings.serialMode = uscSerialMode.SERIAL_MODE_USB_DUAL_PORT
 
         for leg in self.robot.legs:
             for servo in leg:
-                servo.set_target(0)
+                servo.zero()
                 channel = settings.channelSettings[servo.channel]
                 channel.mode = ChannelMode.Servo
                 channel.homeMode = HomeMode.Goto
@@ -850,7 +846,7 @@ class Agility:
                 channel.maximum = -(-servo.max_pwm // 64) * 64
 
         for servo in self.robot.head:
-            servo.set_target(0)
+            servo.zero()
             channel = settings.channelSettings[servo.channel]
             channel.mode = ChannelMode.Servo
             channel.homeMode = HomeMode.Goto
@@ -859,6 +855,7 @@ class Agility:
             channel.maximum = -(-servo.max_pwm // 64) * 64
 
         self.usc.setUscSettings(settings, False)
+        self.usc.reinitialize(500)
 
     def go_home(self):
         """
