@@ -120,12 +120,12 @@ class Maestro:
             self.usb.write((0x84, stepper.c1, 64, 62))
         else:
             direction = -1
-            self.usb.write((0x84, stepper.c1, 80, 15))
+            self.usb.write((0x84, stepper.c1, 104, 7))
 
         steps = abs(steps)
 
         x = t / (2 * steps) / 1000
-        low_pulse = (0x84, stepper.c2, 80, 15)
+        low_pulse = (0x84, stepper.c2, 104, 7)
         high_pulse = (0x84, stepper.c2, 64, 62)
 
         for i in range(steps):
