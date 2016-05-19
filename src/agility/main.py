@@ -18,10 +18,11 @@ class ServoError(Exception):
 
 
 class Stepper:
-    def __init__(self, c1, c2, steps):
-        self.c1 = c1
-        self.c2 = c2
+    def __init__(self, c1, c2, steps, direction=1):
+        self.c1 = c1  # Direction channel.
+        self.c2 = c2  # Step channel.
         self.steps = steps
+        self.direction = direction
 
         self.step = 1
         self.target = 1
@@ -41,7 +42,7 @@ class Stepper:
         :return: The corresponding steps.
         """
 
-        steps = int(round(deg * (self.steps / 360)))
+        steps = int(round(deg * (self.steps / 360))) * self.direction
 
         if steps == 0:
             return self.steps
@@ -55,9 +56,9 @@ class Stepper:
         :return: The corresponding angle.
         """
 
-        return steps * (360 / self.steps)
+        return steps * (360 / self.steps) * self.direction
 
-    def step(self, direction):
+    def step_one(self, direction):
         """
         Increment step counter.
         :param direction: 1 steps up, -1 steps down.
@@ -70,6 +71,8 @@ class Stepper:
         else:
             self.step = n
 
+
+
     def set_target(self, deg):
         """
         Target a degree. Servo will attempt nearest path to target.
@@ -79,13 +82,11 @@ class Stepper:
 
         # Normalize.
         deg -= 360 * (deg // 360)
+        steps = self.deg_to_steps(deg)
 
         # Compute closest direction.
-        target = deg - self.step
+        target = steps - self.step
         delta = (self.steps / 2 - target) % self.steps - (self.steps / 2)
-
-        # Set target.
-        self.target = self.target
 
         # Return.
         return delta

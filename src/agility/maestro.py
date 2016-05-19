@@ -1,6 +1,7 @@
 import logging
 import os
 import re
+import time
 import serial
 from serial import SerialTimeoutException
 import struct
@@ -95,6 +96,45 @@ class Maestro:
         :return: (lsb, msb)
         """
         return value & 0x7F, (value >> 7) & 0x7F
+
+    ############################################
+    # Begin implementation of digital protocol.
+    ############################################
+
+    def rotate(self, stepper, degrees, t):
+        """
+        Send some pulses in a given time with equal spacing per pulse.
+        Blocking until completion.
+        :param stepper: Stepper object.
+        :param degrees: The number of degrees to turn.
+        :param t: The total time.
+        """
+
+        steps = stepper.deg_to_steps(degrees)
+
+        if steps == 0:
+            return
+
+        if steps > 0:
+            direction = 1
+            self.usb.write((0x84, stepper.c1, 64, 62))
+        else:
+            direction = -1
+            self.usb.write((0x84, stepper.c1, 80, 15))
+
+        steps = abs(steps)
+
+        x = t / (2 * steps) / 1000
+        low_pulse = (0x84, stepper.c2, 80, 15)
+        high_pulse = (0x84, stepper.c2, 64, 62)
+
+        for i in range(steps):
+            self.usb.write(high_pulse)
+            time.sleep(x)
+            self.usb.write(low_pulse)
+            time.sleep(x)
+
+            stepper.step_one(direction)
 
     ##########################################################
     # Begin implementation of buffer-capable compact protocol.
