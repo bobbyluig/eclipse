@@ -6,6 +6,8 @@ from shared.debug import Dummy
 import numpy as np
 import math
 from matplotlib.path import Path
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 import time
 import logging
 import sys
@@ -70,8 +72,6 @@ class Stepper:
             self.step = 1
         else:
             self.step = n
-
-
 
     def set_target(self, deg):
         """
@@ -231,7 +231,7 @@ class Servo:
 
 
 class Body:
-    def __init__(self, length, width, cx, cy, mb, ml):
+    def __init__(self, length, width, cx, cy, cz, mb, ml):
         """
         Create a body object.
         Note that dimensions are between kinematic roots.
@@ -239,6 +239,7 @@ class Body:
         :param width: Width of body (along y-axis).
         :param cx: Bias of center of mass along x.
         :param cy: Bias of center of mass along y.
+        :param cz: Bias of center of mass along z (relative to kinematic-zero plane).
         :param mb: Mass of body.
         :param ml: Mass of leg.
         """
@@ -248,12 +249,16 @@ class Body:
         self.width = width
         self.cx = cx
         self.cy = cy
+        self.cz = cz
         self.mb = mb
         self.ml = ml
-        self.com = np.array((cx, cy, 0))
+        self.com = np.array((cx, cy, cz))
+
+        # Constants of nature (for Los Angeles in cm/sec).
+        self.g = 979.6
 
         # Compute default bias.
-        self.default = np.zeros((4, 3)) - self.com
+        self.bias = np.zeros((4, 3)) - (cx, cy, 0)
 
         # Define quick access array.
         self.j = np.array((
@@ -274,18 +279,13 @@ class Body:
             (-x, -y, 0)
         ))
 
-        # Dynamic bias.
-        self.bias = self.default.copy()
-
-    def default_bias(self):
+    def default_bias(self, *args):
         """
         Zeros vertices and bias.
         :return: Bias.
         """
 
-        self.bias = self.default.copy()
-
-        return self.bias
+        return self.bias.copy()
 
     @staticmethod
     def rotation_matrix(axis, theta):
@@ -335,44 +335,89 @@ class Body:
 
         return vertices
 
-    def adjust_com(self, off, next_frame, sigma):
+    @staticmethod
+    def closest(x1, x2, y1, y2, x, y):
         """
-        Adjust the center of mass based on grounded leg positions.
-        :param off: An array of True or False indicating if a leg is up.
-        :param next_frame: An array representing the next frame (4 x 3).
-        :param sigma: Safety boundary.
-        :return: Bias.
+        Compute the point along the two supporting legs that is closest to the center of mass.
+        This shall be known as "Alastair's magic."
         """
 
-        # Get indices.
+        m = (y2 - y1) / (x2 - x1)
+        b1 = y1 - m * x1
+        b3 = y + (x / m)
+        x0 = (b3 - b1) / (m + 1 / m)
+        y0 = m * x0 + b1
+
+        return x0, y0
+
+    def get_com(self, frame):
+        """
+        Compute the center of mass given the leg positions.
+        :param frame: The leg positions.
+        :return: com -> [cx, cy].
+        """
+
+        com = self.ml * np.sum(frame[:, :2], axis=0) / (self.ml + self.mb)
+        com += self.com[2:]
+
+        return com
+
+    def get_zmp(self, cx, ground, vx):
+        """
+        Compute the zero-moment point.
+        Source: ["Springer Handbook of Robotics", "Reliable Dynamic Motions for a Stiff Quadruped"]
+        Links: "http://dspace.mit.edu/openaccess-disseminate/1721.1/59530"
+        :param cx: Center of mass for configuration along x.
+        :param ground: The ground.
+        :param vx: Velocity of cx along x.
+        :return: zmp -> xz
+        """
+
+        zx = (cx * self.g - (-ground + self.cz) * vx) / self.g
+
+        return zx
+
+    def adjust_crawl(self, curr_frame, next_frame, gait, sigma=0.5):
+        """
+        Adjust the center of mass for the crawl gait.
+        :param curr_frame: The current frame.
+        :param next_frame: An array representing the next frame (4 x 3).
+        :param gait: The gait object.
+        :param sigma: Safety boundary.
+        """
+
+        # Check if optimization is necessary.
+        off = next_frame[:, 2] > (gait.ground + 1e-6)
+
+        if np.count_nonzero(off) == 0:
+            return self.default_bias()
+
+        # Get the leg in the air.
         air = np.where(off)[0]
         air = int(air)
+        legs = self.j[air]
 
         # Relative to absolute.
         original = next_frame + self.vertices
 
         # Get points.
-        legs = self.j[air]
         p = original[legs]
         x1, y1, z1 = p[0]
         x2, y2, z2 = p[1]
 
-        # Define center of mass as with leg positions.
-        # cx, cy = 0, 0
-        cx, cy = self.ml * np.sum(original[:, :2], axis=0) / (self.ml + self.mb)
-        print(cx, cy)
+        # Compute center of mass as with leg positions.
+        cx, cy = self.get_com(original)
 
-        # Compute Alastair's magic.
-        m = (y2 - y1) / (x2 - x1)
-        b1 = y1 - m * x1
-        b3 = cy + (cx / m)
-        x0 = (b3 - b1) / (m + 1 / m)
-        y0 = m * x0 + b1
+        # Get shortest path from zero-moment point to support triangle (perpendicular).
+        x0, y0 = self.closest(x1, x2, y1, y2, cx, cy)
 
-        # Compute theta.
+        # Compute additional safety margin.
+        # d = np.linalg.norm(p[1] - p[0])
+        # rx = sigma * (y2 - y1) / d + x0
+        # ry = sigma * (x2 - x1) / d + y0
+        # rz = 0
+
         theta = math.atan2((y2 - y1), (x2 - x1))
-
-        # Compute rho.
         rx = sigma * math.sin(theta) + x0
         ry = -sigma * math.cos(theta) + y0
         rz = 0
@@ -386,9 +431,52 @@ class Body:
         new = self.tilt_body(new, air, 0.05)
 
         # Compute bias.
-        self.bias = new - original
+        bias = new - original
 
-        return self.bias
+        return bias
+
+    def adjust_trot(self, curr_frame, next_frame, gait):
+        """
+        Adjust the center of mass for the crawl gait.
+        :param curr_frame: The current frame.
+        :param next_frame: An array representing the next frame (4 x 3).
+        :param gait: The gait object.
+        """
+
+        # Check if optimization is necessary.
+        off = next_frame[:, 2] > (gait.ground + 1e-6)
+
+        if np.count_nonzero(off) == 0:
+            return self.default_bias()
+
+        # Get the leg on the ground.
+        legs = np.where(~off)[0]
+
+        # Relative to absolute.
+        original = next_frame + self.vertices
+
+        # Get points.
+        p = original[legs]
+        x1, y1, z1 = p[0]
+        x2, y2, z2 = p[1]
+
+        # Compute center of mass as with leg positions.
+        cx, cy = self.get_com(original)
+
+        # Compute zero-moment point.
+        zx = self.get_zmp(cx, gait.ground, gait.v)
+
+        # Get closest point from center of mass to support.
+        x0, y0 = self.closest(x1, x2, y1, y2, zx, cy)
+
+        # Compute bias.
+        rx = x0 - cx
+        ry = y0 - cy
+        rz = 0
+
+        bias = np.array([rx, ry, rz])
+
+        return bias
 
     def translate(self, x, y, z):
         """
@@ -402,7 +490,6 @@ class Body:
         t = np.array([x, y, z], dtype=float)
 
         self.com = np.array([self.cx, self.cy, 0], dtype=float) + t
-        self.bias = self.com
 
         return self.bias
 
@@ -705,9 +792,6 @@ class Agility:
         :param frames: Frames generated by execute.
         """
 
-        import matplotlib.pyplot as plt
-        from mpl_toolkits.mplot3d import Axes3D
-
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
 
@@ -722,7 +806,7 @@ class Agility:
         ax.plot(x, y, z, marker='o')
         plt.show()
 
-    def execute(self, frames, dt):
+    def execute_forever(self, frames, dt):
         # Get all legs and servos for quick access.
         legs = self.robot.legs
         servos = self.robot.leg_servos
@@ -741,12 +825,26 @@ class Agility:
                 self.maestro.end_together(servos, dt)
                 self.wait(servos)
 
-    def prepare(self, gait, steps=100, debug=False):
+    def execute(self, frames, dt):
+        # Get all legs and servos for quick access.
+        legs = self.robot.legs
+        servos = self.robot.leg_servos
+
+        # Update initial leg locations.
+        self.maestro.get_multiple_positions(servos)
+
+        for frame in frames:
+            for i in range(len(legs)):
+                legs[i].target(frame[i])
+
+            self.maestro.end_together(servos, dt)
+            self.wait(servos)
+
+    def prepare(self, gait, debug=False):
         """
         Execute a given gait class.
         This class is (will be) thread safe.
         :param gait: The gait class.
-        :param steps: Number of steps per iteration of the gait.
         :param debug: Show gait in a graph.
         :return: (frames, dt) ready for execution.
         """
@@ -756,11 +854,21 @@ class Agility:
 
         # Get gait properties.
         ground = gait.ground
+        steps = gait.steps
+        name = gait.name
         dt = gait.time / steps
         ts = np.linspace(0, 1000, num=steps, endpoint=False)
 
         # Get all legs for quick access.
         legs = self.robot.legs
+
+        # Get center of mass adjustment function.
+        if name == 'crawl':
+            adjust = body.adjust_crawl
+        elif name == 'trot':
+            adjust = body.adjust_trot
+        else:
+            adjust = body.default_bias
 
         # Compute shape.
         shape = (steps, len(legs), 3)
@@ -778,15 +886,12 @@ class Agility:
 
         # Iterate and perform static analysis.
         for t in range(steps):
-            # Look ahead to check which legs are about to lift. Compare to original.
+            # Look ahead and pass data to center of mass adjustment algorithms.
+            curr_frame = original[t]
             next_frame = original[(t + 1) % steps]
-            off = next_frame[:, 2] > (ground + 1e-6)
 
-            if np.count_nonzero(off) == 1:
-                # If any legs are off, perform center of mass adjustments accordingly.
-                bias = body.adjust_com(off, next_frame, 0.5)
-            else:
-                bias = body.default_bias()
+            # Perform center of mass adjustments accordingly.
+            bias = adjust(curr_frame, next_frame, gait)
 
             frames[t] -= bias
 

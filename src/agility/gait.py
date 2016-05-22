@@ -5,7 +5,7 @@ import math
 
 
 class Gait:
-    def __init__(self, ground, time):
+    def __init__(self, ground, time, steps, v, r, name):
         # Define the ground (z-axis). Usually a negative float.
         # This helps Agility determine when center of mass should be shifted.
         self.ground = ground
@@ -13,6 +13,18 @@ class Gait:
         # The amount of time the gait should last in ms.
         # Gait is guaranteed to be at least this long. However actual gait will be longer.
         self.time = time
+
+        # The number of optimal steps.
+        self.steps = steps
+
+        # The type of gait.
+        self.name = name
+
+        # Velocity forward (cm/s).
+        self.v = v
+
+        # Rotational velocity (rad/s).
+        self.r = r
 
     def evaluate(self, leg, t):
         """
@@ -34,7 +46,7 @@ class Gait:
 
 
 class Linear(Gait):
-    def __init__(self, sequence, ground, time):
+    def __init__(self, sequence, ground, time, steps, v, r, name):
         """
         A sequence of key frames.
         :param sequence: A sequence of points and times.
@@ -48,7 +60,7 @@ class Linear(Gait):
         ]
         """
 
-        super().__init__(ground, time)
+        super().__init__(ground, time, steps, v, r, name)
 
         # Generate private functions called during evaluation.
         self._fn = [self.interpolate(s) for s in sequence]
@@ -58,12 +70,9 @@ class Linear(Gait):
     def interpolate(sequence):
         """
         Create parametric functions given a sequence of points.
-        :param sequence: A sequence of points.
+        :param sequence: A numpy sequence of points.
         :return: A function to interpolate points at times t.
         """
-
-        # Create numpy array.
-        sequence = np.array(sequence, dtype=float)
 
         # Boundary constraints.
         t = sequence[:, 3]
@@ -106,7 +115,7 @@ class Linear(Gait):
         return p.T
 
 
-class Crawl:
+class Dynamic:
     def __init__(self, body):
         self.body = body
 
@@ -120,17 +129,33 @@ class Crawl:
         ))
 
         # Generation constants.
-        self.j0 = 2
-        self.j1 = math.radians(20)
+        self.j0 = 2                 # Transition from slow forward to fast forward.
+        self.j1 = math.radians(10)  # Transition from slow rotation to fast rotation.
 
-        self.ground = -10
-        self.lift = 2
-        self.beta = 0.8
-        self.t = 2
+        self.ground = -13           # The ground plane.
+        self.lift = 2               # How much to lift each leg.
+        self.beta_crawl = 0.825     # Beta value for crawl gait.
+        self.beta_trot = 0.800      # Beta value for trot gait.
+        self.t = 2                  # Maximum cycle time.
+        self.transition = 5         # Velocity at which to transition from crawl to trot.
+
+        self.max_steps = 100        # Maximum number of dt steps.
+        self.min_steps = 40         # Minimum number of dt steps.
 
         # Rotation constants.
         self.r = self.b / np.linalg.norm(self.b)
         self.k = 0.5 * np.linalg.norm(self.b)
+
+        # Offset constants.
+        self.gait_offset = {
+            '1243': [0, 250, 750, 500],
+            '1423': [0, 500, 750, 250],
+            '1234': [0, 250, 500, 750],
+            '1342': [0, 750, 250, 500],
+            '1324': [0, 500, 250, 750],
+            '1432': [0, 750, 500, 250],
+            'trot': [0, 500, 500, 0]
+        }
 
         # Cache for gait objects.
         self.cache = {}
@@ -151,7 +176,7 @@ class Crawl:
         """
 
         # Check for no solution.
-        # assert not (forward == 0 and rotation == 0)
+        assert not (forward == 0 and rotation == 0)
 
         # Hash table lookup.
         h = hash((forward, rotation))
@@ -160,19 +185,31 @@ class Crawl:
         if h in self.cache:
             return self.cache[h]
 
+        # Check which type of gait to use.
+        if abs(forward) >= self.transition:
+            # Use trot.
+            offset = 'trot'
+            name = 'trot'
+            beta = self.beta_trot
+        else:
+            # Use crawl.
+            offset = '1423'
+            name = 'crawl'
+            beta = self.beta_crawl
+
         # Create t decision array.
         t = [0, 0]
 
         # Compute parameters here. It is all Alastair's fault.
-        if forward <= self.j0:
+        if abs(forward) <= self.j0:
             t[0] = self.t
         else:
-            t[0] = self.t * self.j0 / forward
+            t[0] = self.t * self.j0 / abs(forward)
 
-        if rotation <= self.j1:
+        if abs(rotation) <= self.j1:
             t[1] = self.t
         else:
-            t[1] = self.t * self.j1 / rotation
+            t[1] = self.t * self.j1 / abs(rotation)
 
         # Pick lower t. Minimize size.
         t = min(t)
@@ -181,16 +218,28 @@ class Crawl:
         v = forward * t
         theta = rotation * t
 
+        # Convert t to milliseconds.
+        t *= 1000
+
+        # Compute steps. 10 ms dt maximum.
+        steps = round(int(t / 10))
+
+        if steps > self.max_steps:
+            steps = self.max_steps
+        elif steps < self.min_steps:
+            steps = self.min_steps
+
         # Generate sequence.
-        sequence = self.get(theta, v, self.beta, self.ground, self.lift)
+        sequence = self.get(theta, v, beta, self.ground, self.lift, offset)
+        sequence = np.array(sequence, dtype=float)
 
         # Create object and add to cache.
-        gait = Linear(sequence, self.ground, t * 1000)
+        gait = Linear(sequence, self.ground, t, steps, forward, rotation, name)
         self.cache[h] = gait
 
         return gait
 
-    def get(self, theta, v, beta, ground, lift):
+    def get(self, theta, v, beta, ground, lift, offset):
         """
         Get a sequence. If none exists in cache, generate it.
         :param theta: Rotation (radian/iteration).
@@ -198,12 +247,9 @@ class Crawl:
         :param beta: Amount of time that the leg is on the ground.
         :param ground: Ground plane. Usually negative z.
         :param lift: How much to lift the leg on return.
+        :param offset: Offset order. (Gait pattern).
         :return: A sequence to pass into Linear.
         """
-
-        # Check for feasibility.
-        assert beta >= 0.75
-        assert theta < 50
 
         # Compute air and ground times.
         at = (1 - beta) * 1000
@@ -212,13 +258,16 @@ class Crawl:
         # Forward motion is half on each side.
         v /= 2
 
+        # Get offset.
+        offset = self.gait_offset[offset]
+
         # Create empty sequence.
         sequence = []
 
         # Iterate and generate.
         for i in range(4):
             # Compute offset.
-            o = i * 250
+            o = offset[i]
 
             # Compute rotation.
             x, y = self.n[i] * math.tan(0.5 * theta) * self.k * self.r
