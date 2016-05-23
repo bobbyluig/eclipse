@@ -1,82 +1,94 @@
+from cerebral import logger as l
+
+import Pyro4
+from cerebral.nameserver import ports
+from agility.gait import Dynamic
 from cerebral.pack.hippocampus import Android
-from cerebral.pack.commands import Commands
-from agility.main import Agility, IR
-from finesse.eclipse import Finesse
-from threading import Thread
-import time
+from agility.main import Agility
+from threading import Thread, Lock, Event
+
+# Configure pyro.
+Pyro4.config.SERIALIZERS_ACCEPTED = frozenset(['pickle', 'serpent'])
 
 
-# Define agility.
-robot = Android.robot
-agility = Agility(robot)
+class Movement:
+    def __init__(self):
+        self.robot = Android.robot
+        self.agility = Agility(self.robot)
+        self.gait = Dynamic(self.robot.body)
 
-# Threading variables.
-run = False
+        # Lock and event.
+        self.lock = Lock()
+        self.event = Event()
 
+        # Target vector
+        self.vector = (0, 0)
 
-class Target:
-    @staticmethod
-    def crawl():
-        global run
+        # Cache.
+        self.cache = {}
 
-        tau = 1000
-        beta = 0.8
-        x, y = agility.generate_crawl(tau, beta)
-        intro, main = agility.generate_ir(tau, x, y)
-        agility.execute_ir(intro)
+        # Thread.
+        self.thread = Thread(target=self.run)
 
-        while run:
-            agility.execute_ir(main)
+    def start(self):
+        try:
+            self.event.clear()
+            self.thread.start()
+            return True
+        except RuntimeError:
+            return False
 
-    @staticmethod
-    def pushup():
-        global run
+    def stop(self):
+        self.vector = (0, 0)
+        self.event.set()
+        self.thread.join()
+        self.thread = Thread(target=self.run)
 
-        instructions = []
-        targets = [
-            (0, 0, -8),
-            (0, 0, -13)
-        ]
-        tau = 750
+        return True
 
-        for target in targets:
-            for leg in range(4):
-                angles = Finesse.inverse_pack(robot.legs[leg].lengths, target)
-                instructions.append((IR.MOVE, leg, angles, tau/len(targets)))
-            instructions.append((IR.WAIT_ALL,))
+    def zero(self):
+        self.stop()
 
-        while run:
-            agility.execute_ir(instructions)
+        with self.lock:
+            self.agility.zero()
 
-    @staticmethod
-    def transform():
-        global run
+        return True
 
-        instructions = []
-        target = (-14, 0, 0)
+    def set_target(self, target):
+        self.vector = target
 
-        for leg in range(4):
-            angles = Finesse.inverse_pack(robot.legs[leg].lengths, target)
-            instructions.append((IR.MOVE, leg, angles, 0))
+        return True
 
-        instructions.append((IR.WAIT_ALL,))
+    def run(self):
+        while not self.event.is_set():
+            vector = self.vector
 
-        agility.execute_ir(instructions)
+            if vector == (0, 0):
+                return
 
-        run = False
+            id = hash(vector)
 
-    @staticmethod
-    def go_home():
-        global run
+            if id in self.cache:
+                frames, dt = self.cache[id]
+            else:
+                points = self.gait.generate(*vector)
+                frames, dt = self.agility.prepare(points)
+                self.cache[id] = (frames, dt)
 
-        agility.zero()
-        run = False
-
-# Global thread.
-thread = Thread()
-
-# Worker is ready.
-run = True
-Target.go_home()
+            with self.lock:
+                self.agility.execute(frames, dt)
 
 
+movement = Movement()
+
+
+if __name__ == '__main__':
+    # Create a daemon.
+    port = ports['worker1']
+    daemon = Pyro4.Daemon('localhost', port)
+
+    # Register all objects.
+    daemon.register(movement, 'movement')
+
+    # Start event loop.
+    daemon.requestLoop()

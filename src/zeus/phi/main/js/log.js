@@ -16,10 +16,8 @@ ctrlLog.log = function (logger, message, level) {
     if (log.scroll) {
         var display = selector.find('div.scrollable');
         display = $(display);
-        display.scrollTop(display.prop("scrollHeight"));
+        display.scrollTop(display.prop('scrollHeight'));
     }
-    
-    ctrlSpeech.speak(settings.speech.phi, message);
 
     /*
     selector.find('.item.hidden').each(function () {
@@ -57,7 +55,6 @@ ctrlLog.getLogger = function (logger) {
     if ($.type(logger) === 'string') {
         var query = '.logger[data-name="' + logger + '"]';
         return $(query);
-
     }
     else {
         return logger;

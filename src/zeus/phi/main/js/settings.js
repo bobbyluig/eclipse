@@ -10,12 +10,6 @@ defaults.com = {
     retry_delay_growth: 1.1
 };
 
-defaults.style = {
-    color: 0,
-    name: 'EDD 2016',
-    link: 'http://google.com'
-};
-
 defaults.speech = {
     volume: 1,
     rate: 1,
@@ -24,8 +18,4 @@ defaults.speech = {
     robot1: 'native',
     robot2: 'native',
     robot3: 'native'
-};
-
-defaults.mission = {
-
 };

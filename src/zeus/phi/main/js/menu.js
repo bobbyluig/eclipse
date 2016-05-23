@@ -1,19 +1,3 @@
-ctrlMenu.changeTeam = function () {
-    var functions = {};
-    var context = {run: functions};
-
-    functions.teamRed = function () {
-        settings.style.color = 1;
-        settings.style.name = 'Eclipse Technologies';
-    };
-    functions.teamBlue = function () {
-        settings.style.color = 2;
-        settings.style.name = 'Paragon Industries';
-    };
-
-    ctrlModal.modal('team', false, context);
-};
-
 ctrlMenu.resetOne = function (category) {
     for (var property in settings[category]) {
         if (settings[category].hasOwnProperty(property) && defaults[category].hasOwnProperty(property)) {

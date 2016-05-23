@@ -30,6 +30,7 @@ ctrlWamp.connect = function () {
         ctrlLog.log('system', 'Connected!', 1);
 
         ctrlRpc.registerAll();
+        ctrlRpc.subLogger('pack1');
     };
 
     this.connection.onclose = function (reason, details) {

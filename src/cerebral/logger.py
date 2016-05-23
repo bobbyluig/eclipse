@@ -10,7 +10,8 @@ class Handler(QueueHandler):
     """
 
     def prepare(self, record):
-        msg = self.format(record)
+        # msg = self.format(record)
+        msg = (record.levelno, record.msg)
         return msg
 
 # Configure pyro.

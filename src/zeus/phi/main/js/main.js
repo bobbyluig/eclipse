@@ -15,22 +15,28 @@ var ctrlRpc = {};
 var ctrlLog = {};
 var ctrlSpeech = {};
 
+// Status resets.
+state.com = {
+    state: 'closed'
+};
+
 // Main
 $(document).ready(function() {
     // Begin loading.
-    ctrlLoad.loadTabs();
     ctrlMenu.loadSettings();
 
     $('.ui.dropdown').dropdown({
         action: 'hide'
     });
 
-    $('.menu .item').tab();
+    var body = $('body');
 
-    rivets.bind($('#menu'), {style: settings.style, menu: ctrlMenu, state: state});
+    body.find('.logger').each(function() {
+        var logger = $(this);
+        ctrlLog.init(logger);
+    });
 
-    // End loading.
-    $('.dimmer.active').removeClass('active');
+    rivets.bind(body, {menu: ctrlMenu, state: state, wamp: ctrlWamp});
 });
 
 // Prevent accidental closing.

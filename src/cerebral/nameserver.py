@@ -15,6 +15,6 @@ def lookup(process, id):
     """
 
     port = ports[process]
-    uri = 'PYRO:{}@localhost:{}'.format(process, id)
+    uri = 'PYRO:{}@localhost:{}'.format(id, port)
 
     return uri

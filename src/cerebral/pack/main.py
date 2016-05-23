@@ -15,6 +15,8 @@ from concurrent.futures import ThreadPoolExecutor
 
 from cerebral.pack.hippocampus import Crossbar
 
+import Pyro4
+from cerebral.nameserver import lookup
 
 logger = logging.getLogger('universe')
 
@@ -55,8 +57,9 @@ class Cerebral(ApplicationSession):
 
     async def onJoin(self, details):
         logger.info('Joined "%s" realm.' % self.config.realm)
+        print('Connected!')
         self.register(self)
-        await self.loop.run_in_executor(None, self.watch_logging)
+        self.executor.submit(self.watch_logging)
 
     def onDisconnect(self):
         logger.info('Connection lost!')
@@ -66,13 +69,13 @@ class Cerebral(ApplicationSession):
     #####################
 
     def watch_logging(self):
-        queue = self.manager.get('queue.logging')
+        uri = lookup('database', 'logging')
+        queue = Pyro4.Proxy(uri)
 
         while True:
             message = queue.get()
             topic = '{}.log'.format(Crossbar.prefix)
-            self.publish(topic, message)
-            print(message)
+            self.publish(topic, *message)
 
 
     ############

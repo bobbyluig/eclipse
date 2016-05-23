@@ -10,21 +10,13 @@
     <link rel="stylesheet" type="text/css" href="css/phi.css">
 </head>
 <body>
-<div id="menu" class="ui inverted top attached menu" rv-class-red="style.color |=== 1" rv-class-blue="style.color |=== 2">
+<div id="menu" class="ui inverted top attached menu blue">
     <a class="ui icon item">
         <i class="home icon"></i>
     </a>
-    <div id="views" class="ui dropdown icon item">
-        <i class="browser icon"></i>
-        <div class="menu">
-            <div class="item" data-tab="first">View 1</div>
-            <div class="item" data-tab="second">View 2</div>
-        </div>
-    </div>
     <div class="ui dropdown icon item">
         <i class="options icon"></i>
         <div class="menu">
-            <div rv-on-click="menu.changeTeam" class="item">Change Team</div>
             <div rv-on-click="menu.comSettings" class="item" rv-class-disabled="state.com.state |!== 'closed'">Communication</div>
             <div rv-on-click="menu.speechSettings" class="item" >Speech</div>
             <div rv-on-click="menu.saveSettings" class="item">Save Settings</div>
@@ -33,19 +25,106 @@
     </div>
 
     <div class="right menu">
-        <a class="item name" rv-text="style.name" rv-href="style.link" target="_blank"></a>
+        <a class="item name" href="https://google.com/" target="_blank">Penumbra</a>
     </div>
 </div>
 
-<div class="ui active dimmer">
-    <div class="ui large text loader">
-        Loading System
+<div class="ui bottom attached segment">
+    <div class="ui two column stackable grid">
+        <div class="stretched row">
+            <div class="column">
+                <div class="ui raised segments logger" data-name="system" rv-on-click="log.zero">
+                    <div class="ui segment">
+                        <div class="ui middle aligned two column grid">
+                            <div class="left aligned column">
+                                <div class="ui large purple label">
+                                    System Log
+                                    <div class="detail">{{ log.new }}</div>
+                                </div>
+                            </div>
+                            <div class="right aligned column">
+                                <div class="ui compact icon button" rv-on-click="log.changeScroll">
+                                    <i class="icon" rv-class-play="log.scroll | !" rv-class-pause="log.scroll"></i>
+                                </div>
+                                <div class="ui compact button" rv-on-click="log.clear">
+                                    Clear
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="ui segment scrollable blue">
+                        <div class="ui divided items">
+                            <div class="item" rv-each-event="log.events">
+                                <div class="middle aligned content">
+                                    <i class="grey info icon" rv-if="event.level |=== 0"></i>
+                                    <i class="green checkmark icon" rv-if="event.level |=== 1"></i>
+                                    <i class="orange warning sign icon" rv-if="event.level |=== 2"></i>
+                                    <i class="red remove icon" rv-if="event.level |=== 3"></i>
+                                    {{ event.message }} <span class="light">({{ event.time }})</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="column">
+                <div class="ui raised segments rv">
+                    <div class="ui segment">
+                        <div class="ui large purple label">
+                            Communication Controls
+                        </div>
+                    </div>
+                    <div class="ui segment blue">
+                        <div class="ui button" rv-on-click="wamp.connect">
+                            Connect to Server
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="stretched row">
+            <div class="column">
+                <div class="ui raised segments logger" data-name="pack1" rv-on-click="log.zero">
+                    <div class="ui segment">
+                        <div class="ui middle aligned two column grid">
+                            <div class="left aligned column">
+                                <div class="ui large purple label">
+                                    Pack 1 Log
+                                    <div class="detail">{{ log.new }}</div>
+                                </div>
+                            </div>
+                            <div class="right aligned column">
+                                <div class="ui compact icon button" rv-on-click="log.changeScroll">
+                                    <i class="icon" rv-class-play="log.scroll | !" rv-class-pause="log.scroll"></i>
+                                </div>
+                                <div class="ui compact button" rv-on-click="log.clear">
+                                    Clear
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="ui segment scrollable blue">
+                        <div class="ui divided items">
+                            <div class="item" rv-each-event="log.events">
+                                <div class="middle aligned content">
+                                    <i class="grey info icon" rv-if="event.level |== 0"></i>
+                                    <i class="green checkmark icon" rv-if="event.level |=== 1"></i>
+                                    <i class="orange warning sign icon" rv-if="event.level |=== 2"></i>
+                                    <i class="red remove icon" rv-if="event.level |=== 3"></i>
+                                    {{ event.message }} <span class="light">({{ event.time }})</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
-
-<div class="ui bottom attached tab segment active" data-tab="home"></div>
-<div class="ui bottom attached tab segment" data-tab="first"></div>
-<div class="ui bottom attached tab segment" data-tab="second"></div>
 
 <script src="js/jquery.min.js"></script>
 <script src="js/autobahn.min.js"></script>

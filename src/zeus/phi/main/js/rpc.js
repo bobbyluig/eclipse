@@ -25,7 +25,28 @@ ctrlRpc.basicDecision = function (args, kwargs, details) {
     return d.promise;
 };
 
-ctrlRpc.registerAll = function() {
+ctrlRpc.registerAll = function () {
     wamp.register('zeus.phi.basic_decision', ctrlRpc.basicDecision);
     ctrlLog.log('system', 'Registered all procedures.', 1);
+};
+
+ctrlRpc.subLogger = function (prefix) {
+    var logger = ctrlLog.getLogger(prefix);
+
+    wamp.subscribe(prefix + '.log', function(data) {
+        var level = data[0];
+        var msg = data[1];
+
+        if (level === 40 || level === 50) {
+            level = 3;
+        }
+        else if (level === 30) {
+            level = 2;
+        }
+        else {
+            level = 0;
+        }
+
+        ctrlLog.log(logger, msg, level);
+    });
 };

@@ -254,12 +254,6 @@ class Body:
         self.ml = ml
         self.com = np.array((cx, cy, cz))
 
-        # Constants of nature (for Los Angeles in cm/sec).
-        self.g = 979.6
-
-        # Compute default bias.
-        self.bias = np.zeros((4, 3)) - (cx, cy, 0)
-
         # Define quick access array.
         self.j = np.array((
             (2, 1),
@@ -279,13 +273,19 @@ class Body:
             (-x, -y, 0)
         ))
 
-    def default_bias(self, *args):
+    def default_bias(self, next_frame):
         """
         Zeros vertices and bias.
         :return: Bias.
         """
 
-        return self.bias.copy()
+        # Relative to absolute.
+        original = next_frame + self.vertices
+
+        # Get com.
+        cx, cy = self.get_com(original)
+
+        return np.array((-cx, -cx, 0))
 
     @staticmethod
     def rotation_matrix(axis, theta):
@@ -357,30 +357,14 @@ class Body:
         :return: com -> [cx, cy].
         """
 
-        com = self.ml * np.sum(frame[:, :2], axis=0) / (self.ml + self.mb)
-        com += self.com[2:]
+        com = self.ml * np.sum(frame[:, :2], axis=0) * 0.5 / (self.ml + self.mb)
+        com += self.com[:2]
 
         return com
 
-    def get_zmp(self, cx, ground, vx):
-        """
-        Compute the zero-moment point.
-        Source: ["Springer Handbook of Robotics", "Reliable Dynamic Motions for a Stiff Quadruped"]
-        Links: "http://dspace.mit.edu/openaccess-disseminate/1721.1/59530"
-        :param cx: Center of mass for configuration along x.
-        :param ground: The ground.
-        :param vx: Velocity of cx along x.
-        :return: zmp -> xz
-        """
-
-        zx = (cx * self.g - (-ground + self.cz) * vx) / self.g
-
-        return zx
-
-    def adjust_crawl(self, curr_frame, next_frame, gait, sigma=0.5):
+    def adjust_crawl(self, next_frame, gait, sigma=0.5):
         """
         Adjust the center of mass for the crawl gait.
-        :param curr_frame: The current frame.
         :param next_frame: An array representing the next frame (4 x 3).
         :param gait: The gait object.
         :param sigma: Safety boundary.
@@ -390,7 +374,7 @@ class Body:
         off = next_frame[:, 2] > (gait.ground + 1e-6)
 
         if np.count_nonzero(off) == 0:
-            return self.default_bias()
+            return self.default_bias(next_frame)
 
         # Get the leg in the air.
         air = np.where(off)[0]
@@ -422,7 +406,7 @@ class Body:
         ry = -sigma * math.cos(theta) + y0
         rz = 0
 
-        rho = np.array([rx, ry, rz])
+        rho = np.array((rx, ry, rz))
 
         # Adjust vertices.
         new = original + rho
@@ -435,10 +419,9 @@ class Body:
 
         return bias
 
-    def adjust_trot(self, curr_frame, next_frame, gait):
+    def adjust_trot(self, next_frame, gait):
         """
         Adjust the center of mass for the crawl gait.
-        :param curr_frame: The current frame.
         :param next_frame: An array representing the next frame (4 x 3).
         :param gait: The gait object.
         """
@@ -447,7 +430,7 @@ class Body:
         off = next_frame[:, 2] > (gait.ground + 1e-6)
 
         if np.count_nonzero(off) == 0:
-            return self.default_bias()
+            return self.default_bias(next_frame)
 
         # Get the leg on the ground.
         legs = np.where(~off)[0]
@@ -463,18 +446,15 @@ class Body:
         # Compute center of mass as with leg positions.
         cx, cy = self.get_com(original)
 
-        # Compute zero-moment point.
-        zx = self.get_zmp(cx, gait.ground, gait.v)
-
         # Get closest point from center of mass to support.
-        x0, y0 = self.closest(x1, x2, y1, y2, zx, cy)
+        x0, y0 = self.closest(x1, x2, y1, y2, cx, cy)
 
         # Compute bias.
         rx = x0 - cx
         ry = y0 - cy
         rz = 0
 
-        bias = np.array([rx, ry, rz])
+        bias = np.array((rx, ry, rz))
 
         return bias
 
@@ -487,11 +467,10 @@ class Body:
         :return: Bias.
         """
 
-        t = np.array([x, y, z], dtype=float)
+        t = np.array((x, y, z), dtype=float)
+        bias = np.array((self.cx, self.cy, 0), dtype=float) + t
 
-        self.com = np.array([self.cx, self.cy, 0], dtype=float) + t
-
-        return self.bias
+        return bias
 
     def is_supported(self, vertices):
         """
@@ -840,6 +819,8 @@ class Agility:
             self.maestro.end_together(servos, dt)
             self.wait(servos)
 
+    def 
+
     def prepare(self, gait, debug=False):
         """
         Execute a given gait class.
@@ -853,7 +834,7 @@ class Agility:
         body = self.robot.body
 
         # Get gait properties.
-        ground = gait.ground
+        smooth = gait.smooth
         steps = gait.steps
         name = gait.name
         dt = gait.time / steps
@@ -881,19 +862,50 @@ class Agility:
         if debug:
             self.plot_gait(frames)
 
-        # Copy frames for comparison.
+        # Copy frames for comparison and smoothing.
         original = frames.copy()
+
+        # Define number inserted.
+        inserted = 0
 
         # Iterate and perform static analysis.
         for t in range(steps):
             # Look ahead and pass data to center of mass adjustment algorithms.
-            curr_frame = original[t]
             next_frame = original[(t + 1) % steps]
 
             # Perform center of mass adjustments accordingly.
-            bias = adjust(curr_frame, next_frame, gait)
+            bias = adjust(next_frame, gait)
+            frames[t + inserted] -= bias
 
-            frames[t] -= bias
+            '''
+            # If no smoothing desired, continue.
+            if smooth == 0 or t == 0:
+                continue
+
+            # Find delta.
+            curr = frames[t + inserted]
+            prev = frames[t + inserted - 1]
+            delta = curr - prev
+
+            # Find the maximum distance traveled by leg.
+            dst = np.linalg.norm(delta, axis=1)
+            max_dst = np.max(dst)
+
+            # Smooth.
+            k = int((max_dst / dt * 1000) // smooth)
+
+            if k > 0:
+                addition = []
+
+                d = delta / (k + 1)
+
+                for i in range(1, k + 1):
+                    addition.append(prev + delta * i)
+
+                frames = np.insert(frames, t + inserted, addition, axis=0)
+
+                inserted += len(addition)
+            '''
 
         return frames, dt
 
