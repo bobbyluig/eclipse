@@ -525,7 +525,7 @@ class Leg:
             self.servos[2].set_target(angles[2])
             self.position = point
         except (ServoError, ValueError, ZeroDivisionError):
-            logger.error('Leg {} is unable to reach point ({0:.2f}, {0:.2f}, {0:.2f})'.format(self.index, *point))
+            logger.error('Leg {} is unable to reach point ({}, {}, {})'.format(self.index, *point))
             return False
 
         return True
@@ -541,7 +541,7 @@ class Leg:
             self.servos[1].set_target(angle[1])
             self.servos[2].set_target(angle[2])
         except ServoError:
-            logger.error('Leg {} is unable to reach angle ({0:.2f}, {0:.2f}, {0:.2f})'.format(self.index, *angle))
+            logger.error('Leg {} is unable to reach angle ({}, {}, {})'.format(self.index, *angle))
             return False
 
         return True
@@ -954,7 +954,7 @@ class Agility:
         :param target: The target point.
         :param lift: How much to lift.
         :param t: The time in milliseconds.
-        :return: np.array([(x1, y1, z1), ...])
+        :return: (frames, dt)
         """
 
         # Get all legs and servos for quick access.
@@ -966,10 +966,12 @@ class Agility:
 
         # Get pose of all legs.
         pose = self.get_pose()
-        print(pose)
+
+        # Get "ground".
+        ground = np.min(pose[:, 2])
 
         # Compute steps.
-        steps = t / 50
+        steps = int(round(t / 50))
         if steps > 100:
             steps = 100
         elif steps < 20:
@@ -998,8 +1000,18 @@ class Agility:
         p = np.array(interpolate.splev(ts, tck))
         p = p.T
 
-        print(p)
+        # Fill in non-motion frames.
+        f = [None] * 4
+        f[index] = p
 
+        for i in range(4):
+            if i != index:
+                l = pose[i].reshape((1, 3))
+                f[i] = np.repeat(l, steps + 1, axis=0)
+
+        frames = np.concatenate(f).reshape((steps + 1, 4, 3), order='F')
+
+        return self.prepare_frames(frames, dt, ground)
 
     def prepare_frames(self, frames, dt, ground):
         """
