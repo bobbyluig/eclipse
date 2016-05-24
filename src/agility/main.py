@@ -525,7 +525,7 @@ class Leg:
             self.servos[2].set_target(angles[2])
             self.position = point
         except (ServoError, ValueError, ZeroDivisionError):
-            logger.error('Leg {} is unable to reach point ({}, {}, {})'.format(self.index, *point))
+            logger.error('Leg {} is unable to reach point ({:.2f}, {:.2f}, {:.2f})'.format(self.index, *point))
             return False
 
         return True
@@ -541,7 +541,7 @@ class Leg:
             self.servos[1].set_target(angle[1])
             self.servos[2].set_target(angle[2])
         except ServoError:
-            logger.error('Leg {} is unable to reach angle ({}, {}, {})'.format(self.index, *angle))
+            logger.error('Leg {} is unable to reach angle ({:.2f}, {:.2f}, {:.2f})'.format(self.index, *angle))
             return False
 
         return True

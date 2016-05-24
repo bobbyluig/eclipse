@@ -49,7 +49,7 @@ apt-get -y update && apt-get -y upgrade
 apt-get -y install apt-utils
 
 # Get required software.
-apt-get -y install p7zip-full nano wireless-tools wpasupplicant usbutils wget connman \
+apt-get -y install p7zip-full nano wireless-tools wpasupplicant usbutils wget rfkill \
 libusb-dev ca-certificates linux-headers-odrobian-s905 \
 firmware-linux firmware-linux-free firmware-linux-nonfree firmware-realtek \
 cmake pkg-config s905-zram
