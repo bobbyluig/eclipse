@@ -4,30 +4,6 @@ from math import sin, cos, asin, acos, atan2, pi, degrees
 
 class Finesse:
     @staticmethod
-    def forward_wolf(lengths, angles):
-        """
-        Computes the forward kinematics for the back legs of Alpha.
-        :param lengths: An array of lengths (l1, l2).
-        :param angles: An array of angles (theta1, theta2, theta3).
-        :return: (x3, y3, z3)
-        """
-
-        l1, l2 = lengths
-        theta1, theta2, theta3 = angles
-
-        x1, y1, z1 = 0, 0, 0
-
-        x2 = -l1 * sin(theta1)
-        y2 = 0
-        z2 = -l1 * cos(theta1)
-
-        x3 = x2 - l2 * cos(theta1) * cos(theta2) * sin(theta3) - l2 * cos(theta3) * sin(theta1)
-        y3 = y2 - l2 * sin(theta2) * sin(theta3)
-        z3 = z2 + l2 * sin(theta1) * sin(theta3) * cos(theta2) - l2 * cos(theta1) * cos(theta3)
-
-        return x3, y3, z3
-
-    @staticmethod
     def forward_pack(lengths, angles):
         """
         Computes the forward kinematics for the legs of DOG.

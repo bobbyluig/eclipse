@@ -1,6 +1,7 @@
 from agility.maestro import Maestro
 from agility.pololu.enumeration import uscSerialMode, ChannelMode, HomeMode
 from agility.pololu.usc import Usc
+from scipy import interpolate
 from finesse.eclipse import Finesse
 from shared.debug import Dummy
 import numpy as np
@@ -182,7 +183,6 @@ class Servo:
 
         deg = self.maestro_to_deg(self.pwm)
         deg = (deg - self.bias) * self.direction
-
         return deg
 
     def at_target(self):
@@ -357,24 +357,18 @@ class Body:
         :return: com -> [cx, cy].
         """
 
-        com = self.ml * np.sum(frame[:, :2], axis=0) * 0.5 / (self.ml + self.mb)
+        com = self.ml * np.sum(frame[:, :2], axis=0) / (self.ml + self.mb)
         com += self.com[:2]
 
         return com
 
-    def adjust_crawl(self, next_frame, gait, sigma=0.5):
+    def adjust_crawl(self, off, next_frame, sigma=0.5):
         """
         Adjust the center of mass for the crawl gait.
+        :param off: An array defining which legs are in the air.
         :param next_frame: An array representing the next frame (4 x 3).
-        :param gait: The gait object.
         :param sigma: Safety boundary.
         """
-
-        # Check if optimization is necessary.
-        off = next_frame[:, 2] > (gait.ground + 1e-6)
-
-        if np.count_nonzero(off) == 0:
-            return self.default_bias(next_frame)
 
         # Get the leg in the air.
         air = np.where(off)[0]
@@ -396,11 +390,6 @@ class Body:
         x0, y0 = self.closest(x1, x2, y1, y2, cx, cy)
 
         # Compute additional safety margin.
-        # d = np.linalg.norm(p[1] - p[0])
-        # rx = sigma * (y2 - y1) / d + x0
-        # ry = sigma * (x2 - x1) / d + y0
-        # rz = 0
-
         theta = math.atan2((y2 - y1), (x2 - x1))
         rx = sigma * math.sin(theta) + x0
         ry = -sigma * math.cos(theta) + y0
@@ -419,18 +408,12 @@ class Body:
 
         return bias
 
-    def adjust_trot(self, next_frame, gait):
+    def adjust_trot(self, off, next_frame):
         """
         Adjust the center of mass for the crawl gait.
+        :param off: An array defining which legs are in the air.
         :param next_frame: An array representing the next frame (4 x 3).
-        :param gait: The gait object.
         """
-
-        # Check if optimization is necessary.
-        off = next_frame[:, 2] > (gait.ground + 1e-6)
-
-        if np.count_nonzero(off) == 0:
-            return self.default_bias(next_frame)
 
         # Get the leg on the ground.
         legs = np.where(~off)[0]
@@ -457,6 +440,28 @@ class Body:
         bias = np.array((rx, ry, rz))
 
         return bias
+
+    def adjust(self, off, next_frame, count=None):
+        """
+        Adjust the center of mass.
+        :param off: An array indicating whether the leg is in the air.
+        :param next_frame: The next frame.
+        :param count: The number of legs in the air.
+        :return: The bias.
+        """
+
+        # Check which (if any) optimization is needed.
+        if count is None:
+            count = np.count_nonzero(off)
+
+        if count == 1:
+            # Crawl gait.
+            return self.adjust_crawl(off, next_frame)
+        elif count == 2 and off[1] == off[2]:
+            # Trot gait.
+            return self.adjust_trot(off, next_frame)
+        else:
+            return self.default_bias(next_frame)
 
     def translate(self, x, y, z):
         """
@@ -506,7 +511,7 @@ class Leg:
 
         self.position = None
 
-    def target(self, point):
+    def target_point(self, point):
         """
         Target a point in space.
         :param point: (x, y, z).
@@ -520,9 +525,35 @@ class Leg:
             self.servos[2].set_target(angles[2])
             self.position = point
         except (ServoError, ValueError, ZeroDivisionError):
+            logger.error('Leg {} is unable to reach point ({0:.2f}, {0:.2f}, {0:.2f})'.format(self.index, *point))
             return False
 
         return True
+
+    def target_angle(self, angle):
+        """
+        Target an angle configuration.
+        :param angle: (theta1, theta2, theta3).
+        :return: True if target is reachable, else False.
+        """
+        try:
+            self.servos[0].set_target(angle[0])
+            self.servos[1].set_target(angle[1])
+            self.servos[2].set_target(angle[2])
+        except ServoError:
+            logger.error('Leg {} is unable to reach angle ({0:.2f}, {0:.2f}, {0:.2f})'.format(self.index, *angle))
+            return False
+
+        return True
+
+    def get_angles(self, point):
+        """
+        Convert a point to angles. Will throw exceptions.
+        :param point: (x, y, z).
+        :return: The angles.
+        """
+
+        return self.ik_solver(self.lengths, point)
 
     def get_position(self):
         """
@@ -530,10 +561,12 @@ class Leg:
         """
 
         a = self.servos[0].get_position()
-        b = self.servos[0].get_position()
-        c = self.servos[0].get_position()
+        b = self.servos[1].get_position()
+        c = self.servos[2].get_position()
 
         self.position = self.fk_solver(self.lengths, (a, b, c))
+
+        return self.position
 
     def __getitem__(self, key):
         return self.servos[key]
@@ -799,12 +832,12 @@ class Agility:
         while True:
             for frame in frames:
                 for i in range(len(legs)):
-                    legs[i].target(frame[i])
+                    legs[i].target_point(frame[i])
 
                 self.maestro.end_together(servos, dt)
                 self.wait(servos)
 
-    def execute(self, frames, dt):
+    def execute_frames(self, frames, dt):
         # Get all legs and servos for quick access.
         legs = self.robot.legs
         servos = self.robot.leg_servos
@@ -814,17 +847,202 @@ class Agility:
 
         for frame in frames:
             for i in range(len(legs)):
-                legs[i].target(frame[i])
+                legs[i].target_point(frame[i])
 
             self.maestro.end_together(servos, dt)
             self.wait(servos)
 
-    def 
+    def execute_angles(self, angles, dt):
+        # Get all legs and servos for quick access.
+        legs = self.robot.legs
+        servos = self.robot.leg_servos
 
-    def prepare(self, gait, debug=False):
+        # Update initial leg locations.
+        self.maestro.get_multiple_positions(servos)
+
+        for angle in angles:
+            for i in range(len(legs)):
+                legs[i].target_angle(angle)
+
+            self.maestro.end_together(servos, dt)
+            self.wait(servos)
+
+    def anglify(self, frames):
         """
-        Execute a given gait class.
-        This class is (will be) thread safe.
+        Converts frames generated by self.prepare to angles.
+        :param frames: The input frames.
+        :return: The output angles ready for execution.
+        """
+
+        # Get all legs and servos for quick access.
+        legs = self.robot.legs
+
+        # Allocate memory.
+        angles = np.empty(frames.shape)
+
+        for i in range(len(frames)):
+            for l in range(len(legs)):
+                a = legs[l].get_angles(frames[i][l])
+                angles[i][l] = a
+
+        return angles
+
+    @staticmethod
+    def smooth(a, b, n):
+        """
+        Create a smooth transition from a to b in n steps.
+        :param a: The first array.
+        :param b: The second array.
+        :param n: The number of steps.
+        :return: An array from [a, b).
+        """
+
+        assert(a.shape == b.shape)
+        assert(n > 1)
+
+        # Compute delta.
+        delta = (b - a) / n
+
+        # Allocate n-1 with dimension d+1.
+        shape = (n, *a.shape)
+        inter = np.empty(shape)
+
+        for i in range(n):
+            inter[i] = a + i * delta
+
+        return inter
+
+    def get_pose(self):
+        """
+        Get the relative pose of the robot.
+        :return: A (4 x 3) matrix representing the current state of the robot.
+        """
+
+        # Get all legs for quick access.
+        legs = self.robot.legs
+
+        # Iterate through all legs.
+        pose = []
+        for leg in legs:
+            position = leg.get_position()
+            pose.append(position)
+
+        return np.array(pose, dtype=float)
+
+    @staticmethod
+    def linearize(frames):
+        """
+        Given frames, compute t based on linear distance.
+        :param frames: Frames of [(x1, y1, z1), ...]
+        :return: Times (for scipy interpolation).
+        """
+
+        delta = np.roll(frames, -1, axis=0) - frames
+        dst = np.linalg.norm(delta, axis=1)[:-1]
+
+        t = dst / np.sum(dst) * 1000
+        t = np.insert(t, 0, (0,))
+        t = np.cumsum(t)
+
+        return t
+
+    def prepare_lift(self, index, target, lift, t):
+        """
+        Get the leg from a to b by lifting.
+        From the current position, lift leg. Move to target, then adjust z.
+        :param index: The leg index.
+        :param target: The target point.
+        :param lift: How much to lift.
+        :param t: The time in milliseconds.
+        :return: np.array([(x1, y1, z1), ...])
+        """
+
+        # Get all legs and servos for quick access.
+        legs = self.robot.legs
+        servos = self.robot.leg_servos
+
+        # Update positions.
+        self.maestro.get_multiple_positions(servos)
+
+        # Get pose of all legs.
+        pose = self.get_pose()
+        print(pose)
+
+        # Compute steps.
+        steps = t / 50
+        if steps > 100:
+            steps = 100
+        elif steps < 20:
+            steps = 20
+
+        # Compute dt.
+        dt = t / steps
+
+        # Construct array.
+        x, y, z = pose[index]
+        tx, ty, tz = target
+
+        p0 = (x, y, z)
+        p1 = (x, y, z + lift)
+        p2 = (tx, ty, z + lift)
+        p3 = (tx, ty, tz)
+
+        frames = np.array((p0, p1, p2, p3), dtype=float)
+
+        # Linearize.
+        times = self.linearize(frames)
+
+        # Interpolate.
+        ts = np.linspace(0, 1000, num=steps + 1, endpoint=True)
+        tck, _ = interpolate.splprep(frames.T, u=times, s=0, k=1)
+        p = np.array(interpolate.splev(ts, tck))
+        p = p.T
+
+        print(p)
+
+
+    def prepare_frames(self, frames, dt, ground):
+        """
+        Prepare some frames which are non-circular (last frame not linked to first frame).
+        :param frames: The input frames.
+        :param dt: dt.
+        :param ground: Ground.
+        :param loop: Whether the gait loops.
+        :return: (frames, dt) ready for execution.
+        """
+
+        # Define body for quick access.
+        body = self.robot.body
+
+        # Copy frames for comparison and smoothing.
+        original = frames.copy()
+
+        # Generate leg state arrays.
+        state1 = np.greater(original[:, :, 2], (ground + 1e-6))     # Defines which legs are in the air.
+        state2 = state1.sum(1)                                      # The number of legs in the air.
+
+        # Define.
+        steps = len(frames)
+
+        for t in range(steps - 1):
+            # Look ahead and pass data to center of mass adjustment algorithms.
+            next_frame = original[t]
+
+            # Determine which legs are off.
+            off = state1[t]
+            count = state2[t]
+
+            # Perform center of mass adjustments accordingly.
+            bias = body.adjust(off, next_frame, count)
+
+            # Adjust frame.
+            frames[t] -= bias
+
+        return frames, dt
+
+    def prepare_gait(self, gait, debug=False):
+        """
+        Prepare a given gait class.
         :param gait: The gait class.
         :param debug: Show gait in a graph.
         :return: (frames, dt) ready for execution.
@@ -834,27 +1052,18 @@ class Agility:
         body = self.robot.body
 
         # Get gait properties.
-        smooth = gait.smooth
         steps = gait.steps
-        name = gait.name
+        ground = gait.ground
         dt = gait.time / steps
         ts = np.linspace(0, 1000, num=steps, endpoint=False)
 
         # Get all legs for quick access.
         legs = self.robot.legs
 
-        # Get center of mass adjustment function.
-        if name == 'crawl':
-            adjust = body.adjust_crawl
-        elif name == 'trot':
-            adjust = body.adjust_trot
-        else:
-            adjust = body.default_bias
-
         # Compute shape.
         shape = (steps, len(legs), 3)
 
-        # Run static analysis.
+        # Evaluate gait.
         f = [gait.evaluate(leg, ts) for leg in legs]
         frames = np.concatenate(f).reshape(shape, order='F')
 
@@ -865,47 +1074,24 @@ class Agility:
         # Copy frames for comparison and smoothing.
         original = frames.copy()
 
-        # Define number inserted.
-        inserted = 0
+        # Generate leg state arrays.
+        state1 = np.greater(original[:, :, 2], (ground + 1e-6))     # Defines which legs are in the air.
+        state2 = state1.sum(1)                                      # The number of legs in the air.
 
         # Iterate and perform static analysis.
         for t in range(steps):
             # Look ahead and pass data to center of mass adjustment algorithms.
             next_frame = original[(t + 1) % steps]
 
+            # Determine which legs are off.
+            off = state1[t]
+            count = state2[t]
+
             # Perform center of mass adjustments accordingly.
-            bias = adjust(next_frame, gait)
-            frames[t + inserted] -= bias
+            bias = body.adjust(off, next_frame, count)
 
-            '''
-            # If no smoothing desired, continue.
-            if smooth == 0 or t == 0:
-                continue
-
-            # Find delta.
-            curr = frames[t + inserted]
-            prev = frames[t + inserted - 1]
-            delta = curr - prev
-
-            # Find the maximum distance traveled by leg.
-            dst = np.linalg.norm(delta, axis=1)
-            max_dst = np.max(dst)
-
-            # Smooth.
-            k = int((max_dst / dt * 1000) // smooth)
-
-            if k > 0:
-                addition = []
-
-                d = delta / (k + 1)
-
-                for i in range(1, k + 1):
-                    addition.append(prev + delta * i)
-
-                frames = np.insert(frames, t + inserted, addition, axis=0)
-
-                inserted += len(addition)
-            '''
+            # Adjust frame.
+            frames[t] -= bias
 
         return frames, dt
 
@@ -916,8 +1102,7 @@ class Agility:
         self.maestro.get_multiple_positions(servos)
 
         for leg in legs:
-            angles = [l.get_position() for l in leg]
-            a, b, c = Finesse.forward_pack(leg.lengths, angles)
+            a, b, c = leg.get_position()
             a -= x
             b -= y
             c -= z

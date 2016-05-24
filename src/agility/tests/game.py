@@ -29,8 +29,8 @@ def run_gait():
     while True:
         try:
             gait = crawl.generate(*vector)
-            frames, dt = agility.prepare(gait)
-            agility.execute(frames, dt)
+            frames, dt = agility.prepare_gait(gait)
+            agility.execute_frames(frames, dt)
         except:
             pass
 

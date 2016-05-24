@@ -72,11 +72,11 @@ class Movement:
                 frames, dt = self.cache[id]
             else:
                 points = self.gait.generate(*vector)
-                frames, dt = self.agility.prepare(points)
+                frames, dt = self.agility.prepare_gait(points)
                 self.cache[id] = (frames, dt)
 
             with self.lock:
-                self.agility.execute(frames, dt)
+                self.agility.execute_frames(frames, dt)
 
 
 movement = Movement()

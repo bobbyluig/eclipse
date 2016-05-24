@@ -5,7 +5,7 @@ import math
 
 
 class Gait:
-    def __init__(self, ground, time, steps, v, r, smooth, name):
+    def __init__(self, ground, time, steps):
         # Define the ground (z-axis). Usually a negative float.
         # This helps Agility determine when center of mass should be shifted.
         self.ground = ground
@@ -16,18 +16,6 @@ class Gait:
 
         # The number of optimal steps.
         self.steps = steps
-
-        # The type of gait.
-        self.name = name
-
-        # Velocity forward (cm/s).
-        self.v = v
-
-        # Rotational velocity (rad/s).
-        self.r = r
-
-        # Smoothing. 0 for no smoothing. Otherwise a float defining velocity to smooth.
-        self.smooth = smooth
 
     def evaluate(self, leg, t):
         """
@@ -49,7 +37,7 @@ class Gait:
 
 
 class Linear(Gait):
-    def __init__(self, sequence, ground, time, steps, v, r, smooth, name):
+    def __init__(self, sequence, ground, time, steps):
         """
         A sequence of key frames.
         :param sequence: A sequence of points and times.
@@ -63,7 +51,7 @@ class Linear(Gait):
         ]
         """
 
-        super().__init__(ground, time, steps, v, r, smooth, name)
+        super().__init__(ground, time, steps)
 
         # Generate private functions called during evaluation.
         self._fn = [self.interpolate(s) for s in sequence]
@@ -145,8 +133,6 @@ class Dynamic:
         self.max_steps = 100        # Maximum number of dt steps.
         self.min_steps = 40         # Minimum number of dt steps.
 
-        self.smooth = 0            # Smoothing constant.
-
         # Rotation constants.
         self.r = self.b / np.linalg.norm(self.b)
         self.k = 0.5 * np.linalg.norm(self.b)
@@ -194,12 +180,10 @@ class Dynamic:
         if abs(forward) >= self.transition:
             # Use trot.
             offset = 'trot'
-            name = 'trot'
             beta = self.beta_trot
         else:
             # Use crawl.
             offset = '1423'
-            name = 'crawl'
             beta = self.beta_crawl
 
         # Create t decision array.
@@ -239,7 +223,7 @@ class Dynamic:
         sequence = np.array(sequence, dtype=float)
 
         # Create object and add to cache.
-        gait = Linear(sequence, self.ground, t, steps, forward, rotation, self.smooth, name)
+        gait = Linear(sequence, self.ground, t, steps)
         self.cache[h] = gait
 
         return gait

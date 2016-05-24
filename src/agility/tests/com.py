@@ -10,10 +10,11 @@ agility = Agility(robot)
 
 # Gait.
 crawl = Dynamic(robot.body)
-gait = crawl.generate(6, 0)
+gait = crawl.generate(3, 0)
 
 # Main
-# agility.configure()
+agility.configure()
 agility.zero()
-frames, dt = agility.prepare(gait)
+agility.prepare_lift(0, (2, 0, -13), 1, 1000)
+# frames, dt = agility.prepare_gait(gait)
 # agility.execute_forever(frames, dt)

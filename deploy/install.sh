@@ -7,6 +7,7 @@
 # Use only with Debian 8 ("Jessie") ARMv8. Script must be executed as root.
 # Requires at least 4GB of free space for installation.
 # Designed for ARM64 architecture. Optimized for Cortex-A53.
+# Run using $ source install.sh
 ###########################################################################
 
 #############
@@ -83,9 +84,11 @@ cd ~
 apt-get -y install libasound-dev libav-tools portaudio19-dev
 
 # Get Python libraries.
+apt-get -y install libatlas-base-dev gfortran liblapack-dev libblas-dev libatlas-dev
+
 export NPY_NUM_BUILD_JOBS=4
 pip3 install --upgrade pip
-pip3 install numpy pyserial autobahn[accelerate] pyusb psutil scipy
+pip3 install numpy pyserial autobahn[accelerate] pyusb psutil scipy pyro4
 pip3 install pyaudio pydub
 
 ####################
@@ -95,7 +98,6 @@ pip3 install pyaudio pydub
 # Get required libraries.
 apt-get -y install libjpeg-dev libtiff5-dev libjasper-dev libpng12-dev
 apt-get -y install libavcodec-dev libavformat-dev libswscale-dev libv4l-dev
-apt-get -y install libatlas-base-dev gfortran
 
 # Get contrib module.
 cd ~
@@ -118,7 +120,6 @@ cmake -D CMAKE_BUILD_TYPE=RELEASE \
 -D PYTHON3_LIBRARY=/usr/local/lib/libpython3.5m.so \
 -D INSTALL_C_EXAMPLES=OFF \
 -D INSTALL_PYTHON_EXAMPLES=OFF \
--D OPENCV_EXTRA_MODULES_PATH=~/opencv_contrib/modules \
 -D BUILD_PERF_TESTS=OFF \
 -D BUILD_TESTS=OFF \
 -D BUILD_EXAMPLES=OFF ..
@@ -137,7 +138,7 @@ apt-get -y install libboost-all-dev
 cd ~/Eclipse/src/theia/oculus
 mkdir build
 cd build
-cmake -D  PYTHON3_NUMPY_INCLUDE_DIRS=/usr/local/lib/python3.5/site-packages/numpy/core/include ..
+cmake -D PYTHON3_NUMPY_INCLUDE_DIRS=/usr/local/lib/python3.5/site-packages/numpy/core/include ..
 make CXXFLAGS="-O3 -mcpu=cortex-a53 -mfloat-abi=hard -mfpu=neon-fp-armv8 -ffast-math" && make install
 
 #################
@@ -147,7 +148,7 @@ make CXXFLAGS="-O3 -mcpu=cortex-a53 -mfloat-abi=hard -mfpu=neon-fp-armv8 -ffast-
 cd ~
 git clone https://github.com/codewithpassion/mjpg-streamer.git
 cd mjpg-streamer/mjpg-streamer
-apt-get install imagemagick libv4l-dev
+apt-get -y install imagemagick libv4l-dev
 make USE_LIBV4L2=true clean all
 export LD_LIBRARY_PATH=.
 # ./mjpg_streamer -o "output_http.so -w ./www"
