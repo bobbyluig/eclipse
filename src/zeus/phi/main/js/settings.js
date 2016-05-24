@@ -1,7 +1,7 @@
 defaults.com = {
     authid: 'Zeus',
     secret: '+Ew~77XrvW-c<6sZ',
-    url: 'wss://127.0.0.1/ws/',
+    url: 'wss://192.168.56.1/ws/',
     realm: 'lycanthrope',
     authmethod: 'wampcra',
     max_retries: 15,

@@ -42,7 +42,7 @@ class Android:
     head = Head(servo16, servo17, camera)
 
     # Body
-    body = Body(16.5, 15.5, 0.5, -0.075, 0, 20, 0)
+    body = Body(16.5, 15.5, 0.5, 0, 0, 20, 0.5)
 
     # Robot.
     robot = Robot(leg1, leg2, leg3, leg4, body, head=head)
@@ -54,7 +54,7 @@ class Android:
 
 class Crossbar:
     # Crossbar.
-    ip = '127.0.0.1'
+    ip = '192.168.56.101'
     realm = 'lycanthrope'
     authid = 'DOG-1E5'
     secret = 'de2432k,/s-=/8Eu'
