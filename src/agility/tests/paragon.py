@@ -26,7 +26,7 @@ def moveToEuclidean(position, time):
         servo1.set_target(angles[0])
         servo2.set_target(angles[1])
         servo3.set_target(angles[2])
-        maestro.end_together(servos, update=True, time=time)
+        maestro.end_together(servos, update=True, t=time)
     else:
         print('Unable to reach position (%s, %s, %s)!' % position)
         goHome()

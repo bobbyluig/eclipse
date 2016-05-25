@@ -111,7 +111,7 @@ def animate(gait, leg1, leg2, leg3, leg4):
             target_euclidean(leg3, leg3_points[i])
             target_euclidean(leg4, leg4_points[i])
             maestro.get_multiple_positions(leg1 + leg2 + leg3 + leg4)
-            maestro.end_together(leg1 + leg2 + leg3 + leg4, time=frame_time, update=False)
+            maestro.end_together(leg1 + leg2 + leg3 + leg4, t=frame_time, update=False)
 
             # No need to check all.
             while not is_at_target(leg1):
@@ -136,7 +136,7 @@ def animate_trot(gait, leg1, leg2, leg3, leg4):
             target_euclidean(leg3, leg23_points[i])
             target_euclidean(leg4, leg14_points[i])
             maestro.get_multiple_positions(leg1 + leg2 + leg3 + leg4)
-            maestro.end_together(leg1 + leg2 + leg3 + leg4, time=frame_time, update=False)
+            maestro.end_together(leg1 + leg2 + leg3 + leg4, t=frame_time, update=False)
 
             while not is_at_target(leg1):
                 pass
@@ -196,7 +196,7 @@ class Agility:
                 target_euclidean(leg3, sequence[i])
                 target_euclidean(leg4, sequence[i])
                 maestro.get_multiple_positions(leg1 + leg2 + leg3 + leg4)
-                maestro.end_together(leg1 + leg2 + leg3 + leg4, time=frame_time, update=False)
+                maestro.end_together(leg1 + leg2 + leg3 + leg4, t=frame_time, update=False)
 
                 # No need to check all.
                 while not is_at_target(leg1):
@@ -228,7 +228,7 @@ class Agility:
                 target_euclidean(leg3, leg3_points[i])
                 target_euclidean(leg4, leg4_points[i])
                 maestro.get_multiple_positions(leg1 + leg2 + leg3 + leg4)
-                maestro.end_together(leg1 + leg2 + leg3 + leg4, time=frame_time, update=False)
+                maestro.end_together(leg1 + leg2 + leg3 + leg4, t=frame_time, update=False)
 
                 # No need to check all.
                 while not is_at_target(leg1):

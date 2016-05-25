@@ -425,12 +425,49 @@ class Maestro:
     # Begin implementation of complex helper functions.
     ###################################################
 
-    def end_together(self, servos, time=0, update=False):
+    def end_in(self, servo, t=0, update=False):
+        """
+        Move one servo to it's target in t time.
+        :param servo: A servo object.
+        :param t: The time in ms for the operation. Set to 0 for max speed.
+        :param update: Whether of not to update servo's position.
+        """
+
+        # Update servo positions as needed.
+        if update:
+            self.get_position(servo)
+
+        # Max speed.
+        if t == 0:
+            t = abs(servo.target - servo.pwm) / servo.max_vel * 10
+
+        # Faster send.
+        buffer = bytearray()
+
+        # Set acceleration to zero.
+        ins = self.set_acceleration(servo, 0, send=False)
+        buffer.extend(ins)
+
+        # Compute velocity as a change in 0.25us PWM / 10ms.
+        delta = abs(servo.target - servo.pwm)
+        vel = int(round(delta / t * 10))
+
+        # Set velocity.
+        ins = self.set_speed(servo, vel, send=False)
+        buffer.extend(ins)
+
+        # Send data.
+        self.write(buffer)
+
+        # Synchronize instruction.
+        self.set_target(servo)
+
+    def end_together(self, servos, t=0, update=False):
         """
         Move all servos to their respective targets such that they arrive together.
         This will reset all accelerations to 0 and flush buffer.
         :param servos: Servo objects.
-        :param time: The time in ms for the operation. Set to 0 for max speed.
+        :param t: The time in ms for the operation. Set to 0 for max speed.
         :param update: Whether of not to update servo positions.
         """
 
@@ -439,8 +476,8 @@ class Maestro:
             self.get_multiple_positions(servos)
 
         # Max speed.
-        if time == 0:
-            time = max([abs(servo.target - servo.pwm) / servo.max_vel * 10 for servo in servos])
+        if t == 0:
+            t = max([abs(servo.target - servo.pwm) / servo.max_vel * 10 for servo in servos])
 
         # Faster send.
         buffer = bytearray()
@@ -453,7 +490,7 @@ class Maestro:
 
             # Compute velocity as a change in 0.25us PWM / 10ms.
             delta = abs(servo.target - servo.pwm)
-            vel = int(round(delta / time * 10))
+            vel = int(round(delta / t * 10))
 
             # Set velocity.
             ins = self.set_speed(servo, vel, send=False)

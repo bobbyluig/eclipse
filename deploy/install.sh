@@ -49,7 +49,7 @@ apt-get -y update && apt-get -y upgrade
 apt-get -y install apt-utils
 
 # Get required software.
-apt-get -y install p7zip-full nano wireless-tools wpasupplicant usbutils wget rfkill \
+apt-get -y install p7zip-full nano wireless-tools wpasupplicant usbutils wget rfkill supervisor \
 libusb-dev ca-certificates linux-headers-odrobian-s905 \
 firmware-linux firmware-linux-free firmware-linux-nonfree firmware-realtek \
 cmake pkg-config s905-zram
@@ -84,11 +84,11 @@ cd ~
 apt-get -y install libasound-dev libav-tools portaudio19-dev
 
 # Get Python libraries.
-apt-get -y install libatlas-base-dev gfortran liblapack-dev libblas-dev libatlas-dev
+apt-get -y install libatlas-base-dev gfortran liblapack-dev libblas-dev libatlas-dev libfreetype6-dev
 
 export NPY_NUM_BUILD_JOBS=4
 pip3 install --upgrade pip
-pip3 install numpy pyserial autobahn[accelerate] pyusb psutil scipy pyro4
+pip3 install numpy pyserial autobahn[accelerate] pyusb psutil scipy pyro4 matplotlib
 pip3 install pyaudio pydub
 
 ####################

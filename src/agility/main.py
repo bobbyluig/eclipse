@@ -95,7 +95,7 @@ class Stepper:
 
 class Servo:
     def __init__(self, channel, min_deg, max_deg, min_pwm, max_pwm, max_vel,
-                 bias=0, direction=1):
+                 bias=0, direction=1, left_bound=None, right_bound=None):
         self.channel = channel # 0 to 17
         self.min_deg = min_deg # -360 to 360 as (degrees)
         self.max_deg = max_deg # -360 to 360 as (degrees)
@@ -107,6 +107,21 @@ class Servo:
         # This is used to compensate for ridge spacing and inaccuracies during installation.
         # Think of this like the "home" value of the servo.
         self.bias = bias
+
+        if left_bound is None:
+            # Left bound (if not min_deg), with bias.
+            self.left_bound = self.min_deg
+        else:
+            self.left_bound = left_bound
+
+        if right_bound is None:
+            # Left bound (if not max_deg), with bias.
+            self.right_bound = self.max_deg
+        else:
+            self.right_bound = right_bound
+
+        assert(self.left_bound >= self.min_deg)
+        assert(self.right_bound <= self.max_deg)
 
         # If the front of the servo is pointing in a negative axis, set this to negative 1.
         # This reverses the directionality of all angle inputs.
@@ -136,12 +151,12 @@ class Servo:
 
     def get_range(self):
         """
-        Get the maximum and minimum with bias.
+        Get the maximum and minimum, removing bias.
         :return: (min, max)
         """
 
-        low = self.min_deg - self.bias
-        high = self.max_deg - self.bias
+        low = self.left_bound - self.bias
+        high = self.right_bound - self.bias
 
         return low, high
 
@@ -165,12 +180,12 @@ class Servo:
         deg = deg * self.direction + self.bias
 
         # Normalize.
-        if deg > self.max_deg:
+        if deg > self.right_bound:
             deg -= 360
-        elif deg < self.min_deg:
+        elif deg < self.left_bound:
             deg += 360
 
-        if deg > self.max_deg or deg < self.min_deg:
+        if deg > self.right_bound or deg < self.left_bound:
             raise ServoError('Target out of range!')
 
         return deg
@@ -606,9 +621,10 @@ class Head:
         low, high = servo.get_range()
         position = servo.get_position()
 
-        if position == high:
+        # Within one 0.2 degrees is "there".
+        if abs(position - high) < 0.2:
             return 1
-        elif position == low:
+        elif abs(position - low) < 0.2:
             return -1
         else:
             return 0
@@ -696,6 +712,7 @@ class Agility:
         Scans head in a direction. If no direction is given, scans toward bound of last known location.
         If at minimum of maximum bounds, automatically selects opposite direction.
         Blocks until completely scanned towards one direction.
+        :param t: Time in milliseconds.
         :param direction: A direction, either None, 1, or -1.
         """
 
@@ -729,12 +746,13 @@ class Agility:
         else:
             servo.set_target(low)
 
-        self.maestro.end_together((servo,), t)
+        self.maestro.end_in(servo, t)
+        self.wait(servo)
 
     def center_head(self, t=0):
         """
         Returns head to original position.
-        :param time: The time in ms.
+        :param t: The time in ms.
         """
 
         # Obtain definitions.
@@ -750,10 +768,11 @@ class Agility:
 
         # Execute.
         self.maestro.end_together(servos, t, True)
+        self.wait(servos)
 
     def move_head(self, data):
         """
-        Move head based on data parameters.
+        Move head based on data parameters. Does not wait for completion.
         :param data: An array given by look_at.
         """
 
@@ -1212,12 +1231,19 @@ class Agility:
     def is_at_target(self, servos=None):
         """
         Check if servos are at their target.
-        :param servos: An array of servos. If None, checks if all servos have reached their targets (more efficient).
+        :param servos: One or more servo objects. If None, checks if all servos have reached their targets (more efficient).
         :return: True if all servos are at their targets, False otherwise.
         """
 
         if servos is None:
             return not self.maestro.get_moving_state()
+        elif isinstance(servos, Servo):
+            self.maestro.get_position(servos)
+
+            if servos.at_target():
+                return True
+
+            return False
         else:
             self.maestro.get_multiple_positions(servos)
 
