@@ -937,7 +937,7 @@ namespace cv
 #endif
 
 #if CV_NEON 
-			volatile bool haveNEON = false;
+			volatile bool haveNEON = checkHardwareSupport(CPU_NEON);
 #endif
 
 			for (int r = 0; r < height; ++r)
@@ -1229,7 +1229,7 @@ namespace cv
 #endif
 
 #if CV_NEON
-			volatile bool haveNEON = false;
+			volatile bool haveNEON = checkHardwareSupport(CPU_NEON);
 #endif
 
 			// Compute the similarity measure for this template by accumulating the contribution of
@@ -1327,7 +1327,7 @@ namespace cv
 #endif
 
 #if CV_NEON
-			volatile bool haveNEON = false;
+			volatile bool haveNEON = checkHardwareSupport(CPU_NEON);
 			uint8x16_t* dst_ptr_neon = dst.ptr<uint8x16_t>();
 #endif
 
