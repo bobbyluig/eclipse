@@ -937,7 +937,7 @@ namespace cv
 #endif
 
 #if CV_NEON 
-			volatile bool haveNEON = false;
+			volatile bool haveNEON = checkHardwareSupport(CPU_NEON);
 #endif
 
 			for (int r = 0; r < height; ++r)
@@ -984,9 +984,9 @@ namespace cv
 				{
 					for (; c < width - 15; c += 16)
 					{
-						uint32x4_t val = vld1q_u32(reinterpret_cast<const uint32_t*>(src + c));
-						uint32x4_t* dst_ptr = reinterpret_cast<uint32x4_t*>(dst + c);
-						*dst_ptr = vorrq_u32(*dst_ptr, val);
+						uint8x16_t val = vld1q_u8(reinterpret_cast<const uint8_t*>(src + c));
+						uint8x16_t* dst_ptr = reinterpret_cast<uint8x16_t*>(dst + c);
+						*dst_ptr = vorrq_u8(*dst_ptr, val);
 					}
 				}
 #endif
@@ -1229,7 +1229,7 @@ namespace cv
 #endif
 
 #if CV_NEON
-			volatile bool haveNEON = false;
+			volatile bool haveNEON = checkHardwareSupport(CPU_NEON);
 #endif
 
 			// Compute the similarity measure for this template by accumulating the contribution of
@@ -1327,7 +1327,7 @@ namespace cv
 #endif
 
 #if CV_NEON
-			volatile bool haveNEON = false;
+			volatile bool haveNEON = checkHardwareSupport(CPU_NEON);
 			uint8x16_t* dst_ptr_neon = dst.ptr<uint8x16_t>();
 #endif
 
