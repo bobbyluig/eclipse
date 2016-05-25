@@ -991,8 +991,8 @@ namespace cv
 				}
 #endif
 
-				// for (; c < width; ++c)
-					// dst[c] |= src[c];
+				for (; c < width; ++c)
+					dst[c] |= src[c];
 
 				// Advance to next row
 				src += src_stride;
