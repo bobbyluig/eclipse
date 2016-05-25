@@ -300,7 +300,7 @@ class Body:
         # Get com.
         cx, cy = self.get_com(original)
 
-        return np.array((-cx, -cx, 0))
+        return np.array((-cx, -cy, 0))
 
     @staticmethod
     def rotation_matrix(axis, theta):
@@ -377,7 +377,7 @@ class Body:
 
         return com
 
-    def adjust_crawl(self, off, next_frame, sigma=0.5):
+    def adjust_crawl(self, off, next_frame, sigma=2.0):
         """
         Adjust the center of mass for the crawl gait.
         :param off: An array defining which legs are in the air.
@@ -413,15 +413,15 @@ class Body:
         rho = np.array((rx, ry, rz))
 
         # Adjust vertices.
-        new = original + rho
+        # new = original + rho
 
         # Perform tilt.
-        new = self.tilt_body(new, air, 0.05)
+        # new = self.tilt_body(new, air, 0.0)
 
         # Compute bias.
-        bias = new - original
+        # bias = new - original
 
-        return bias
+        return rho
 
     def adjust_trot(self, off, next_frame):
         """
@@ -452,9 +452,9 @@ class Body:
         ry = y0 - cy
         rz = 0
 
-        bias = np.array((rx, ry, rz))
+        rho = np.array((rx, ry, rz))
 
-        return bias
+        return rho
 
     def adjust(self, off, next_frame, count=None):
         """
@@ -1045,11 +1045,11 @@ class Agility:
         # Define body for quick access.
         body = self.robot.body
 
-        # Copy frames for comparison and smoothing.
-        original = frames.copy()
+        # Create array for biases.
+        biases = np.empty(frames.shape)
 
         # Generate leg state arrays.
-        state1 = np.greater(original[:, :, 2], (ground + 1e-6))     # Defines which legs are in the air.
+        state1 = np.greater(frames[:, :, 2], (ground + 1e-6))     # Defines which legs are in the air.
         state2 = state1.sum(1)                                      # The number of legs in the air.
 
         # Define.
@@ -1057,17 +1057,17 @@ class Agility:
 
         for t in range(steps - 1):
             # Look ahead and pass data to center of mass adjustment algorithms.
-            next_frame = original[t]
+            next_frame = frames[t]
 
             # Determine which legs are off.
             off = state1[t]
             count = state2[t]
 
             # Perform center of mass adjustments accordingly.
-            bias = body.adjust(off, next_frame, count)
+            biases[t] = body.adjust(off, next_frame, count)
 
-            # Adjust frame.
-            frames[t] -= bias
+        # Adjust frames.
+        frames -= biases
 
         return frames, dt
 
@@ -1102,27 +1102,111 @@ class Agility:
         if debug:
             self.plot_gait(frames)
 
-        # Copy frames for comparison and smoothing.
-        original = frames.copy()
+        # Create array for biases.
+        biases = np.empty(shape)
 
         # Generate leg state arrays.
-        state1 = np.greater(original[:, :, 2], (ground + 1e-6))     # Defines which legs are in the air.
+        state1 = np.greater(biases[:, :, 2], (ground + 1e-6))     # Defines which legs are in the air.
         state2 = state1.sum(1)                                      # The number of legs in the air.
 
         # Iterate and perform static analysis.
         for t in range(steps):
             # Look ahead and pass data to center of mass adjustment algorithms.
-            next_frame = original[(t + 1) % steps]
+            next_frame = biases[(t + 1) % steps]
 
             # Determine which legs are off.
             off = state1[t]
             count = state2[t]
 
             # Perform center of mass adjustments accordingly.
-            bias = body.adjust(off, next_frame, count)
+            biases[t] = body.adjust(off, next_frame, count)
 
-            # Adjust frame.
-            frames[t] -= bias
+        # Adjust frames.
+        frames -= biases
+
+        return frames, dt
+
+    def prepare_smoothly(self, gait):
+        """
+        Prepare a gait by intelligently applying smoothing. Only works for planar COM adjustments.
+        Plus, who doesn't like smooth things? (I'm really tired right now.)
+        :param gait: The gait object.
+        :return: (frames, dt) ready for execution.
+        """
+
+        # Define body for quick access.
+        body = self.robot.body
+
+        # Get gait properties.
+        steps = gait.steps
+        ground = gait.ground
+        dt = gait.time / steps
+        ts = np.linspace(0, 1000, num=steps, endpoint=False)
+
+        # Get all legs for quick access.
+        legs = self.robot.legs
+
+        # Compute shape.
+        shape = (steps, len(legs), 3)
+
+        # Evaluate gait.
+        f = [gait.evaluate(leg, ts) for leg in legs]
+        frames = np.concatenate(f).reshape(shape, order='F')
+
+        # Generate leg state arrays.
+        state1 = np.greater(frames[:, :, 2], (ground + 1e-6))  # Defines which legs are in the air.
+        state2 = state1.sum(1)  # The number of legs in the air.
+
+        # Get indices of legs in air.
+        air = np.where(state2 != 0)[0]
+        air = air.tolist()
+
+        # Create array for biases.
+        biases = np.empty(shape)
+
+        # Keep track of last air -> ground.
+        t = air[-1]
+        if state2[(t + 1) % steps] == 0:
+            # Last air frame is an air -> ground transition.
+            last_ag = t
+        else:
+            # There will
+            last_ag = None
+
+        # Compute biases for each frame that is not on the ground.
+        for i in range(len(air)):
+            # Get the index relative to all frames.
+            t = air[i]
+
+            # Compute bias as usual.
+            next_frame = frames[(t + 1) % steps]
+            off = state1[t]
+            count = state2[t]
+
+            biases[t] = body.adjust(off, next_frame, count)
+
+            # Checks if the current frame represents a ground -> air transition.
+            if state2[t - 1] == 0:
+                curr_bias = biases[t]
+                prev_bias = biases[last_ag]
+
+                # Smooth from [t, last_ag).
+                if t > last_ag:
+                    n = t - last_ag
+                    inter = self.smooth(prev_bias, curr_bias, n)
+                    biases[last_ag:t] = inter
+                else:
+                    n = steps - last_ag + t
+                    inter = self.smooth(prev_bias, curr_bias, n)
+                    biases[last_ag:] = inter[:(steps - last_ag)]
+                    biases[:t] = inter[(steps - last_ag):]
+
+            # Check if the current frame represents an air -> ground transition.
+            if state2[(t + 1) % steps] == 0:
+                last_ag = t
+
+        # Adjust frames.
+        frames -= biases
 
         return frames, dt
 
