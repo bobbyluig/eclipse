@@ -57,8 +57,11 @@ class Cerebral(ApplicationSession):
 
     async def onJoin(self, details):
         logger.info('Joined "%s" realm.' % self.config.realm)
-        print('Connected!')
+
+        # Register all procedures.
         self.register(self)
+
+        # Start logging.
         self.executor.submit(self.watch_logging)
 
     def onDisconnect(self):

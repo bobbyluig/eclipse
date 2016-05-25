@@ -10,7 +10,7 @@ import os
 
 class Android:
     # Camera.
-    camera = Camera(0, 90, 60)
+    camera = Camera('http://127.0.0.1:8080/?action=stream&dummy.mjpg', 90, 60)
 
     # Leg 1.
     servo1 = Servo(0, -180, 90, 500, 2500, 150, bias=2, direction=1)
@@ -46,6 +46,12 @@ class Android:
 
     # Robot.
     robot = Robot(leg1, leg2, leg3, leg4, body, head=head)
+
+    # Information.
+    info = {
+        'max_speed': 10,            # Max forward speed in cm/sec.
+        'max_rotation': 1.0472      # Max rotation speed in rads/sec.
+    }
 
 
 #######################

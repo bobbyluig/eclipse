@@ -150,5 +150,15 @@ git clone https://github.com/codewithpassion/mjpg-streamer.git
 cd mjpg-streamer/mjpg-streamer
 apt-get -y install imagemagick libv4l-dev
 make USE_LIBV4L2=true clean all
-export LD_LIBRARY_PATH=.
-# ./mjpg_streamer -o "output_http.so -w ./www"
+
+cp mjpg_streamer /usr/local/bin
+cp output_http.so input_file.so input_uvc.so /usr/local/lib/
+cp -R www /usr/local/www
+
+#############
+# Copy files.
+#############
+
+cp ~/Eclipse/deploy/supervisor/edd.conf /etc/supervisor/conf.d/
+supervisorctl reread
+supervisorctl update
