@@ -1112,7 +1112,7 @@ class Agility:
         # Iterate and perform static analysis.
         for t in range(steps):
             # Look ahead and pass data to center of mass adjustment algorithms.
-            next_frame = biases[(t + 1) % steps]
+            next_frame = frames[(t + 1) % steps]
 
             # Determine which legs are off.
             off = state1[t]

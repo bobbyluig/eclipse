@@ -6,15 +6,16 @@ from agility.gait import Dynamic
 from cerebral.pack.hippocampus import Android
 from agility.main import Agility
 from threading import Thread, Lock, Event
+import time
 
 # Configure pyro.
 Pyro4.config.SERIALIZERS_ACCEPTED = frozenset(['pickle', 'serpent'])
 
 
 class SuperAgility:
-    def __init__(self):
+    def __init__(self, agility):
         self.robot = Android.robot
-        self.agility = Agility(self.robot)
+        self.agility = agility
         self.gait = Dynamic(self.robot.body)
 
         # Event and lock.
@@ -33,7 +34,16 @@ class SuperAgility:
     def start_watch(self):
         with self.lock:
             if self.thread is None:
-                self.thread = Thread(target=self.watch)
+                self.thread = Thread(target=self._watch)
+                self.thread.start()
+                return True
+
+        return False
+
+    def start_pushup(self):
+        with self.lock:
+            if self.thread is None:
+                self.thread = Thread(target=self._pushup)
                 self.thread.start()
                 return True
 
@@ -45,6 +55,7 @@ class SuperAgility:
                 self.event.set()
                 self.thread.join()
                 self.thread = None
+                self.event.clear()
                 return True
 
         return False
@@ -57,12 +68,21 @@ class SuperAgility:
 
         return False
 
-    def watch(self):
+    def set_vector(self, vector):
+        self.vector = vector
+
+    def _pushup(self):
+        while not self.event.is_set():
+            self.agility.move_body(0, 0, -4, 1000)
+            self.agility.move_body(0, 0, 0, 1000)
+
+    def _watch(self):
         while not self.event.is_set():
             vector = self.vector
 
             if vector == (0, 0):
-                return
+                time.sleep(0.001)
+                continue
 
             id = hash(vector)
 
@@ -76,7 +96,8 @@ class SuperAgility:
             self.agility.execute_frames(frames, dt)
 
 
-agility = SuperAgility()
+agility = Agility(Android.robot)
+super_agility = SuperAgility(agility)
 
 
 if __name__ == '__main__':
@@ -86,6 +107,7 @@ if __name__ == '__main__':
 
     # Register all objects.
     daemon.register(agility, 'agility')
+    daemon.register(super_agility, 'super_agility')
 
     # Start event loop.
     daemon.requestLoop()
