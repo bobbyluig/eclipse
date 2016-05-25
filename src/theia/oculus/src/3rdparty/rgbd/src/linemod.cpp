@@ -991,8 +991,8 @@ namespace cv
 				}
 #endif
 
-				for (; c < width; ++c)
-					dst[c] |= src[c];
+				// for (; c < width; ++c)
+					// dst[c] |= src[c];
 
 				// Advance to next row
 				src += src_stride;
@@ -1286,8 +1286,8 @@ namespace cv
 						}
 					}
 #endif
-				for (; j < template_positions; ++j)
-					dst_ptr[j] = uchar(dst_ptr[j] + lm_ptr[j]);
+				// for (; j < template_positions; ++j)
+					//dst_ptr[j] = uchar(dst_ptr[j] + lm_ptr[j]);
 			}
 		}
 
@@ -1381,7 +1381,7 @@ namespace cv
 					}
 					else
 #endif
-					{
+					/* {
 						uchar* dst_ptr = dst.ptr<uchar>();
 						for (int row = 0; row < 16; ++row)
 						{
@@ -1390,7 +1390,7 @@ namespace cv
 							dst_ptr += 16;
 							lm_ptr += W;
 						}
-					}
+					} */
 			}
 		}
 
