@@ -40,7 +40,7 @@ either expressed or implied, of the FreeBSD Project.
 #ifndef _SSE_HPP_
 #define _SSE_HPP_
 
-#if defined(__ARM_ARCH_7A__)
+#if defined(__ARM_ARCH_7A__) || defined(__aarch64__)
 #include <SSE2NEON.h>
 #else
 #include <emmintrin.h> // SSE2:<e*.h>, SSE3:<p*.h>, SSE4:<s*.h>
