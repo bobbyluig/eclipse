@@ -984,9 +984,9 @@ namespace cv
 				{
 					for (; c < width - 15; c += 16)
 					{
-						int32x4_t val = vld1q_s32(reinterpret_cast<const int32_t*>(src + c));
-						int32x4_t* dst_ptr = reinterpret_cast<int32x4_t*>(dst + c);
-						*dst_ptr = vorrq_s32(*dst_ptr, val);
+						uint32x4_t val = vld1q_u32(reinterpret_cast<const uint32_t*>(src + c));
+						uint32x4_t* dst_ptr = reinterpret_cast<uint32x4_t*>(dst + c);
+						*dst_ptr = vorrq_u32(*dst_ptr, val);
 					}
 				}
 #endif
@@ -1254,8 +1254,8 @@ namespace cv
 				{
 					for (; j < template_positions - 15; j += 16)
 					{
-						int8x16_t responses = vld1q_u8(reinterpret_cast<const int8_t*>(lm_ptr + j));
-						int8x16_t* dst_ptr_neon = reinterpret_cast<int8x16_t*>(dst_ptr + j);
+						uint8x16_t responses = vld1q_u8(reinterpret_cast<const uint8_t*>(lm_ptr + j));
+						uint8x16_t* dst_ptr_neon = reinterpret_cast<uint8x16_t*>(dst_ptr + j);
 						*dst_ptr_neon = vaddq_u8(*dst_ptr_neon, responses);
 					}
 				}
@@ -1328,7 +1328,7 @@ namespace cv
 
 #if CV_NEON
 			volatile bool haveNEON = checkHardwareSupport(CPU_NEON);
-			int8x16_t* dst_ptr_neon = dst.ptr<int8x16_t>();
+			uint8x16_t* dst_ptr_neon = dst.ptr<uint8x16_t>();
 #endif
 
 			for (int i = 0; i < (int)templ.features.size(); ++i)
@@ -1348,7 +1348,7 @@ namespace cv
 				{
 					for (int row = 0; row < 16; ++row)
 					{
-						int8x16_t aligned = vld1q_u8(reinterpret_cast<const int8_t*>(lm_ptr));
+						uint8x16_t aligned = vld1q_u8(reinterpret_cast<const uint8_t*>(lm_ptr));
 						dst_ptr_neon[row] = vaddq_u8(dst_ptr_neon[row], aligned);
 						lm_ptr += W; // Step to next row
 					}
