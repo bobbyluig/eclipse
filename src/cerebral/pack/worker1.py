@@ -66,14 +66,6 @@ class SuperAgility:
 
         return False
 
-    def _prepare(self):
-        with self.lock:
-            if self.thread is None:
-                self.agility.ready(self.gait.ground)
-                return True
-
-        return False
-
     def set_vector(self, vector):
         self.vector = vector
 
@@ -83,7 +75,7 @@ class SuperAgility:
             self.agility.move_body(0, 0, 0, 1000)
 
     def _watch(self):
-        self._prepare()
+        self.agility.ready(self.gait.ground)
 
         while not self.event.is_set():
             vector = self.vector
