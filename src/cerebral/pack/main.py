@@ -34,13 +34,9 @@ class Cerebral(ApplicationSession):
         # Get remote objects.
         self.agility = Pyro4.Proxy(lookup('worker1', 'agility'))
         self.super_agility = Pyro4.Proxy(lookup('worker1', 'super_agility'))
-        self.super_ares = Pyro4.Proxy(lookup('worker3', 'super_ares'))
 
         # Create a thread executor for slightly CPU-bound async functions.
         self.executor = ThreadPoolExecutor(20)
-
-        # Manual/Automatic mode.
-        self.auto = False
 
         # Init parent.
         super().__init__(*args, **kwargs)
@@ -94,13 +90,6 @@ class Cerebral(ApplicationSession):
 
         return 'http://{}:8080/?action=stream'.format(ip)
 
-    @wamp.register('{}.follow'.format(Crossbar.prefix))
-    async def follow(self):
-        future = self.run(self.super_ares.start_follow)
-        success = await future
-        self.auto = True
-        return success
-
     @wamp.register('{}.set_vector'.format(Crossbar.prefix))
     async def set_vector(self, a, b):
         if self.auto:
@@ -116,13 +105,6 @@ class Cerebral(ApplicationSession):
 
         await self.run(self.agility.set_head, (a, b))
         return True
-
-    @wamp.register('{}.global_stop'.format(Crossbar.prefix))
-    async def global_stop(self):
-        future = self.run(self.super_ares.stop)
-        success = await future
-        self.auto = False
-        return success
 
     @wamp.register('{}.stop_watch'.format(Crossbar.prefix))
     async def stop_agility(self):

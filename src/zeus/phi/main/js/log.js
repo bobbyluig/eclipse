@@ -1,6 +1,7 @@
 ctrlLog.log = function (logger, message, level) {
     var selector = this.getLogger(logger);
-    var log = selector.data('log');
+    var name = selector.data('name');
+    var log = ctrlLog.loggers[name];
 
     var d = new Date();
     var time = d.toLocaleTimeString('en-US', {hour12: false});
@@ -19,18 +20,21 @@ ctrlLog.log = function (logger, message, level) {
         display.scrollTop(display.prop('scrollHeight'));
     }
 
-    /*
-    selector.find('.item.hidden').each(function () {
-        $(this).transition('fade down');
-    });
-    */
+
+    var voice = settings.speech[name];
+    ctrlSpeech.speak(voice, message);
+    
 };
 
+ctrlLog.loggers = {};
+
 ctrlLog.init = function (logger) {
-    var selector = this.getLogger(logger);
+    var selector = ctrlLog.getLogger(logger);
 
     var log = {};
-    selector.data('log', log);
+    var name = selector.data('name');
+    ctrlLog.loggers[name] = log;
+
     log.new = 0;
     log.events = [];
     log.scroll = true;
@@ -45,10 +49,9 @@ ctrlLog.init = function (logger) {
         log.zero();
     };
 
-    var view = rivets.bind(selector, {log: log, style: settings.style});
-    selector.data('view', view);
+    rivets.bind(selector, {log: log});
 
-    this.log(selector, 'Logger initialized!', 1);
+    ctrlLog.log(selector, 'Logger initialized!', 1);
 };
 
 ctrlLog.getLogger = function (logger) {

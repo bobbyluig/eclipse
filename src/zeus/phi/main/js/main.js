@@ -36,8 +36,10 @@ $(document).ready(function() {
         var logger = $(this);
         ctrlLog.init(logger);
     });
+    
+    annyang.addCommands(ctrlSpeech.commands);
 
-    rivets.bind(body, {menu: ctrlMenu, state: state, wamp: ctrlWamp, pack: ctrlPack});
+    rivets.bind(body, {menu: ctrlMenu, state: state, wamp: ctrlWamp, pack: ctrlPack, speech: ctrlSpeech});
 });
 
 // Prevent accidental closing.

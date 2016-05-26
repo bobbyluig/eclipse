@@ -2,160 +2,97 @@ ctrlPack.check = function () {
     if (wamp === undefined) {
         ctrlLog.log('system', 'Not connected to server!', 3);
         return false;
+    }
+
+    if (ctrlPack.robot != 'pack1' && ctrlPack.robot != 'pack2') {
+        ctrlLog.log('system', 'Unknown robot ' + id + '.');
+        return false;
+    }
+
+    return true;
+};
+
+ctrlPack.robot = 'pack1';
+
+ctrlPack.setRobot = function (id) {
+    if (id == 'one' || id == '1') {
+        ctrlPack.pack1();
+    }
+    else if (id == 'to' || id == '2') {
+        ctrlPack.pack2();
+    }
+};
+
+ctrlPack.pack1 = function () {
+    if (ctrlPack.robot != 'pack1') {
+        ctrlPack.robot = 'pack1';
+        ctrlLog.log('system', 'Controlling pack 1.', 1);
+    }
+};
+
+ctrlPack.pack2 = function () {
+    if (ctrlPack.robot != 'pack2') {
+        ctrlPack.robot = 'pack2';
+        ctrlLog.log('system', 'Controlling pack 2.', 1);
+    }
+};
+
+ctrlPack.basicCall = function (name, array) {
+    if (!ctrlPack.check()) {
+        return false;
+    }
+
+    var fn;
+
+    if (array === undefined) {
+        fn = name + '()';
     } else {
-        return true;
-    }
-};
-
-ctrlPack.getFeed = function () {
-    if (!ctrlPack.check()) {
-        return false;
+        fn = name + '(' + array.join(', ') + ')';
     }
 
-    wamp.call('pack1.get_feed')
-        .then(function (res) {
-            $('#feed').attr('src', res);
-            ctrlLog.log('system', 'Executed get_feed().', 1);
-        });
-};
-
-ctrlPack.follow = function () {
-    if (!ctrlPack.check()) {
-        return false;
-    }
-
-    wamp.call('pack1.follow')
-        .then(function (res) {
+    wamp.call(ctrlPack.robot + '.' + name, array).then(
+        function (res) {
             if (res) {
-                ctrlLog.log('system', 'Executed follow().', 1);
+                ctrlLog.log('system', 'Executed ' + fn + '.', 1);
             } else {
-                ctrlLog.log('system', 'Unable to execute follow().', 3);
+                ctrlLog.log('system', 'Unable to execute ' + fn + '.', 2);
             }
-        });
+        },
+        function (err) {
+            var message = err.args[0];
+            message = message.capitalizeFirstLetter();
+            ctrlLog.log('system', message + '.', 3);
+        }
+    )
+
 };
 
 ctrlPack.setVector = function (vector) {
-    if (!ctrlPack.check()) {
-        return false;
-    }
-
-    console.log(vector);
-
-    wamp.call('pack1.set_vector', vector)
-        .then(function (res) {
-            if (res) {
-                var str = 'set_vector(' + vector[0].toFixed(2) + ', ' + vector[1].toFixed(2) + ')';
-                ctrlLog.log('system', 'Executed ' + str + '.', 1)
-            } else {
-                ctrlLog.log('system', 'Unable to execute set_vector().', 3);
-            }
-        });
+    ctrlPack.basicCall('set_vector', vector);
 };
 
 ctrlPack.setHead = function (position) {
-    if (!ctrlPack.check()) {
-        return false;
-    }
-
-    wamp.call('pack1.set_head', position)
-        .then(function (res) {
-            if (res) {
-                var str = 'set_head(' + position[0].toFixed(2) + ', ' + position[1].toFixed(2) + ')';
-                ctrlLog.log('system', 'Executed ' + str + '.', 1);
-            } else {
-                ctrlLog.log('system', 'Unable to execute set_head()', 3);
-            }
-        });
-};
-
-ctrlPack.globalStop = function () {
-    if (!ctrlPack.check()) {
-        return false;
-    }
-
-    wamp.call('pack1.global_stop')
-        .then(function (res) {
-            if (res) {
-                ctrlLog.log('system', 'Executed global_stop().', 1);
-            } else {
-                ctrlLog.log('system', 'Unable to execute global_stop().', 3);
-            }
-        });
+    ctrlPack.basicCall('set_head', position);
 };
 
 ctrlPack.stopWatch = function () {
-    if (!ctrlPack.check()) {
-        return false;
-    }
-
-    wamp.call('pack1.stop_watch')
-        .then(function (res) {
-            if (res) {
-                ctrlLog.log('system', 'Executed stop_watch().', 1);
-            } else {
-                ctrlLog.log('system', 'Unable to execute stop_watch().', 3);
-            }
-        });
+    ctrlPack.basicCall('stop_watch');
 };
 
 ctrlPack.centerHead = function () {
-    if (!ctrlPack.check()) {
-        return false;
-    }
-
-    wamp.call('pack1.center_head')
-        .then(function (res) {
-            if (res) {
-                ctrlLog.log('system', 'Executed center_head().', 1);
-            } else {
-                ctrlLog.log('system', 'Unable to execute center_head().', 3);
-            }
-        });
+    ctrlPack.basicCall('center_head');
 };
 
 ctrlPack.pushup = function () {
-    if (!ctrlPack.check()) {
-        return false;
-    }
-    
-    wamp.call('pack1.pushup')
-        .then(function (res) {
-            if (res) {
-                ctrlLog.log('system', 'Executed pushup().', 1);
-            } else {
-                ctrlLog.log('system', 'Unable to execute pushup().', 3);
-            }
-        });
+    ctrlPack.basicCall('pushup');
 };
 
 ctrlPack.watch = function () {
-    if (!ctrlPack.check()) {
-        return false;
-    }
-
-    wamp.call('pack1.watch')
-        .then(function (res) {
-            if (res) {
-                ctrlLog.log('system', 'Executed watch().', 1);
-            } else {
-                ctrlLog.log('system', 'Unable to execute watch().', 3);
-            }
-        });
+    ctrlPack.basicCall('watch');
 };
 
 ctrlPack.zero = function () {
-    if (!ctrlPack.check()) {
-        return false;
-    }
-
-    wamp.call('pack1.zero')
-        .then(function (res) {
-            if (res) {
-                ctrlLog.log('system', 'Executed zero().', 1);
-            } else {
-                ctrlLog.log('system', 'Unable to execute zero().', 3);
-            }
-        });
+    ctrlPack.basicCall('zero');
 };
 
 ctrlPack.vector = [0, 0];
@@ -221,9 +158,9 @@ ctrlPack.bindKeys = function () {
             ctrlPack.position = position.slice(0);
             ctrlPack.setHead(position);
         }
-
-        ctrlLog.log('system', 'Binded keys.', 1);
     });
+
+    ctrlLog.log('system', 'Binded keys.', 1);
 };
 
 function arraysEqual(a, b) {
@@ -239,3 +176,7 @@ function arraysEqual(a, b) {
   }
   return true;
 }
+
+String.prototype.capitalizeFirstLetter = function() {
+    return this.charAt(0).toUpperCase() + this.slice(1);
+};
