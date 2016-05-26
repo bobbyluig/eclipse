@@ -1,5 +1,5 @@
 from autobahn.wamp.types import ComponentConfig
-from autobahn.websocket.protocol import parseWsUrl
+from autobahn.websocket.util import parse_url
 from autobahn.asyncio.websocket import WampWebSocketClientFactory
 import asyncio
 import txaio
@@ -108,7 +108,7 @@ class ApplicationRunner(object):
         self.transport_factory = None
         self.active_protocol = None
 
-        self.isSecure, self.host, self.port, _, _, _ = parseWsUrl(url)
+        self.isSecure, self.host, self.port, _, _, _ = parse_url(url)
 
         if ssl is None:
             self.ssl = self.isSecure
