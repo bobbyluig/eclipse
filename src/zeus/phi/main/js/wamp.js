@@ -31,6 +31,7 @@ ctrlWamp.connect = function () {
 
         ctrlRpc.registerAll();
         ctrlRpc.subLogger('pack1');
+        ctrlRpc.subLogger('pack2');
     };
 
     this.connection.onclose = function (reason, details) {

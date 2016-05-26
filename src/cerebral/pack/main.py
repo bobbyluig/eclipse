@@ -92,17 +92,11 @@ class Cerebral(ApplicationSession):
 
     @wamp.register('{}.set_vector'.format(Crossbar.prefix))
     async def set_vector(self, a, b):
-        if self.auto:
-            return False
-
         await self.run(self.super_agility.set_vector, (a, b))
         return True
 
     @wamp.register('{}.set_head'.format(Crossbar.prefix))
     async def set_head(self, a, b):
-        if self.auto:
-            return False
-
         await self.run(self.agility.set_head, (a, b))
         return True
 
@@ -110,40 +104,27 @@ class Cerebral(ApplicationSession):
     async def stop_agility(self):
         future = self.run(self.super_agility.stop)
         success = await future
-        self.auto = False
         return success
 
     @wamp.register('{}.center_head'.format(Crossbar.prefix))
     async def center_head(self):
-        if self.auto:
-            return False
-
         await self.run(self.agility.center_head)
         return True
 
     @wamp.register('{}.pushup'.format(Crossbar.prefix))
     async def pushup(self):
-        if self.auto:
-            return False
-
         future = self.run(self.super_agility.start_pushup)
         success = await future
         return success
 
     @wamp.register('{}.watch'.format(Crossbar.prefix))
     async def watch(self):
-        if self.auto:
-            return False
-
         future = self.run(self.super_agility.start_watch)
         success = await future
         return success
 
     @wamp.register('{}.zero'.format(Crossbar.prefix))
     async def zero(self):
-        if self.auto:
-            return False
-
         future = self.run(self.super_agility.zero)
         success = await future
         return success

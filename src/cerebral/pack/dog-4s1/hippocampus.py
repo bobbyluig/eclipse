@@ -1,8 +1,6 @@
 from agility.main import Servo, Leg, Robot, Head, Body
 from finesse.eclipse import Finesse
 from theia.eye import Camera
-import os
-
 
 ################
 # Define robot.
