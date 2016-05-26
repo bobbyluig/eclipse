@@ -99,12 +99,7 @@ class DSST:
         self.initialized = False
 
     def init(self, image, boundingBox):
-        success = self.tracker.reinit(image, boundingBox)
-
-        if success:
-            self.initialized = True
-        else:
-            raise Exception('Unable to initialize DSST tracker with given frame.')
+        return self.tracker.reinit(image, boundingBox)
 
     def reinit(self, image, boundingBox):
         self.tracker.reinit(image, boundingBox)

@@ -9,8 +9,8 @@ import os
 ################
 
 class Android:
-    # Camera.
-    camera = Camera('http://127.0.0.1:8080/?action=stream&dummy.mjpg', 90, 60)
+    # Camera. 'http://127.0.0.1:8080/?action=stream&dummy.mjpg'
+    camera = Camera(0, 90, 60)
 
     # Leg 1.
     servo1 = Servo(0, -180, 90, 500, 2500, 150, bias=2, direction=1)
@@ -37,15 +37,15 @@ class Android:
     leg4 = Leg(servo10, servo11, servo12, (6.5, 7.25), 3, Finesse.inverse_pack, Finesse.forward_pack)
 
     # Head
-    servo16 = Servo(16, -90, 90, 400, 2400, 150, bias=8, direction=1, left_bound=-45, right_bound=45)
-    servo17 = Servo(17, -90, 90, 400, 2400, 150, bias=3, direction=1, left_bound=-20, right_bound=20)
+    servo16 = Servo(16, -90, 90, 400, 2400, 100, bias=8, direction=1, left_bound=-45, right_bound=45)
+    servo17 = Servo(17, -90, 90, 400, 2400, 100, bias=3, direction=1, left_bound=-20, right_bound=20)
     head = Head(servo16, servo17, camera)
 
     # Body
-    body = Body(16.5, 15.5, 0.5, 0, 0, 20, 0)
+    body = Body(length=16.5, width=15.5, cx=0.5, cy=0, mb=20, ml=1)
 
     # Robot.
-    robot = Robot(leg1, leg2, leg3, leg4, body, head=head)
+    robot = Robot(leg1, leg2, leg3, leg4, body, head)
 
     # Information.
     info = {

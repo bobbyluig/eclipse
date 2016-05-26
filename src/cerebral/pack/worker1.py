@@ -1,4 +1,4 @@
-from cerebral import logger as l
+# from cerebral import logger as l
 
 import Pyro4
 from cerebral.nameserver import ports
@@ -10,6 +10,7 @@ import time
 
 # Configure pyro.
 Pyro4.config.SERIALIZERS_ACCEPTED = frozenset(['pickle', 'serpent'])
+Pyro4.config.SERIALIZER = 'pickle'
 
 
 class SuperAgility:
@@ -22,11 +23,8 @@ class SuperAgility:
         self.event = Event()
         self.lock = Lock()
 
-        # Target vector
+        # Target vector.
         self.vector = (0, 0)
-
-        # Cache.
-        self.cache = {}
 
         # Thread.
         self.thread = None
@@ -68,6 +66,14 @@ class SuperAgility:
 
         return False
 
+    def _prepare(self):
+        with self.lock:
+            if self.thread is None:
+                self.agility.ready(self.gait.ground)
+                return True
+
+        return False
+
     def set_vector(self, vector):
         self.vector = vector
 
@@ -77,6 +83,8 @@ class SuperAgility:
             self.agility.move_body(0, 0, 0, 1000)
 
     def _watch(self):
+        self._prepare()
+
         while not self.event.is_set():
             vector = self.vector
 
@@ -84,14 +92,8 @@ class SuperAgility:
                 time.sleep(0.001)
                 continue
 
-            id = hash(vector)
-
-            if id in self.cache:
-                frames, dt = self.cache[id]
-            else:
-                points = self.gait.generate(*vector)
-                frames, dt = self.agility.prepare_smoothly(points)
-                self.cache[id] = (frames, dt)
+            g = self.gait.generate(*vector)
+            frames, dt = self.agility.prepare_smoothly(g)
 
             self.agility.execute_frames(frames, dt)
 

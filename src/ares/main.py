@@ -3,6 +3,68 @@ from serial.tools import list_ports
 import time
 
 
+class Ares:
+    def __init__(self, robot, camera, info):
+        self.robot = robot
+        self.camera = camera
+
+        self.max_speed = info['max_speed']
+        self.max_rotation = info['max_rotation']
+
+        self.k = 1
+
+    def compute_vector(self, target, area, x, hr):
+        """
+        From given Theia data, compute desired movement vector.
+        :param target: The target area of the object.
+        :param area: The current area of the object..
+        :param x: The x-center of the target.
+        :param hr: Head rotation.
+        :return: (forward, rotation).
+        """
+
+        # Compute absolute r.
+        dr = (x - 0.5 * self.camera.width) * -1
+        r = dr / self.camera.width * (self.camera.fx / 2)
+        r += hr
+
+        # Get range bounds.
+        servo = self.robot.head[0]
+        low = servo.left_bound - self.camera.fx / 2
+        high = servo.right_bound + self.camera.fx / 2
+        mid = (low + high) / 2
+        delta = abs(high - mid)
+
+        # Compute magnitude of r.
+        if abs(r - mid) <= 5:
+            # Close enough to target.
+            rotation = 0
+        elif r > mid:
+            # Left turn.
+            rotation = abs(self.max_rotation * r / delta)
+        else:
+            # Right turn.
+            rotation = abs(self.max_rotation * r / delta)
+            rotation *= -1
+
+        if rotation > 0.5:
+            # Too much rotation, perform in place turn.
+            forward = 0
+        else:
+            v = self.max_speed - self.max_speed * area / target
+
+            if abs(v) < 0.5:
+                # Too slow. No need to move.
+                forward = 0
+            else:
+                forward = v
+
+        # Round because rounded things are better.
+        rotation = round(rotation, 2)
+        forward = round(forward, 2)
+
+        return forward, rotation
+
 class RFID:
     def __init__(self, port=None):
         """

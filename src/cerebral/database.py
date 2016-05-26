@@ -5,6 +5,7 @@ from cerebral.nameserver import ports
 
 # Configure pyro.
 Pyro4.config.SERIALIZERS_ACCEPTED = frozenset(['pickle', 'serpent'])
+Pyro4.config.SERIALIZER = 'pickle'
 
 # Logging queue.
 queue = queue.Queue()

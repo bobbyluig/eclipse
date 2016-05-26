@@ -148,16 +148,6 @@ class Dynamic:
             'trot': [0, 500, 500, 0]
         }
 
-        # Cache for gait objects.
-        self.cache = {}
-
-    def clear(self):
-        """
-        Clear the cache.
-        """
-
-        self.cache.clear()
-
     def generate(self, forward, rotation):
         """
         Generate a gait.
@@ -168,13 +158,6 @@ class Dynamic:
 
         # Check for no solution.
         assert not (forward == 0 and rotation == 0)
-
-        # Hash table lookup.
-        h = hash((forward, rotation))
-
-        # If gait is in cache, return it.
-        if h in self.cache:
-            return self.cache[h]
 
         # Check which type of gait to use.
         if abs(forward) >= self.transition:
@@ -224,7 +207,6 @@ class Dynamic:
 
         # Create object and add to cache.
         gait = Linear(sequence, self.ground, t, steps)
-        self.cache[h] = gait
 
         return gait
 

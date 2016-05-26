@@ -246,7 +246,7 @@ class Servo:
 
 
 class Body:
-    def __init__(self, length, width, cx, cy, cz, mb, ml):
+    def __init__(self, length, width, cx, cy, mb, ml):
         """
         Create a body object.
         Note that dimensions are between kinematic roots.
@@ -254,7 +254,6 @@ class Body:
         :param width: Width of body (along y-axis).
         :param cx: Bias of center of mass along x.
         :param cy: Bias of center of mass along y.
-        :param cz: Bias of center of mass along z (relative to kinematic-zero plane).
         :param mb: Mass of body.
         :param ml: Mass of leg.
         """
@@ -264,10 +263,9 @@ class Body:
         self.width = width
         self.cx = cx
         self.cy = cy
-        self.cz = cz
         self.mb = mb
         self.ml = ml
-        self.com = np.array((cx, cy, cz))
+        self.com = np.array((cx, cy, 0))
 
         # Define quick access array.
         self.j = np.array((
@@ -637,7 +635,18 @@ class Head:
 
 
 class Robot:
-    def __init__(self, leg1, leg2, leg3, leg4, body, head=None):
+    def __init__(self, leg1, leg2, leg3, leg4, body, head, bias=0):
+        """
+        Define a robot.
+        :param leg1: Leg object.
+        :param leg2: Leg object.
+        :param leg3: Leg object.
+        :param leg4: Leg object.
+        :param body: Body object.
+        :param head: Head object.
+        :param bias: Rotational bias for body.
+        """
+
         # Define legs.
         self.legs = [leg1, leg2, leg3, leg4]
         self.leg_servos = [servo for leg in self.legs for servo in leg]
@@ -673,6 +682,32 @@ class Agility:
             logger.warn("Failed to attached to Maestro's command port. "
                         "If not debugging, consider this a fatal error.")
 
+    def head_rotation(self):
+        """
+        Provides head rotation.
+        :return: Head rotation in degrees.
+        """
+
+        servo = self.robot.head[0]
+        self.maestro.get_position(servo)
+
+        return servo.get_position()
+
+    def set_head(self, target):
+        """
+        Move the head to a given position.
+        Blocks until completion.
+        """
+
+        head = self.robot.head
+        servos = self.robot.head_servos
+
+        head[0].set_target(target[0])
+        head[1].set_target(target[1])
+
+        self.maestro.end_together(servos, 0, True)
+        self.wait(servos)
+
     def look_at(self, x, y):
         """
         Move the head to look at a given target.
@@ -707,13 +742,16 @@ class Agility:
         # Update target.
         head.target = [x, y]
 
-    def scan(self, t, direction=None):
+        return data
+
+    def scan(self, t, direction=None, block=False):
         """
         Scans head in a direction. If no direction is given, scans toward bound of last known location.
         If at minimum of maximum bounds, automatically selects opposite direction.
         Blocks until completely scanned towards one direction.
         :param t: Time in milliseconds.
         :param direction: A direction, either None, 1, or -1.
+        :param block: Whether to wait until completion.
         """
 
         # Obtain definitions.
@@ -747,7 +785,9 @@ class Agility:
             servo.set_target(low)
 
         self.maestro.end_in(servo, t)
-        self.wait(servo)
+
+        if block:
+            self.wait(servo)
 
     def center_head(self, t=0):
         """
@@ -813,8 +853,8 @@ class Agility:
             # Set speed.
             self.maestro.set_speed(servo, velocity)
 
-        # Execute.
-        self.maestro.set_target(servos)
+            # Execute.
+            self.maestro.set_target(servo)
 
     @staticmethod
     def plot_gait(frames):
@@ -1282,6 +1322,26 @@ class Agility:
 
         self.maestro.go_home()
 
+    def ready(self, z, t=1000):
+        """
+        Ready a gait by lower robot to plane.
+        :param z: Height of gait.
+        :param t: Time in milliseconds
+        """
+
+        # Get all legs and servos for quick access.
+        legs = self.robot.legs
+        servos = self.robot.leg_servos
+
+        # Update initial leg locations.
+        self.maestro.get_multiple_positions(servos)
+
+        for i in range(len(legs)):
+            legs[i].target_point((0, 0, z))
+
+        self.maestro.end_together(servos, t)
+        self.wait(servos)
+
     def zero(self):
         """
         Manual return home by resetting all leg servo targets.
@@ -1299,9 +1359,7 @@ class Agility:
             self.maestro.set_target(servo)
 
         # Wait until completion.
-        while not self.is_at_target():
-            # Sleep for a short time to drastically save CPU cycles.
-            time.sleep(0.0005)
+        self.wait()
 
     def wait(self, servos=None):
         """
@@ -1310,7 +1368,7 @@ class Agility:
         """
 
         while not self.is_at_target(servos=servos):
-            time.sleep(0.005)
+            time.sleep(0.001)
 
     def is_at_target(self, servos=None):
         """

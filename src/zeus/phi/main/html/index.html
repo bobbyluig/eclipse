@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="utf-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 
     <title>Zeus | EDD 2016</title>
@@ -17,8 +17,10 @@
     <div class="ui dropdown icon item">
         <i class="options icon"></i>
         <div class="menu">
-            <div rv-on-click="menu.comSettings" class="item" rv-class-disabled="state.com.state |!== 'closed'">Communication</div>
-            <div rv-on-click="menu.speechSettings" class="item" >Speech</div>
+            <div rv-on-click="menu.comSettings" class="item" rv-class-disabled="state.com.state |!== 'closed'">
+                Communication
+            </div>
+            <div rv-on-click="menu.speechSettings" class="item">Speech</div>
             <div rv-on-click="menu.saveSettings" class="item">Save Settings</div>
             <div rv-on-click="menu.resetSettings" class="item">Reset</div>
         </div>
@@ -70,23 +72,6 @@
             </div>
 
             <div class="column">
-                <div class="ui raised segments rv">
-                    <div class="ui segment">
-                        <div class="ui large purple label">
-                            Communication Controls
-                        </div>
-                    </div>
-                    <div class="ui segment blue">
-                        <div class="ui button" rv-on-click="wamp.connect">
-                            Connect to Server
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="stretched row">
-            <div class="column">
                 <div class="ui raised segments logger" data-name="pack1" rv-on-click="log.zero">
                     <div class="ui segment">
                         <div class="ui middle aligned two column grid">
@@ -118,6 +103,24 @@
                                     {{ event.message }} <span class="light">({{ event.time }})</span>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="stretched row">
+            <div class="column">
+
+                <div class="ui raised segments rv">
+                    <div class="ui segment">
+                        <div class="ui large purple label">
+                            Communication Controls
+                        </div>
+                    </div>
+                    <div class="ui segment blue">
+                        <div class="ui button" rv-on-click="wamp.connect">
+                            Connect to Server
                         </div>
                     </div>
                 </div>

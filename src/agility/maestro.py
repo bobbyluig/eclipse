@@ -21,10 +21,10 @@ class Maestro:
     Having a servo in multiple threads will cause errors.
     """
 
-    def __init__(self, port=None, timeout=2):
+    def __init__(self, port=None, baud=115200):
         """
         :param port: The virtual port number.
-        :param timeout: Timeout option for each transfer.
+        :param baud: Baud rate. Should use maximum.
         """
 
         if port is not None:
@@ -55,7 +55,7 @@ class Maestro:
 
         # Start a connection using pyserial.
         try:
-            self.usb = serial.Serial(self.port, timeout=timeout, write_timeout=timeout)
+            self.usb = serial.Serial(self.port, baudrate=baud, write_timeout=0)
             logger.debug('Using command port "{}".'.format(self.usb.port))
         except:
             raise ConnectionError('Unable to connect to servo controller at {}.'.format(self.port))
@@ -65,9 +65,6 @@ class Maestro:
 
         # Locks.
         self.read_lock = Lock()
-
-        # Exceptions.
-        self.read_error = SerialTimeoutException('Read timeout')
 
     def write(self, buffer):
         """
@@ -235,9 +232,6 @@ class Maestro:
             self.usb.write(data)
             reply = self.usb.read(size=size)
 
-        if len(reply) != size:
-            raise self.read_error
-
         for i in range(count):
             data = reply[2 * i: 2 * i + 2]
             servos[i].pwm = self.struct.unpack(data)[0]
@@ -295,9 +289,6 @@ class Maestro:
             self.usb.write((0x90, servo.channel))
             reply = self.usb.read(size=2)
 
-        if len(reply) != 2:
-            raise self.read_error
-
         # Unpack data.
         pwm = self.struct.unpack(reply)[0]
 
@@ -315,9 +306,6 @@ class Maestro:
             self.usb.write((0x93,))
             reply = self.usb.read()
 
-        if len(reply) != 1:
-            raise self.read_error
-
         # Check and return.
         if reply == b'\x00':
             return False
@@ -334,9 +322,6 @@ class Maestro:
             # Send command and receive.
             self.usb.write((0xA1,))
             reply = self.usb.read(size=2)
-
-        if len(reply) != 2:
-            raise self.read_error
 
         if reply:
             return self.struct.unpack(reply)[0]
@@ -412,9 +397,6 @@ class Maestro:
             self.usb.write((0xAE,))
             reply = self.usb.read()
 
-        if len(reply) != 1:
-            raise self.read_error
-
         # Check and return.
         if reply == b'\x00':
             return False
@@ -440,6 +422,10 @@ class Maestro:
         # Max speed.
         if t == 0:
             t = abs(servo.target - servo.pwm) / servo.max_vel * 10
+
+        # Already at target.
+        if t == 0:
+            return
 
         # Faster send.
         buffer = bytearray()
@@ -478,6 +464,10 @@ class Maestro:
         # Max speed.
         if t == 0:
             t = max([abs(servo.target - servo.pwm) / servo.max_vel * 10 for servo in servos])
+
+        # Already at target.
+        if t == 0:
+            return
 
         # Faster send.
         buffer = bytearray()

@@ -1,11 +1,7 @@
 import cv2
 import numpy as np
-
-from cerebral import logger as l
 import logging
-
 import time
-
 from theia.tracker import DSST
 from theia.matcher import LineMatcher
 from theia.util import CIE76
@@ -51,10 +47,12 @@ class Oculus:
         """
 
         if self.initialized:
-            return
+            return False
 
         # Initialize tracker.
-        self.tracker.init(frame, bb)
+        if not self.tracker.init(frame, bb):
+            return False
+
         self.count = 1
         self.found = True
 
@@ -67,6 +65,8 @@ class Oculus:
         # Initialization is complete.
         self.initialized = True
 
+        return True
+
     def track(self, frame):
         """
         Track one frame. Must be used after initialization.
@@ -75,24 +75,24 @@ class Oculus:
         """
 
         if not self.initialized:
-            return None, None
+            return False, None, None
 
         if len(self.scores) >= self.max_templates:
             self.executor.submit(self.clean)
 
-        self.found = self.tracker.update(frame)
+        found = self.tracker.update(frame)
         bb = self.tracker.get_bounding_box()
         center = self.tracker.get_center()
 
-        if not self.found:
+        if not found:
             # Tracking lost. Attempt recovery.
             matches = self.matcher.match(frame, self.threshold)
 
             if len(matches) > 0:
                 best = matches[0]
-                self.found = self.tracker.update_at(frame, (best.x, best.y, best.width, best.height))
+                found = self.tracker.update_at(frame, (best.x, best.y, best.width, best.height))
 
-                if self.found:
+                if found:
                     template_id = best.template_id
                     score = 2 * best.similarity / self.matcher.num_templates_in_class(self.class_id)
                     self.scores[template_id] += score
@@ -110,6 +110,15 @@ class Oculus:
             if self.count > max(self.rank_interval, self.insert_interval):
                 # Reset counter.
                 self.count = 1
+
+        if found != self.found:
+            if found:
+                logger.debug('Tracking obtained.')
+            else:
+                logger.debug('Tracking lost.')
+
+        # Set.
+        self.found = found
 
         # Advance one.
         self.count += 1
@@ -216,14 +225,14 @@ class Theia:
         return colors[index]
 
     @staticmethod
-    def get_foreground(eye, frames, blur=True):
+    def get_foreground(eye, frames, event=None):
         """
         Gets the foreground given an eye object.
         This uses the MOG2 background/foreground segmentation algorithm.
         This allows for identification of moving PreyBOTS.
         :param eye: An eye (camera) object.
         :param frames: The number of initial frames to capture.
-        :param blur: Apply a smoothing gaussian blur to remove grains.
+        :param event: A threading event to exist early.
         :return: A binary image, where white is the foreground object.
         """
 
@@ -232,16 +241,21 @@ class Theia:
 
         for i in range(frames):
             frame = eye.get_color_frame()
-            if blur:
-                frame = cv2.GaussianBlur(frame, ksize, 0)
-            subtractor.apply(frame)
+            blurred = cv2.GaussianBlur(frame, ksize, 0)
 
+            # Return early if necessary.
+            if event is not None and event.is_set():
+                return None, frame
+
+            subtractor.apply(blurred)
+
+        # Get one additional frame for return.
         frame = eye.get_color_frame()
-        if blur:
-            frame = cv2.GaussianBlur(frame, ksize, 0)
-        mask = subtractor.apply(frame)
+        blurred = cv2.GaussianBlur(frame, ksize, 0)
 
-        return mask
+        mask = subtractor.apply(blurred)
+
+        return mask, frame
 
     @staticmethod
     def bound_blobs(image, count, order=False):
@@ -260,7 +274,7 @@ class Theia:
 
         if len(areas) < count:
             count = len(areas)
-            logger.info('Requested {} blobs. Only found {} blobs.'.format(count, len(areas)))
+            logger.warning('Requested {} blobs. Only found {} blobs.'.format(count, len(areas)))
 
         if count == 0:
             return None

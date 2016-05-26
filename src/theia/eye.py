@@ -40,9 +40,10 @@ class Camera:
 
 
 class Eye:
-    def __init__(self, camera):
+    def __init__(self, camera, debug=True):
         self.history = deque(maxlen=5)
         self.frame = None
+        self.debug = debug
 
         source = camera.source
         self.cap = cv2.VideoCapture(source)
@@ -68,6 +69,10 @@ class Eye:
             self.history.appendleft(self.frame.copy())
 
         _, self.frame = self.cap.read()
+
+        if self.debug:
+            cv2.imshow('debug', self.frame)
+            cv2.waitKey(1)
 
     def get_gray_frame(self):
         self.update_frame()
