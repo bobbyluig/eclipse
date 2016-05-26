@@ -1,4 +1,5 @@
-# from cerebral import logger as l
+from cerebral import logger as l
+
 import logging
 
 import Pyro4
