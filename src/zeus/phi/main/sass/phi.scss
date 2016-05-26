@@ -12,3 +12,14 @@ span.light {
   overflow: auto;
   height: 300px;
 }
+
+#feed {
+  max-width: 640px;
+  width: 100%;
+}
+
+#controller {
+  .button {
+    margin-bottom: 0.75em;
+  }
+}

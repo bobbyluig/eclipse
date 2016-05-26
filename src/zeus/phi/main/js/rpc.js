@@ -43,6 +43,9 @@ ctrlRpc.subLogger = function (prefix) {
         else if (level === 30) {
             level = 2;
         }
+        else if (level == 20) {
+            level = 1;
+        }
         else {
             level = 0;
         }

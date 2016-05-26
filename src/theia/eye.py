@@ -40,7 +40,7 @@ class Camera:
 
 
 class Eye:
-    def __init__(self, camera, debug=True):
+    def __init__(self, camera, debug=False):
         self.history = deque(maxlen=5)
         self.frame = None
         self.debug = debug

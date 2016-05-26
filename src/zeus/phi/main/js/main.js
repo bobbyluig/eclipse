@@ -7,13 +7,14 @@ var state = {};
 var wamp;
 
 // Controllers.
-var ctrlLoad = {};
 var ctrlMenu ={};
 var ctrlModal = {};
 var ctrlWamp = {};
 var ctrlRpc = {};
 var ctrlLog = {};
 var ctrlSpeech = {};
+var ctrlPack = {};
+
 
 // Status resets.
 state.com = {
@@ -36,7 +37,7 @@ $(document).ready(function() {
         ctrlLog.init(logger);
     });
 
-    rivets.bind(body, {menu: ctrlMenu, state: state, wamp: ctrlWamp});
+    rivets.bind(body, {menu: ctrlMenu, state: state, wamp: ctrlWamp, pack: ctrlPack});
 });
 
 // Prevent accidental closing.

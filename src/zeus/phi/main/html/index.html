@@ -111,17 +111,59 @@
 
         <div class="stretched row">
             <div class="column">
-
-                <div class="ui raised segments rv">
+                <div class="ui raised segments">
                     <div class="ui segment">
                         <div class="ui large purple label">
-                            Communication Controls
+                            System Control
                         </div>
                     </div>
-                    <div class="ui segment blue">
+                    <div id="controller" class="ui segment blue">
                         <div class="ui button" rv-on-click="wamp.connect">
                             Connect to Server
                         </div>
+                        <div class="ui button" rv-on-click="pack.getFeed">
+                            Get Feed
+                        </div>
+                        <div class="ui button" rv-on-click="pack.follow">
+                            Follow
+                        </div>
+                        <div class="ui button" rv-on-click="pack.globalStop">
+                            Global Stop
+                        </div>
+                        <div class="ui button" rv-on-click="pack.stopWatch">
+                            Stop Watch
+                        </div>
+                        <div class="ui button" rv-on-click="pack.centerHead">
+                            Center Head
+                        </div>
+                        <div class="ui button" rv-on-click="pack.pushup">
+                            Push Up
+                        </div>
+                        <div class="ui button" rv-on-click="pack.watch">
+                            Watch
+                        </div>
+                        <div class="ui button" rv-on-click="pack.zero">
+                            Zero
+                        </div>
+                        <div class="ui button" rv-on-click="pack.bindKeys">
+                            Bind Keys
+                        </div>
+                        <div class="ui button" rv-on-click="pack.unbindKeys">
+                            Unbind Keys
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="column">
+                <div class="ui raised segments">
+                    <div class="ui segment">
+                        <div class="ui large purple label">
+                            Video Feed
+                        </div>
+                    </div>
+                    <div class="ui segment blue">
+                        <img id="feed" class="ui centered image" src="http://placehold.it/640x480" />
                     </div>
                 </div>
             </div>

@@ -37,7 +37,8 @@ class SuperAres:
     def stop(self):
         with self.lock:
             super_agility.stop()
-            super_theia.stop()
+            super_theia.stop_track()
+            super_theia.stop_find()
 
             if self.thread is not None:
                 self.event.set()
@@ -107,4 +108,15 @@ class SuperAres:
 
 
 super_ares = SuperAres()
-super_ares.start_follow()
+
+
+if __name__ == '__main__':
+    # Create a daemon.
+    port = ports['worker3']
+    daemon = Pyro4.Daemon('localhost', port)
+
+    # Register all objects.
+    daemon.register(super_ares, 'super_ares')
+
+    # Start event loop.
+    daemon.requestLoop()

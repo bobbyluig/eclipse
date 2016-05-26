@@ -145,9 +145,6 @@ class Maestro:
         :return: The instruction tuple.
         """
 
-        # Logging.
-        logger.debug('Setting servo {}\'s position to {}.'.format(servo.channel, servo.target))
-
         # Use endian format suitable for Maestro.
         lsb, msb = self.endianize(servo.target)
 
@@ -167,9 +164,6 @@ class Maestro:
         :param send: Whether or not to send instruction immediately.
         :return: The instruction tuple.
         """
-
-        # Logging.
-        logger.debug('Setting servo {}\'s speed to {}.'.format(servo.channel, speed))
 
         # Use endian format suitable for Maestro.
         lsb, msb = self.endianize(speed)
@@ -193,9 +187,6 @@ class Maestro:
         :param send: Whether or not to send instruction immediately.
         :return: The instruction tuple.
         """
-
-        # Logging.
-        logger.debug('Setting servo {}\'s acceleration to {}.'.format(servo.channel, accel))
 
         # Use endian format suitable for Maestro.
         lsb, msb = self.endianize(accel)

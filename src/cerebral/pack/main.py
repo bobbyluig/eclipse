@@ -7,6 +7,7 @@ import logging
 import ssl
 import time
 import os
+import socket
 
 from autobahn.asyncio.wamp import ApplicationSession
 from autobahn import wamp
@@ -37,7 +38,6 @@ class Cerebral(ApplicationSession):
 
         # Create a thread executor for slightly CPU-bound async functions.
         self.executor = ThreadPoolExecutor(20)
-        self.loop.set_default_executor(self.executor)
 
         # Manual/Automatic mode.
         self.auto = False
@@ -71,45 +71,72 @@ class Cerebral(ApplicationSession):
         self.register(self)
 
         # Start logging.
-        self.executor.submit(self.watch_logging)
+        self.run(self.watch_logging)
 
     def onDisconnect(self):
         logger.info('Connection lost!')
+
+    ####################
+    # Special functions.
+    ####################
+
+    def run(self, fn, *args, **kwargs):
+        return asyncio.wrap_future(self.executor.submit(fn, *args, **kwargs))
 
     ########################
     # Main remote functions.
     ########################
 
+    @wamp.register('{}.get_feed'.format(Crossbar.prefix))
+    async def get_feed(self):
+        future = self.run(self.get_ip)
+        ip = await future
+
+        return 'http://{}:8080/?action=stream'.format(ip)
+
     @wamp.register('{}.follow'.format(Crossbar.prefix))
     async def follow(self):
-        if self.auto:
-            return False
-
-        future = self.executor.submit(self.super_ares.start_follow)
+        future = self.run(self.super_ares.start_follow)
         success = await future
+        self.auto = True
         return success
 
     @wamp.register('{}.set_vector'.format(Crossbar.prefix))
-    async def set_vector(self, args):
+    async def set_vector(self, a, b):
         if self.auto:
             return False
 
-        await self.executor.submit(self.super_agility.set_vector, args)
+        await self.run(self.super_agility.set_vector, (a, b))
         return True
 
-    @wamp.register('{}.stop'.format(Crossbar.prefix))
-    async def stop(self):
-        future = self.executor.submit(self.super_ares.stop)
+    @wamp.register('{}.set_head'.format(Crossbar.prefix))
+    async def set_head(self, a, b):
+        if self.auto:
+            return False
+
+        await self.run(self.agility.set_head, (a, b))
+        return True
+
+    @wamp.register('{}.global_stop'.format(Crossbar.prefix))
+    async def global_stop(self):
+        future = self.run(self.super_ares.stop)
+        success = await future
+        self.auto = False
+        return success
+
+    @wamp.register('{}.stop_watch'.format(Crossbar.prefix))
+    async def stop_agility(self):
+        future = self.run(self.super_agility.stop)
         success = await future
         self.auto = False
         return success
 
     @wamp.register('{}.center_head'.format(Crossbar.prefix))
-    async def center_head(self, args):
+    async def center_head(self):
         if self.auto:
             return False
 
-        await self.executor.submit(self.agility.center_head)
+        await self.run(self.agility.center_head)
         return True
 
     @wamp.register('{}.pushup'.format(Crossbar.prefix))
@@ -117,7 +144,7 @@ class Cerebral(ApplicationSession):
         if self.auto:
             return False
 
-        future = self.executor.submit(self.super_agility.start_pushup)
+        future = self.run(self.super_agility.start_pushup)
         success = await future
         return success
 
@@ -126,13 +153,28 @@ class Cerebral(ApplicationSession):
         if self.auto:
             return False
 
-        future = self.executor.submit(self.super_agility.start_watch)
+        future = self.run(self.super_agility.start_watch)
+        success = await future
+        return success
+
+    @wamp.register('{}.zero'.format(Crossbar.prefix))
+    async def zero(self):
+        if self.auto:
+            return False
+
+        future = self.run(self.super_agility.zero)
         success = await future
         return success
 
     #####################
     # Blocking functions.
     #####################
+
+    @staticmethod
+    def get_ip():
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect((Crossbar.ip, 443))
+        return s.getsockname()[0]
 
     def watch_logging(self):
         uri = lookup('database', 'logging')

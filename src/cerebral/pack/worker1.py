@@ -1,4 +1,4 @@
-# from cerebral import logger as l
+from cerebral import logger as l
 
 import Pyro4
 from cerebral.nameserver import ports
