@@ -10,7 +10,7 @@ import os
 
 class Android:
     # Camera. 'http://127.0.0.1:8080/?action=stream&dummy.mjpg'
-    camera = Camera(0, 90, 60)
+    camera = Camera('http://127.0.0.1:8080/?action=stream&dummy.mjpg', 90, 60)
 
     # Leg 1.
     servo1 = Servo(0, -180, 90, 500, 2500, 150, bias=2, direction=1)
