@@ -47,7 +47,9 @@ ctrlPack.basicCall = function (name, array) {
     if (array === undefined) {
         fn = name + '()';
     } else {
-        fn = name + '(' + array.join(', ') + ')';
+        var x = array[0].toFixed(2);
+        var y = array[1].toFixed(2);
+        fn = name + '(' + x + ', ' + y + ')';
     }
 
     wamp.call(ctrlPack.robot + '.' + name, array).then(
@@ -147,6 +149,16 @@ ctrlPack.bindKeys = function () {
                 // Down arrow key. Head down.
                 position[1] -= h;
                 break;
+        }
+
+        if (Math.abs(vector[0]) < 0.001) {
+            // Fix floating point error.
+            vector[0] = 0;
+        }
+
+        if (Math.abs(vector[1]) < 0.001) {
+            // Fix floating point error.
+            vector[1] = 0;
         }
 
         if (!arraysEqual(ctrlPack.vector, vector)) {

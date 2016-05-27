@@ -31,7 +31,7 @@ class Android:
 
     # Leg 4 .
     servo10 = Servo(9, -180, 90, 500, 2500, 150, bias=-7, direction=-1)
-    servo11 = Servo(10, -225, 45, 500, 2500, 150, bias=0, direction=1)
+    servo11 = Servo(10, -225, 45, 500, 2500, 150, bias=-5, direction=1)
     servo12 = Servo(11, -135, 135, 500, 2500, 150, bias=0, direction=1)
     leg4 = Leg(servo10, servo11, servo12, (6.4, 7.25), 3, Finesse.inverse_pack, Finesse.forward_pack)
 
@@ -41,7 +41,7 @@ class Android:
     head = Head(servo16, servo17, camera)
 
     # Body
-    body = Body(length=16.7, width=14.8, cx=0, cy=0, mb=20, ml=0)
+    body = Body(length=16.7, width=14.8, cx=-0.3, cy=0.1, mb=20, ml=0)
 
     # Robot.
     robot = Robot(leg1, leg2, leg3, leg4, body, head)
