@@ -5,7 +5,7 @@ import logging
 import Pyro4
 from ares.main import Ares
 from cerebral.nameserver import lookup, ports
-from cerebral.pack.hippocampus import Android
+from cerebral.pack1.hippocampus import Android
 from threading import RLock, Thread, Event
 import time
 

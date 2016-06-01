@@ -2,7 +2,7 @@ from tkinter import *
 from threading import Thread, Lock
 import math
 from agility.gait import Dynamic
-from cerebral.pack.hippocampus import Android
+from cerebral.pack1.hippocampus import Android
 from agility.main import Agility
 import time, math
 

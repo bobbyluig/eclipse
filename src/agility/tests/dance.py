@@ -4,7 +4,7 @@ from pydub.playback import play
 from threading import Thread
 import sched
 from agility.main import Agility
-from cerebral.pack.hippocampus import Android
+from cerebral.pack1.hippocampus import Android
 
 song = AudioSegment.from_mp3('tiger.mp3')
 song = song[570:] # 570

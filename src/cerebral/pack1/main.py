@@ -15,7 +15,7 @@ from autobahn.wamp import auth
 from shared.autoreconnect import ApplicationRunner
 from concurrent.futures import ThreadPoolExecutor
 
-from cerebral.pack.hippocampus import Crossbar
+from cerebral.pack1.hippocampus import Crossbar
 
 import Pyro4
 from cerebral.nameserver import lookup

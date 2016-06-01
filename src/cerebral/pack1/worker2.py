@@ -6,7 +6,7 @@ from cerebral.nameserver import ports
 
 from theia.main import Oculus, Theia
 from theia.eye import Eye, Camera
-from cerebral.pack.hippocampus import Android
+from cerebral.pack1.hippocampus import Android
 
 from threading import Thread, Lock, Event
 

@@ -3,7 +3,7 @@ from cerebral import logger as l
 import Pyro4
 from cerebral.nameserver import ports
 from agility.gait import Dynamic
-from cerebral.pack.hippocampus import Android
+from cerebral.pack1.hippocampus import Android
 from agility.main import Agility
 from threading import Thread, Lock, Event
 import time

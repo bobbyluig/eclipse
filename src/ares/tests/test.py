@@ -1,5 +1,5 @@
 from ares.main import Ares
-from cerebral.pack.hippocampus import Android
+from cerebral.pack1.hippocampus import Android
 
 
 camera = Android.camera

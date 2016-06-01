@@ -1,4 +1,4 @@
-from cerebral.pack.hippocampus import Android
+from cerebral.pack1.hippocampus import Android
 import numpy as np
 
 robot = Android.robot

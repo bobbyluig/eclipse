@@ -3,7 +3,7 @@ from cerebral import logger as l
 from theia.main import Oculus, Theia
 from theia.eye import Eye, Camera
 from concurrent.futures import ThreadPoolExecutor
-from cerebral.pack.hippocampus import Android
+from cerebral.pack1.hippocampus import Android
 from agility.main import Agility
 
 executor = ThreadPoolExecutor(max_workers=1)
