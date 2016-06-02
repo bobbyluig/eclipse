@@ -88,24 +88,6 @@
                         <div class="ui button" rv-on-click="wamp.connect">
                             Connect to Server
                         </div>
-                        <div class="ui button" rv-on-click="pack.stopWatch">
-                            Stop Watch
-                        </div>
-                        <div class="ui button" rv-on-click="pack.centerHead">
-                            Center Head
-                        </div>
-                        <div class="ui button" rv-on-click="pack.pushup">
-                            Push Up
-                        </div>
-                        <div class="ui button" rv-on-click="pack.watch">
-                            Watch
-                        </div>
-                        <div class="ui button" rv-on-click="pack.zero">
-                            Zero
-                        </div>
-                        <div class="ui button" rv-on-click="pack.bindKeys">
-                            Bind Keys
-                        </div>
                         <div class="ui button" rv-on-click="pack.unbindKeys">
                             Unbind Keys
                         </div>
@@ -121,6 +103,38 @@
         </div>
 
         <div class="ui divider"></div>
+
+        <div class="stretched row">
+            <div class="sixteen wide column">
+                 <div class="ui raised segments">
+                    <div class="ui segment">
+                        <div class="ui large purple label">
+                            Pack 1 Control
+                        </div>
+                    </div>
+                    <div class="ui segment blue center aligned controller">
+                        <div class="ui button" rv-on-click="pack.stop">
+                            Stop
+                        </div>
+                        <div class="ui button" rv-on-click="pack.pack1.centerHead">
+                            Center Head
+                        </div>
+                        <div class="ui button" rv-on-click="pack.pack1.pushup">
+                            Push Up
+                        </div>
+                        <div class="ui button" rv-on-click="pack.pack1.watch">
+                            Watch
+                        </div>
+                        <div class="ui button" rv-on-click="pack.pack1.zero">
+                            Zero
+                        </div>
+                        <div class="ui button" rv-on-click="pack.pack1.bind">
+                            Keyboard Control
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <div class="stretched row">
             <div class="eight wide column">

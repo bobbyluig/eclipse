@@ -33,8 +33,9 @@ class Cerebral(ApplicationSession):
 
         # Get remote objects.
         self.agility = Pyro4.Proxy(lookup('worker1', 'agility'))
-        self.super_theia = Pyro4.Proxy(lookup('worker2', 'super_theia'))
         self.super_agility = Pyro4.Proxy(lookup('worker1', 'super_agility'))
+        self.super_theia = Pyro4.Proxy(lookup('worker2', 'super_theia'))
+        self.super_ares = Pyro4.Proxy(lookup('worker3', 'super_ares'))
 
         # Create a thread executor for slightly CPU-bound async functions.
         self.executor = ThreadPoolExecutor(20)
@@ -101,9 +102,9 @@ class Cerebral(ApplicationSession):
         await self.run(self.agility.set_head, (a, b))
         return True
 
-    @wamp.register('{}.stop_watch'.format(Crossbar.prefix))
-    async def stop_agility(self):
-        future = self.run(self.super_agility.stop)
+    @wamp.register('{}.stop'.format(Crossbar.prefix))
+    async def stop(self):
+        future = self.run(self.super_ares.stop)
         success = await future
         return success
 
@@ -127,6 +128,12 @@ class Cerebral(ApplicationSession):
     @wamp.register('{}.zero'.format(Crossbar.prefix))
     async def zero(self):
         future = self.run(self.super_agility.zero)
+        success = await future
+        return success
+
+    @wamp.register('{}.follow'.format(Crossbar.prefix))
+    async def follow(self):
+        future = self.run(self.super_agility.start_follow)
         success = await future
         return success
 

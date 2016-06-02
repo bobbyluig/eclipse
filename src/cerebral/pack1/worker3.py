@@ -38,8 +38,7 @@ class SuperAres:
     def stop(self):
         with self.lock:
             super_agility.stop()
-            super_theia.stop_track()
-            super_theia.stop_find()
+            super_theia.stop()
 
             if self.thread is not None:
                 self.event.set()

@@ -114,8 +114,8 @@ ctrlPack.setHead = function (robot) {
     );
 };
 
-ctrlPack.pack1.stopWatch = function () {
-    ctrlPack.basicCall('pack1', 'stop_watch');
+ctrlPack.pack1.stop = function () {
+    ctrlPack.basicCall('pack1', 'stop');
 };
 
 ctrlPack.pack1.centerHead = function () {
@@ -152,10 +152,10 @@ ctrlPack.bindKeys = function (robot) {
         var r = 0.08;
         var h = 1;
 
-        var v1 = state[robot].v1;
-        var v2 = state[robot].v2;
-        var p1 = state[robot].p1;
-        var p2 = state[robot].p2;
+        var v1 = parseFloat(state[robot].v1);
+        var v2 = parseFloat(state[robot].v2);
+        var p1 = parseFloat(state[robot].p1);
+        var p2 = parseFloat(state[robot].p2);
 
         switch (e.which) {
             case 87:
@@ -194,6 +194,12 @@ ctrlPack.bindKeys = function (robot) {
                 return;
         }
 
+        // Round.
+        v1 = v1.toFixed(1);
+        v2 = v2.toFixed(2);
+        p1 = p1.toFixed(0);
+        p2 = p2.toFixed(0);
+
         if (Math.abs(v1) < 0.001) {
             // Fix floating point error.
             v1 = 0;
@@ -205,10 +211,11 @@ ctrlPack.bindKeys = function (robot) {
         }
 
         if (v1 !== state[robot].v1 || v2 !== state[robot].v2) {
+            state[robot].v1 = v1;
+            state[robot].v2 = v2;
             ctrlPack.setVector(robot, v1, v2);
         }
-
-        if (p1 !== state[robot].p1 || p2 !== state[robot].p2) {
+        else if (p1 !== state[robot].p1 || p2 !== state[robot].p2) {
             state[robot].p1 = p1;
             state[robot].p2 = p2;
             ctrlPack.setHead(robot, p1, p2);
