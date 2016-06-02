@@ -200,16 +200,6 @@ ctrlPack.bindKeys = function (robot) {
         p1 = p1.toFixed(0);
         p2 = p2.toFixed(0);
 
-        if (Math.abs(v1) < 0.001) {
-            // Fix floating point error.
-            v1 = 0;
-        }
-
-        if (Math.abs(v2) < 0.001) {
-            // Fix floating point error.
-            v2 = 0;
-        }
-
         if (v1 !== state[robot].v1 || v2 !== state[robot].v2) {
             state[robot].v1 = v1;
             state[robot].v2 = v2;
