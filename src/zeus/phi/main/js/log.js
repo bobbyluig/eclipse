@@ -49,8 +49,7 @@ ctrlLog.init = function (logger) {
         log.zero();
     };
 
-    rivets.bind(selector, {log: log});
-
+    rivets.bind(selector, $.extend({log: log}, bindings));
     ctrlLog.log(selector, 'Logger initialized!', 1);
 };
 

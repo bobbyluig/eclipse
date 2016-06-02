@@ -18,6 +18,8 @@ var ctrlPack = {
     pack2: {}
 };
 
+// Global bindings.
+var bindings = {menu: ctrlMenu, state: state, wamp: ctrlWamp, pack: ctrlPack, speech: ctrlSpeech};
 
 // Status resets.
 state.com = {
@@ -61,10 +63,13 @@ $(document).ready(function() {
         var logger = $(this);
         ctrlLog.init(logger);
     });
-    
-    annyang.addCommands(ctrlSpeech.commands);
 
-    rivets.bind(body, {menu: ctrlMenu, state: state, wamp: ctrlWamp, pack: ctrlPack, speech: ctrlSpeech});
+    ctrlPack.registerStream('pack1');
+
+    annyang.addCommands(ctrlSpeech.commands);
+    
+    rivets.bind($('#controller'), bindings);
+    rivets.bind($('#menu'), bindings);
 });
 
 // Prevent accidental closing.

@@ -32,9 +32,9 @@
 </div>
 
 <div class="ui bottom attached segment">
-    <div class="ui two column stackable grid">
+    <div class="ui stackable grid">
         <div class="stretched row">
-            <div class="column">
+            <div class="twelve wide column">
                 <div class="ui raised segments logger" data-name="system" rv-on-click="log.zero">
                     <div class="ui segment">
                         <div class="ui middle aligned two column grid">
@@ -77,7 +77,7 @@
                 </div>
             </div>
 
-            <div class="column">
+            <div class="four wide column">
                 <div class="ui raised segments">
                     <div class="ui segment">
                         <div class="ui large purple label">
@@ -120,12 +120,14 @@
             </div>
         </div>
 
+        <div class="ui divider"></div>
+
         <div class="stretched row">
-            <div class="column">
+            <div class="eight wide column">
                 <div class="ui raised segments logger" data-name="pack1" rv-on-click="log.zero">
                     <div class="ui segment">
-                        <div class="ui middle aligned two column grid">
-                            <div class="left aligned column">
+                        <div class="ui middle aligned grid">
+                            <div class="left floated left aligned eleven wide column">
                                 <div class="ui large purple label">
                                     Pack 1 Log
                                     <div class="detail">{{ log.new }}</div>
@@ -143,9 +145,10 @@
                                     <i class="keyboard icon"></i> Off
                                 </div>
                             </div>
-                            <div class="right aligned column">
+                            <div class="right floated right aligned five wide column">
                                 <div class="ui compact icon button" rv-on-click="log.changeScroll">
-                                    <i class="icon" rv-class-play="log.scroll | !" rv-class-pause="log.scroll"></i>
+                                    <i class="play icon" rv-show="log.scroll | !"></i>
+                                    <i class="pause icon" rv-show="log.scroll"></i>
                                 </div>
                                 <div class="ui compact button" rv-on-click="log.clear">
                                     Clear
@@ -170,11 +173,37 @@
                 </div>
             </div>
 
+            <div class="four wide column">
+                <div class="ui raised segments feed" data-name="pack1">
+                    <div class="ui segment">
+                        <div class="ui middle aligned grid">
+                            <div class="left floated left aligned fourteen wide column">
+                                <div class="ui large purple label">
+                                    Pack 1 Video
+                                </div>
+                            </div>
+                            <div class="right floated right aligned two wide column">
+                                <div class="ui compact icon button" rv-on-click="feed.changeStream">
+                                    <i class="play icon" rv-show="feed.play | !"></i>
+                                    <i class="pause icon" rv-show="feed.play"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="ui segment blue">
+                        <img src="">
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="stretched row">
             <div class="column">
                 <div class="ui raised segments logger" data-name="pack2" rv-on-click="log.zero">
                     <div class="ui segment">
-                        <div class="ui middle aligned two column grid">
-                            <div class="left aligned column">
+                        <div class="ui middle aligned grid">
+                            <div class="left floated left aligned eleven wide column">
                                 <div class="ui large purple label">
                                     Pack 2 Log
                                     <div class="detail">{{ log.new }}</div>
@@ -192,7 +221,7 @@
                                     <i class="keyboard icon"></i> Off
                                 </div>
                             </div>
-                            <div class="right aligned column">
+                            <div class="right floated right aligned five wide column">
                                 <div class="ui compact icon button" rv-on-click="log.changeScroll">
                                     <i class="icon" rv-class-play="log.scroll | !" rv-class-pause="log.scroll"></i>
                                 </div>
@@ -219,6 +248,7 @@
                 </div>
             </div>
         </div>
+
     </div>
 </div>
 

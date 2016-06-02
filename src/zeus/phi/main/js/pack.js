@@ -35,6 +35,39 @@ ctrlPack.basicCall = function (robot, name) {
     )
 };
 
+ctrlPack.streams = {};
+
+ctrlPack.registerStream = function (robot) {
+    var query = $('.feed[data-name="' + robot + '"]');
+
+    var feed = {};
+    ctrlPack.streams[robot] = feed;
+
+    feed.play = false;
+    feed.changeStream = function () {
+        feed.play = !feed.play;
+    };
+    feed.get = function () {
+        if (feed.play && state[robot].connected && wamp !== undefined) {
+            console.log('getting video!');
+            wamp.call(robot + '.' + 'get_frame').then(
+                function (res) {
+                    var src = 'data:image/jpeg;base64,' + res;
+                    query.attr('src', src);
+                }
+            );
+        }
+        setTimeout(feed.get, 500);
+    };
+
+    rivets.bind(query, $.extend({feed: feed}, bindings));
+    setTimeout(feed.get, 500);
+};
+
+ctrlPack.stopStream = function (robot) {
+    ctrlPack.streams[robot].play = false;
+};
+
 ctrlPack.setVector = function (robot) {
     if (!ctrlPack.check(robot)) {
         return;
