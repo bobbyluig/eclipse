@@ -216,6 +216,7 @@ ctrlPack.bindKeys = function (robot) {
             ctrlPack.setVector(robot, v1, v2);
         }
         else if (p1 !== state[robot].p1 || p2 !== state[robot].p2) {
+            console.log('head');
             state[robot].p1 = p1;
             state[robot].p2 = p2;
             ctrlPack.setHead(robot, p1, p2);
