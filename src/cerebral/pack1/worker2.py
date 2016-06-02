@@ -10,6 +10,7 @@ from cerebral.pack1.hippocampus import Android
 
 from threading import Thread, Lock, Event
 
+
 # Configure pyro.
 Pyro4.config.SERIALIZERS_ACCEPTED = frozenset(['pickle', 'serpent'])
 Pyro4.config.SERIALIZER = 'pickle'
@@ -30,11 +31,13 @@ class SuperTheia:
 
         # Event and lock.
         self.event = Event()
-        self.event2 = Event()
         self.lock = Lock()
 
         # Start.
         self.thread = None
+
+    def get(self):
+        return self.eye.encoded_jpeg()
 
     def start_track(self, frame):
         with self.lock:
@@ -52,10 +55,10 @@ class SuperTheia:
                 return None
 
             # Reset.
+            self.event.clear()
             self.found = False
             self.position = None
             self.center = None
-            self.event2.clear()
             self.oculus = Oculus()
 
         # Locate the moving object.
@@ -63,7 +66,7 @@ class SuperTheia:
         frame = None
 
         # Loop until capture.
-        while blob is None and not self.event2.is_set():
+        while blob is None and not self.event.is_set():
             mask, frame = Theia.get_foreground(self.eye, 100, self.event)
 
             # Check early exit condition.
@@ -91,14 +94,11 @@ class SuperTheia:
             else:
                 return bb
 
-    def stop_find(self):
-        self.event2.set()
-        return True
-
-    def stop_track(self):
+    def stop(self):
         with self.lock:
+            self.event.set()
+
             if self.thread is not None:
-                self.event.set()
                 self.thread.join()
                 self.thread = None
                 self.event.clear()

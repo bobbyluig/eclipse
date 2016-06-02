@@ -13,12 +13,37 @@ var ctrlWamp = {};
 var ctrlRpc = {};
 var ctrlLog = {};
 var ctrlSpeech = {};
-var ctrlPack = {};
+var ctrlPack = {
+    pack1: {},
+    pack2: {}
+};
 
 
 // Status resets.
 state.com = {
     state: 'closed'
+};
+
+state.bind = {
+    active: null
+};
+
+state.pack1 = {
+    connected: false,
+    session: 0,
+    v1: 0,
+    v2: 0,
+    p1: 0,
+    p2: 0
+};
+
+state.pack2 = {
+    connected: false,
+    session: 0,
+    v1: 0,
+    v2: 0,
+    p1: 0,
+    p2: 0
 };
 
 // Main

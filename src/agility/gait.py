@@ -131,7 +131,7 @@ class Dynamic:
         self.transition = 5         # Velocity at which to transition from crawl to trot.
 
         self.max_steps = 100        # Maximum number of dt steps.
-        self.min_steps = 40         # Minimum number of dt steps.
+        self.min_steps = 20         # Minimum number of dt steps.
 
         # Rotation constants.
         self.r = self.b / np.linalg.norm(self.b)
@@ -193,8 +193,8 @@ class Dynamic:
         # Convert t to milliseconds.
         t *= 1000
 
-        # Compute steps. 10 ms dt maximum.
-        steps = round(int(t / 10))
+        # Compute steps. 50 Hz maximum.
+        steps = round(int(t / 20))
 
         if steps > self.max_steps:
             steps = self.max_steps

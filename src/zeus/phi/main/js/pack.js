@@ -1,58 +1,25 @@
-ctrlPack.check = function () {
+ctrlPack.check = function (robot) {
     if (wamp === undefined) {
         ctrlLog.log('system', 'Not connected to server!', 3);
         return false;
     }
 
-    if (ctrlPack.robot != 'pack1' && ctrlPack.robot != 'pack2') {
-        ctrlLog.log('system', 'Unknown robot ' + id + '.');
+    if (!state[robot].connected) {
+        ctrlLog.log('system', 'Robot ' + robot + ' is not connected!', 3);
         return false;
     }
 
     return true;
 };
 
-ctrlPack.robot = 'pack1';
-
-ctrlPack.setRobot = function (id) {
-    if (id == 'one' || id == '1') {
-        ctrlPack.pack1();
-    }
-    else if (id == 'to' || id == '2') {
-        ctrlPack.pack2();
-    }
-};
-
-ctrlPack.pack1 = function () {
-    if (ctrlPack.robot != 'pack1') {
-        ctrlPack.robot = 'pack1';
-        ctrlLog.log('system', 'Controlling pack 1.', 1);
-    }
-};
-
-ctrlPack.pack2 = function () {
-    if (ctrlPack.robot != 'pack2') {
-        ctrlPack.robot = 'pack2';
-        ctrlLog.log('system', 'Controlling pack 2.', 1);
-    }
-};
-
-ctrlPack.basicCall = function (name, array) {
-    if (!ctrlPack.check()) {
-        return false;
+ctrlPack.basicCall = function (robot, name) {
+    if (!ctrlPack.check(robot)) {
+        return;
     }
 
-    var fn;
+    var fn = name + '()';
 
-    if (array === undefined) {
-        fn = name + '()';
-    } else {
-        var x = array[0].toFixed(2);
-        var y = array[1].toFixed(2);
-        fn = name + '(' + x + ', ' + y + ')';
-    }
-
-    wamp.call(ctrlPack.robot + '.' + name, array).then(
+    wamp.call(robot + '.' + name).then(
         function (res) {
             if (res) {
                 ctrlLog.log('system', 'Executed ' + fn + '.', 1);
@@ -66,46 +33,83 @@ ctrlPack.basicCall = function (name, array) {
             ctrlLog.log('system', message + '.', 3);
         }
     )
-
 };
 
-ctrlPack.setVector = function (vector) {
-    ctrlPack.basicCall('set_vector', vector);
+ctrlPack.setVector = function (robot) {
+    if (!ctrlPack.check(robot)) {
+        return;
+    }
+
+    var v1 = state[robot].v1;
+    var v2 = state[robot].v2;
+
+    wamp.call(robot + '.' + 'set_vector', [v1, v2]).then(
+        function (res) {
+            if (!res) {
+                ctrlLog.log('system', 'Unable to set vector.');
+            }
+        },
+        function (err) {
+            var message = err.args[0];
+            message = message.capitalizeFirstLetter();
+            ctrlLog.log('system', message + '.', 3);
+        }
+    );
 };
 
-ctrlPack.setHead = function (position) {
-    ctrlPack.basicCall('set_head', position);
+ctrlPack.setHead = function (robot) {
+    if (!ctrlPack.check(robot)) {
+        return;
+    }
+
+    var p1 = state[robot].p1;
+    var p2 = state[robot].p2;
+
+    wamp.call(robot + '.' + 'set_vector', [p1, p2]).then(
+        function (res) {
+            if (!res) {
+                ctrlLog.log('system', 'Unable to set position.');
+            }
+        },
+        function (err) {
+            var message = err.args[0];
+            message = message.capitalizeFirstLetter();
+            ctrlLog.log('system', message + '.', 3);
+        }
+    );
 };
 
-ctrlPack.stopWatch = function () {
-    ctrlPack.basicCall('stop_watch');
+ctrlPack.pack1.stopWatch = function () {
+    ctrlPack.basicCall('pack1', 'stop_watch');
 };
 
-ctrlPack.centerHead = function () {
-    ctrlPack.basicCall('center_head');
+ctrlPack.pack1.centerHead = function () {
+    ctrlPack.basicCall('pack1', 'center_head');
 };
 
-ctrlPack.pushup = function () {
-    ctrlPack.basicCall('pushup');
+ctrlPack.pack1.pushup = function () {
+    ctrlPack.basicCall('pack1', 'pushup');
 };
 
-ctrlPack.watch = function () {
-    ctrlPack.basicCall('watch');
+ctrlPack.pack1.watch = function () {
+    ctrlPack.basicCall('pack1', 'watch');
 };
 
-ctrlPack.zero = function () {
-    ctrlPack.basicCall('zero');
+ctrlPack.pack1.zero = function () {
+    ctrlPack.basicCall('pack1', 'zero');
 };
 
-ctrlPack.vector = [0, 0];
-ctrlPack.position = [0, 0];
+ctrlPack.pack1.bind = function () {
+    ctrlPack.bindKeys('pack1');
+    state.bind.active = 'pack1';
+};
 
 ctrlPack.unbindKeys = function () {
     $(document).unbind('keydown');
     ctrlLog.log('system', 'Unbinded keys.', 1);
 };
 
-ctrlPack.bindKeys = function () {
+ctrlPack.bindKeys = function (robot) {
     $(document).unbind('keydown');
 
     $(document).keydown(function(e) {
@@ -113,81 +117,71 @@ ctrlPack.bindKeys = function () {
         var r = 0.08;
         var h = 1;
 
-        var vector = ctrlPack.vector.slice(0);
-        var position = ctrlPack.position.slice(0);
+        var v1 = state[robot].v1;
+        var v2 = state[robot].v2;
+        var p1 = state[robot].p1;
+        var p2 = state[robot].p2;
 
         switch (e.which) {
             case 87:
                 // W key. Go forward.
-                vector[0] += v;
+                v1 += v;
                 break;
             case 83:
                 // S key. Go backward.
-                vector[0] -= v;
+                v1 -= v;
                 break;
             case 65:
                 // A key. Turn left.
-                vector[1] += r;
+                v2 += r;
                 break;
             case 68:
                 // D key. Turn right.
-                vector[1] -= r;
+                v2 -= r;
                 break;
             case 37:
                 // Left arrow key. Head turn left.
-                position[0] += h;
+                p1 += h;
                 break;
             case 39:
                 // Right arrow key. Head turn right.
-                position[0] -= h;
+                p1 -= h;
                 break;
             case 38:
                 // Up arrow key. Head up.
-                position[1] += h;
+                p2 += h;
                 break;
             case 40:
                 // Down arrow key. Head down.
-                position[1] -= h;
+                p2 -= h;
                 break;
+            default:
+                return;
         }
 
-        if (Math.abs(vector[0]) < 0.001) {
+        if (Math.abs(v1) < 0.001) {
             // Fix floating point error.
-            vector[0] = 0;
+            v1 = 0;
         }
 
-        if (Math.abs(vector[1]) < 0.001) {
+        if (Math.abs(v2) < 0.001) {
             // Fix floating point error.
-            vector[1] = 0;
+            v2 = 0;
         }
 
-        if (!arraysEqual(ctrlPack.vector, vector)) {
-            ctrlPack.vector = vector.slice(0);
-            ctrlPack.setVector(vector);
+        if (v1 !== state[robot].v1 || v2 !== state[robot].v2) {
+            ctrlPack.setVector(robot, v1, v2);
         }
 
-        if (!arraysEqual(ctrlPack.position, position)) {
-            ctrlPack.position = position.slice(0);
-            ctrlPack.setHead(position);
+        if (p1 !== state[robot].p1 || p2 !== state[robot].p2) {
+            state[robot].p1 = p1;
+            state[robot].p2 = p2;
+            ctrlPack.setHead(robot, p1, p2);
         }
     });
 
-    ctrlLog.log('system', 'Binded keys.', 1);
+    ctrlLog.log('system', 'Binded keys for robot ' + robot + '.', 1);
 };
-
-function arraysEqual(a, b) {
-  if (a === b) return true;
-  if (a == null || b == null) return false;
-  if (a.length != b.length) return false;
-
-  // If you don't care about the order of the elements inside
-  // the array, you should sort both arrays here.
-
-  for (var i = 0; i < a.length; ++i) {
-    if (a[i] !== b[i]) return false;
-  }
-  return true;
-}
 
 String.prototype.capitalizeFirstLetter = function() {
     return this.charAt(0).toUpperCase() + this.slice(1);

@@ -43,6 +43,12 @@
                                     System Log
                                     <div class="detail">{{ log.new }}</div>
                                 </div>
+                                <div class="ui large green label" rv-show="state.com.state |=== 'open'">
+                                    <i class="wifi icon"></i> On
+                                </div>
+                                <div class="ui large red label" rv-show="state.com.state |!== 'open'">
+                                    <i class="wifi icon"></i> Off
+                                </div>
                             </div>
                             <div class="right aligned column">
                                 <div class="ui compact icon button" rv-on-click="log.changeScroll">
@@ -109,12 +115,6 @@
                         <div class="ui button" rv-on-click="speech.stop">
                             Stop Voice Recognition
                         </div>
-                        <div class="ui button" rv-on-click="pack.pack1">
-                            Select Pack 1
-                        </div>
-                        <div class="ui button" rv-on-click="pack.pack2">
-                            Select Pack 2
-                        </div>
                     </div>
                 </div>
             </div>
@@ -130,8 +130,17 @@
                                     Pack 1 Log
                                     <div class="detail">{{ log.new }}</div>
                                 </div>
-                                <div class="ui large green label" rv-show="pack.robot |=== 'pack1'">
-                                    Active
+                                <div class="ui large green label" rv-show="state.pack1.connected">
+                                    <i class="wifi icon"></i> On
+                                </div>
+                                <div class="ui large red label" rv-show="state.pack1.connected | !">
+                                    <i class="wifi icon"></i> Off
+                                </div>
+                                <div class="ui large green label" rv-show="state.bind.active |=== 'pack1'">
+                                    <i class="keyboard icon"></i> On
+                                </div>
+                                <div class="ui large red label" rv-show="state.bind.active |!== 'pack1'">
+                                    <i class="keyboard icon"></i> Off
                                 </div>
                             </div>
                             <div class="right aligned column">
@@ -170,8 +179,17 @@
                                     Pack 2 Log
                                     <div class="detail">{{ log.new }}</div>
                                 </div>
-                                <div class="ui large green label" rv-show="pack.robot |=== 'pack2'">
-                                    Active
+                                <div class="ui large green label" rv-show="state.pack2.connected">
+                                    <i class="wifi icon"></i> On
+                                </div>
+                                <div class="ui large red label" rv-show="state.pack2.connected | !">
+                                    <i class="wifi icon"></i> Off
+                                </div>
+                                <div class="ui large green label" rv-show="state.bind.active |=== 'pack2'">
+                                    <i class="keyboard icon"></i> On
+                                </div>
+                                <div class="ui large red label" rv-show="state.bind.active |!== 'pack2'">
+                                    <i class="keyboard icon"></i> Off
                                 </div>
                             </div>
                             <div class="right aligned column">

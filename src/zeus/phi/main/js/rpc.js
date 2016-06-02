@@ -27,7 +27,6 @@ ctrlRpc.basicDecision = function (args, kwargs, details) {
 
 ctrlRpc.registerAll = function () {
     wamp.register('zeus.phi.basic_decision', ctrlRpc.basicDecision);
-    ctrlLog.log('system', 'Registered all procedures.', 1);
 };
 
 ctrlRpc.subLogger = function (prefix) {

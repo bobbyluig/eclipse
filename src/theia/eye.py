@@ -3,6 +3,8 @@ import cv2
 import logging
 import urllib.request
 from collections import deque
+import base64
+from PIL import Image
 
 logger = logging.getLogger('universe')
 
@@ -61,6 +63,9 @@ class Eye:
             raise ConnectionError('Unable to open video source at {:d} x {:d}.'
                                   .format(source, camera.width, camera.height))
 
+        # Create blank.
+        self.blank = 'R0lGODlhAQABAIAAAMLCwgAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw=='
+
     def close(self):
         self.cap.release()
 
@@ -73,6 +78,16 @@ class Eye:
         if self.debug:
             cv2.imshow('debug', self.frame)
             cv2.waitKey(1)
+
+    def encoded_jpeg(self):
+        if self.frame is not None:
+            encode_param = (cv2.IMWRITE_JPEG_QUALITY, 90)
+            cnt = cv2.imencode('.jpg', self.frame, encode_param)[1]
+            data = base64.encodebytes(cnt)
+        else:
+            data = self.blank
+
+        return data
 
     def get_gray_frame(self):
         self.update_frame()
