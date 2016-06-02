@@ -2,9 +2,8 @@ import numpy as np
 import cv2
 import logging
 import urllib.request
-from collections import deque
 import base64
-from PIL import Image
+from threading import Thread, Event
 
 logger = logging.getLogger('universe')
 
@@ -43,7 +42,6 @@ class Camera:
 
 class Eye:
     def __init__(self, camera, debug=False):
-        self.history = deque(maxlen=5)
         self.frame = None
         self.debug = debug
 
@@ -63,38 +61,33 @@ class Eye:
             raise ConnectionError('Unable to open video source at {:d} x {:d}.'
                                   .format(source, camera.width, camera.height))
 
-        # Create blank.
-        self.blank = 'R0lGODlhAQABAIAAAMLCwgAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw=='
+        # Threading.
+        self.thread = Thread(target=self.run)
+        self.event = Event()
+
+        # Start.
+        self.thread.start()
+
+    def run(self):
+        while not self.event.is_set():
+            _, self.frame = self.cap.read()
 
     def close(self):
+        self.event.set()
+        self.thread.join()
         self.cap.release()
 
-    def update_frame(self):
-        if self.frame is not None:
-            self.history.appendleft(self.frame.copy())
-
-        _, self.frame = self.cap.read()
-
-        if self.debug:
-            cv2.imshow('debug', self.frame)
-            cv2.waitKey(1)
-
-    def encoded_jpeg(self):
-        if self.frame is not None:
-            encode_param = (cv2.IMWRITE_JPEG_QUALITY, 90)
-            cnt = cv2.imencode('.jpg', self.frame, encode_param)[1]
-            data = base64.encodebytes(cnt)
-        else:
-            data = self.blank
+    def encoded_base64(self):
+        encode_param = (cv2.IMWRITE_JPEG_QUALITY, 90)
+        cnt = cv2.imencode('.jpg', self.frame, encode_param)[1]
+        data = 'data:image/jpeg;base64,' + base64.encodebytes(cnt.flatten()).decode()
 
         return data
 
     def get_gray_frame(self):
-        self.update_frame()
         return cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
 
     def get_color_frame(self):
-        self.update_frame()
         return self.frame.copy()
 
     def get_flipped_frame(self):
@@ -102,5 +95,4 @@ class Eye:
         return cv2.flip(frame, flipCode=-1)
 
     def get_both_frames(self):
-        self.update_frame()
         return self.frame.copy(), cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)

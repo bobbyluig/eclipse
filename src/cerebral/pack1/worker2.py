@@ -37,7 +37,7 @@ class SuperTheia:
         self.thread = None
 
     def get(self):
-        return self.eye.encoded_jpeg()
+        return self.eye.encoded_base64()
 
     def start_track(self, frame):
         with self.lock:

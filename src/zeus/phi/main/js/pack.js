@@ -46,22 +46,24 @@ ctrlPack.registerStream = function (robot) {
     feed.play = false;
     feed.changeStream = function () {
         feed.play = !feed.play;
+        feed.get();
     };
     feed.get = function () {
-        if (feed.play && state[robot].connected && wamp !== undefined) {
-            console.log('getting video!');
+        if (!state[robot].connected || wamp === undefined) {
+            ctrlLog.log(robot, 'Unable to start video stream. Not connected.', 2);
+            feed.play = false;
+        }
+        else if (feed.play) {
             wamp.call(robot + '.' + 'get_frame').then(
                 function (res) {
-                    var src = 'data:image/jpeg;base64,' + res;
-                    query.attr('src', src);
+                    query.find('img').attr('src', res);
+                    setTimeout(feed.get, 500);
                 }
             );
         }
-        setTimeout(feed.get, 500);
     };
 
     rivets.bind(query, $.extend({feed: feed}, bindings));
-    setTimeout(feed.get, 500);
 };
 
 ctrlPack.stopStream = function (robot) {

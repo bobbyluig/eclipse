@@ -36,7 +36,8 @@ state.pack1 = {
     v1: 0,
     v2: 0,
     p1: 0,
-    p2: 0
+    p2: 0,
+    area: 0
 };
 
 state.pack2 = {
@@ -45,7 +46,8 @@ state.pack2 = {
     v1: 0,
     v2: 0,
     p1: 0,
-    p2: 0
+    p2: 0,
+    area: 0
 };
 
 // Main
@@ -67,9 +69,9 @@ $(document).ready(function() {
     ctrlPack.registerStream('pack1');
 
     annyang.addCommands(ctrlSpeech.commands);
-    
-    rivets.bind($('#controller'), bindings);
+
     rivets.bind($('#menu'), bindings);
+    rivets.bind($('.controller'), bindings);
 });
 
 // Prevent accidental closing.

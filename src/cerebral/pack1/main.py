@@ -33,6 +33,7 @@ class Cerebral(ApplicationSession):
 
         # Get remote objects.
         self.agility = Pyro4.Proxy(lookup('worker1', 'agility'))
+        self.super_theia = Pyro4.Proxy(lookup('worker2', 'super_theia'))
         self.super_agility = Pyro4.Proxy(lookup('worker1', 'super_agility'))
 
         # Create a thread executor for slightly CPU-bound async functions.
@@ -83,12 +84,12 @@ class Cerebral(ApplicationSession):
     # Main remote functions.
     ########################
 
-    @wamp.register('{}.get_feed'.format(Crossbar.prefix))
-    async def get_feed(self):
-        future = self.run(self.get_ip)
-        ip = await future
+    @wamp.register('{}.get_frame'.format(Crossbar.prefix))
+    async def get_frame(self):
+        future = self.run(self.super_theia.get)
+        data = await future
 
-        return 'http://{}:8080/?action=stream'.format(ip)
+        return data
 
     @wamp.register('{}.set_vector'.format(Crossbar.prefix))
     async def set_vector(self, a, b):

@@ -101,7 +101,6 @@ ctrlWamp.check = function () {
             res.forEach(function (id) {
                 wamp.call('wamp.session.get', [id]).then(
                     function (data) {
-                        console.log(data.authid);
                         if (data.authid == 'DOG-1E5')
                             state.pack1.connected = true;
                         else if (data.authid == 'DOG-4S1')
