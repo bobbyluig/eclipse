@@ -56,8 +56,8 @@ ctrlWamp.connect = function () {
         state.pack1.connected = false;
         ctrlPack.stopStream('pack1');
 
-        state.pack2.connected = false;
-        ctrlPack.stopStream('pack2');
+        // state.pack2.connected = false;
+        // ctrlPack.stopStream('pack2');
 
         ctrlLog.log('system', message, level);
     };
