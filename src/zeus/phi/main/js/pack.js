@@ -22,9 +22,9 @@ ctrlPack.basicCall = function (robot, name) {
     wamp.call(robot + '.' + name).then(
         function (res) {
             if (res) {
-                ctrlLog.log('system', 'Executed ' + fn + '.', 1);
+                ctrlLog.log(robot, 'Executed ' + fn + '.', 1);
             } else {
-                ctrlLog.log('system', 'Unable to execute ' + fn + '.', 2);
+                ctrlLog.log(robot, 'Unable to execute ' + fn + '.', 2);
             }
         },
         function (err) {
@@ -115,11 +115,27 @@ ctrlPack.setHead = function (robot) {
 };
 
 ctrlPack.pack1.stop = function () {
-    ctrlPack.basicCall('pack1', 'stop');
+    state.pack1.v1 = 0;
+    state.pack1.v2 = 0;
+    ctrlPack.setVector('pack1');
+};
+
+ctrlPack.pack1.terminate = function () {
+    ctrlPack.basicCall('pack1', 'terminate');
+};
+
+ctrlPack.pack1.setVector = function () {
+    ctrlPack.setVector('pack1');
+};
+
+ctrlPack.pack1.setHead = function () {
+    ctrlPack.setHead('pack1');
 };
 
 ctrlPack.pack1.centerHead = function () {
-    ctrlPack.basicCall('pack1', 'center_head');
+    state.pack1.p1 = 0;
+    state.pack1.p2 = 0;
+    ctrlPack.setHead('pack1');
 };
 
 ctrlPack.pack1.pushup = function () {
@@ -139,8 +155,13 @@ ctrlPack.pack1.bind = function () {
     state.bind.active = 'pack1';
 };
 
+ctrlPack.pack1.follow = function () {
+    ctrlPack.basicCall('pack1', 'follow');
+};
+
 ctrlPack.unbindKeys = function () {
     $(document).unbind('keydown');
+    state.bind.active = null;
     ctrlLog.log('system', 'Unbinded keys.', 1);
 };
 

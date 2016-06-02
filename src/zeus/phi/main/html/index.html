@@ -34,7 +34,32 @@
 <div class="ui bottom attached segment">
     <div class="ui stackable grid">
         <div class="stretched row">
-            <div class="twelve wide column">
+            <div class="eight wide column">
+                <div class="ui segment raised black center aligned">
+                     <h1>Command Center (Phi)</h1>
+                </div>
+            </div>
+
+            <div class="eight wide column">
+                    <div class="ui segment raised blue center aligned controller">
+                        <div class="ui button" rv-on-click="wamp.connect">
+                            Connect to Server
+                        </div>
+                        <div class="ui button" rv-on-click="pack.unbindKeys">
+                            Unbind Keys
+                        </div>
+                        <div class="ui button" rv-on-click="speech.start">
+                            Start Voice Recognition
+                        </div>
+                        <div class="ui button" rv-on-click="speech.stop">
+                            Stop Voice Recognition
+                        </div>
+                    </div>
+            </div>
+        </div>
+
+        <div class="stretched row">
+            <div class="sixteen wide column">
                 <div class="ui raised segments logger" data-name="system" rv-on-click="log.zero">
                     <div class="ui segment">
                         <div class="ui middle aligned two column grid">
@@ -76,63 +101,45 @@
                     </div>
                 </div>
             </div>
-
-            <div class="four wide column">
-                <div class="ui raised segments">
-                    <div class="ui segment">
-                        <div class="ui large purple label">
-                            System Control
-                        </div>
-                    </div>
-                    <div class="ui segment blue controller">
-                        <div class="ui button" rv-on-click="wamp.connect">
-                            Connect to Server
-                        </div>
-                        <div class="ui button" rv-on-click="pack.unbindKeys">
-                            Unbind Keys
-                        </div>
-                        <div class="ui button" rv-on-click="speech.start">
-                            Start Voice Recognition
-                        </div>
-                        <div class="ui button" rv-on-click="speech.stop">
-                            Stop Voice Recognition
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
 
         <div class="ui divider"></div>
 
         <div class="stretched row">
-            <div class="sixteen wide column">
-                 <div class="ui raised segments">
-                    <div class="ui segment">
-                        <div class="ui large purple label">
-                            Pack 1 Control
-                        </div>
+            <div class="eight wide column">
+                <div class="ui segment raised black center aligned">
+                     <h1>Pack 1 (DOG-1E5)</h1>
+                </div>
+            </div>
+
+            <div class="eight wide column">
+                <div class="ui raised segment blue center aligned controller">
+                    <div class="ui button" rv-on-click="pack.pack1.stop">
+                        Stop
                     </div>
-                    <div class="ui segment blue center aligned controller">
-                        <div class="ui button" rv-on-click="pack.stop">
-                            Stop
-                        </div>
-                        <div class="ui button" rv-on-click="pack.pack1.centerHead">
-                            Center Head
-                        </div>
-                        <div class="ui button" rv-on-click="pack.pack1.pushup">
-                            Push Up
-                        </div>
-                        <div class="ui button" rv-on-click="pack.pack1.watch">
-                            Watch
-                        </div>
-                        <div class="ui button" rv-on-click="pack.pack1.zero">
-                            Zero
-                        </div>
-                        <div class="ui button" rv-on-click="pack.pack1.bind">
-                            Keyboard Control
-                        </div>
+                    <div class="ui button" rv-on-click="pack.pack1.terminate">
+                        Terminate
+                    </div>
+                    <div class="ui button" rv-on-click="pack.pack1.centerHead">
+                        Center Head
+                    </div>
+                    <div class="ui button" rv-on-click="pack.pack1.pushup">
+                        Push Up
+                    </div>
+                    <div class="ui button" rv-on-click="pack.pack1.watch">
+                        Watch
+                    </div>
+                    <div class="ui button" rv-on-click="pack.pack1.zero">
+                        Zero
+                    </div>
+                    <div class="ui button" rv-on-click="pack.pack1.bind">
+                        Keyboard
+                    </div>
+                    <div class="ui button" rv-on-click="pack.pack1.follow">
+                        Follow
                     </div>
                 </div>
+
             </div>
         </div>
 
@@ -188,7 +195,7 @@
             </div>
 
             <div class="four wide column">
-                <div class="ui raised segments controller">
+                <div class="ui raised segments controller padded">
                     <div class="ui segment">
                         <div class="ui large purple label">
                             Pack 1 Direct

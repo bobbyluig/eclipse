@@ -102,16 +102,11 @@ class Cerebral(ApplicationSession):
         await self.run(self.agility.set_head, (a, b))
         return True
 
-    @wamp.register('{}.stop'.format(Crossbar.prefix))
-    async def stop(self):
+    @wamp.register('{}.terminate'.format(Crossbar.prefix))
+    async def terminate(self):
         future = self.run(self.super_ares.stop)
         success = await future
         return success
-
-    @wamp.register('{}.center_head'.format(Crossbar.prefix))
-    async def center_head(self):
-        await self.run(self.agility.center_head)
-        return True
 
     @wamp.register('{}.pushup'.format(Crossbar.prefix))
     async def pushup(self):
@@ -133,7 +128,7 @@ class Cerebral(ApplicationSession):
 
     @wamp.register('{}.follow'.format(Crossbar.prefix))
     async def follow(self):
-        future = self.run(self.super_agility.start_follow)
+        future = self.run(self.super_ares.start_follow)
         success = await future
         return success
 

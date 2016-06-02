@@ -148,3 +148,4 @@ var rivets;
 })(rivets || (rivets = {}));
 
 rivets.extra.formatters.init();
+
