@@ -1385,25 +1385,6 @@ class Agility:
         self.maestro.end_together(servos, t)
         self.wait(servos)
 
-    @staticmethod
-    def target_euclidean(leg, position, a2=False, a3=False):
-        """
-        Set a leg to a point.
-        :param leg: The leg object.
-        :param position: The target position.
-        :param a2: True to find alternate solution for theta2.
-        :param a3: True to find alternate solution for theta3.
-        """
-
-        angles = Finesse.inverse_pack(leg.lengths, position, a2=a2, a3=a3)
-
-        if angles is not None:
-            leg[0].set_target(angles[0])
-            leg[1].set_target(angles[1])
-            leg[2].set_target(angles[2])
-        else:
-            logger.warning('Unable to reach position ({}, {}, {}).'.format(*position))
-
     def configure(self):
         """
         Configure the Maestro by writing home positions and other configuration data to the device.
