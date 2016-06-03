@@ -553,6 +553,7 @@ class Leg:
             self.servos[0].set_target(angle[0])
             self.servos[1].set_target(angle[1])
             self.servos[2].set_target(angle[2])
+            self.position = self.fk_solver(self.lengths, angle)
         except ServoError:
             logger.error('Leg {} is unable to reach angle ({:.2f}, {:.2f}, {:.2f})'.format(self.index, *angle))
             return False
@@ -568,9 +569,9 @@ class Leg:
 
         return self.ik_solver(self.lengths, point)
 
-    def get_position(self):
+    def update_position(self):
         """
-        Compute current leg position based on servo data.
+        Update current leg position based on servo data.
         """
 
         a = self.servos[0].get_position()
@@ -578,6 +579,15 @@ class Leg:
         c = self.servos[2].get_position()
 
         self.position = self.fk_solver(self.lengths, (a, b, c))
+
+    def get_position(self):
+        """
+        Get the position of the leg. Update if necessary.
+        :return: Position (x, y, z).
+        """
+
+        if self.position is None:
+            self.update_position()
 
         return self.position
 
@@ -664,6 +674,9 @@ class Agility:
         # Set up robot.
         self.robot = robot
 
+        # Set error.
+        self.epsilon = 1e-6
+
         # Set up Usc.
         try:
             self.usc = Usc()
@@ -693,10 +706,12 @@ class Agility:
 
         return servo.get_position()
 
-    def set_head(self, target):
+    def set_head(self, target, t=0):
         """
         Move the head to a given position.
         Blocks until completion.
+        :param target: (LR, UD).
+        :param t: Time in ms. 0 for max speed.
         """
 
         head = self.robot.head
@@ -705,7 +720,7 @@ class Agility:
         head[0].set_target(target[0])
         head[1].set_target(target[1])
 
-        self.maestro.end_together(servos, 0, True)
+        self.maestro.end_together(servos, t, True)
         self.wait(servos)
 
     def look_at(self, x, y):
@@ -878,6 +893,13 @@ class Agility:
         plt.show()
 
     def execute_forever(self, frames, dt):
+        """
+        Like execute_frames(), except it runs forever.
+        :param frames: An array of frames.
+        :param dt: Delta t.
+        :return:
+        """
+
         # Get all legs and servos for quick access.
         legs = self.robot.legs
         servos = self.robot.leg_servos
@@ -890,13 +912,19 @@ class Agility:
 
         while True:
             for frame in frames:
-                for i in range(len(legs)):
+                for i in range(4):
                     legs[i].target_point(frame[i])
 
                 self.maestro.end_together(servos, dt)
                 self.wait(servos)
 
     def execute_frames(self, frames, dt):
+        """
+        Execute some frames with a constant dt.
+        :param frames: An array of frames.
+        :param dt: Delta t.
+        """
+
         # Get all legs and servos for quick access.
         legs = self.robot.legs
         servos = self.robot.leg_servos
@@ -905,13 +933,43 @@ class Agility:
         self.maestro.get_multiple_positions(servos)
 
         for frame in frames:
-            for i in range(len(legs)):
+            for i in range(4):
                 legs[i].target_point(frame[i])
 
             self.maestro.end_together(servos, dt)
             self.wait(servos)
 
+    def execute_variable(self, frames, dts):
+        """
+        Execute some frames with different dt.
+        :param frames: An array of frames.
+        :param dts: An array of dt.
+        """
+
+        # Get all legs and servos for quick access.
+        legs = self.robot.legs
+        servos = self.robot.leg_servos
+
+        # Update initial leg locations.
+        self.maestro.get_multiple_positions(servos)
+
+        # Assertion check.
+        assert len(frames) == len(dts)
+
+        for t in range(len(frames)):
+            for i in range(4):
+                legs[i].target_point(frames[t][i])
+
+            self.maestro.end_together(servos, dts[t])
+            self.wait(servos)
+
     def execute_angles(self, angles, dt):
+        """
+        Like execute_frames(), but uses angles instead.
+        :param angles: An array of angles.
+        :param dt: Delta t.
+        """
+
         # Get all legs and servos for quick access.
         legs = self.robot.legs
         servos = self.robot.leg_servos
@@ -920,7 +978,7 @@ class Agility:
         self.maestro.get_multiple_positions(servos)
 
         for angle in angles:
-            for i in range(len(legs)):
+            for i in range(4):
                 legs[i].target_angle(angle)
 
             self.maestro.end_together(servos, dt)
@@ -940,7 +998,7 @@ class Agility:
         angles = np.empty(frames.shape)
 
         for i in range(len(frames)):
-            for l in range(len(legs)):
+            for l in range(4):
                 a = legs[l].get_angles(frames[i][l])
                 angles[i][l] = a
 
@@ -988,22 +1046,83 @@ class Agility:
 
         return np.array(pose, dtype=float)
 
-    @staticmethod
-    def linearize(frames):
+    def target_pose(self, target, t, lift=1):
         """
-        Given frames, compute t based on linear distance.
-        :param frames: Frames of [(x1, y1, z1), ...]
-        :return: Times (for scipy interpolation).
+        Get the robot from its current pose to a new pose.
+        The robot will lift legs appropriately to eliminate dragging.
+        :param target: The target pose.
+        :param t: The total time for the adjustment.
+        :param lift: How much to lift each leg.
+        :return: (frames, dt) ready for execution.
         """
 
-        delta = np.roll(frames, -1, axis=0) - frames
-        dst = np.linalg.norm(delta, axis=1)[:-1]
+        # Get all legs and body for quick access.
+        legs = self.robot.legs
+        body = self.robot.body
 
-        t = dst / np.sum(dst) * 1000
-        t = np.insert(t, 0, (0,))
-        t = np.cumsum(t)
+        # Create data array.
+        frames = []
 
-        return t
+        # Get pose. Assume updated.
+        pose = self.get_pose()
+
+        # Get ground, which is the lowest point.
+        curr_g = np.min(pose[:, 2])
+        next_g = np.min(target[:, 2])
+
+        # Get all legs to ground if necessary.
+        if not all(pose[:, 2] == curr_g):
+            f1 = pose.copy()
+            f1[:, 2] = curr_g
+            frames.append(f1)
+
+        # Get legs to next height if necessary.
+        if curr_g != next_g:
+            f2 = pose.copy()
+            f2[:, 2] = next_g
+            frames.append(f2)
+
+        # Generate leg state arrays.
+        state = np.greater(target[:, 2], (next_g + self.epsilon))      # Defines which legs are in the air.
+
+        # For every leg that is not at the right (x, y) and is on the ground in target, lift and down.
+        for i in range(4):
+            if not np.array_equal(pose[i][:2], target[i][:2]) and not state[i]:
+                # Get previous frame.
+                prev = frames[-1]
+                f4, f5 = prev.copy(), prev.copy()
+
+                # Move leg to target (x, y) in air.
+                x, y = target[i][:2]
+                f4[i] = (x, y, next_g + lift)
+
+                # Compute bias and adjust.
+                s = [False, False, False, False]
+                s[i] = True
+                bias = body.adjust(s, f4, 1)
+                f3 = prev - bias
+                f4 -= bias
+
+                # Move leg down to target. Keep bias.
+                f5[i] = target[i]
+                f5 -= bias
+
+                # Append data.
+                frames.extend((f3, f4, f5))
+
+        # Move to final target if necessary.
+        if not np.array_equal(frames[-1], target):
+            if any(state):
+                prev = frames[-1]
+                bias = body.adjust(state, target)
+                frames.extend((prev - bias, target - bias))
+            else:
+                frames.append(target)
+
+        # Compute times. Assume equal dt.
+        dt = t / len(frames)
+
+        return frames, dt
 
     def prepare_lift(self, index, target, lift, t):
         """
@@ -1089,8 +1208,8 @@ class Agility:
         biases = np.empty(frames.shape)
 
         # Generate leg state arrays.
-        state1 = np.greater(frames[:, :, 2], (ground + 1e-6))     # Defines which legs are in the air.
-        state2 = state1.sum(1)                                      # The number of legs in the air.
+        state1 = np.greater(frames[:, :, 2], (ground + self.epsilon))       # Defines which legs are in the air.
+        state2 = state1.sum(1)                                              # The number of legs in the air.
 
         # Define.
         steps = len(frames)
@@ -1132,7 +1251,7 @@ class Agility:
         legs = self.robot.legs
 
         # Compute shape.
-        shape = (steps, len(legs), 3)
+        shape = (steps, 4, 3)
 
         # Evaluate gait.
         f = [gait.evaluate(leg, ts) for leg in legs]
@@ -1187,7 +1306,7 @@ class Agility:
         legs = self.robot.legs
 
         # Compute shape.
-        shape = (steps, len(legs), 3)
+        shape = (steps, 4, 3)
 
         # Evaluate gait.
         f = [gait.evaluate(leg, ts) for leg in legs]
@@ -1336,7 +1455,7 @@ class Agility:
         # Update initial leg locations.
         self.maestro.get_multiple_positions(servos)
 
-        for i in range(len(legs)):
+        for i in range(4):
             legs[i].target_point((0, 0, z))
 
         self.maestro.end_together(servos, t)
@@ -1347,16 +1466,17 @@ class Agility:
         Manual return home by resetting all leg servo targets.
         """
 
-        for leg in self.robot.legs:
-            for servo in leg:
-                servo.set_target(0)
-                self.maestro.set_speed(servo, 30)
-                self.maestro.set_target(servo)
+        # Get all legs and servos for quick access.
+        legs = self.robot.legs
+        s1 = self.robot.leg_servos
 
-        for servo in self.robot.head:
-            servo.set_target(0)
-            self.maestro.set_speed(servo, 50)
-            self.maestro.set_target(servo)
+        for leg in legs:
+            z = -sum(leg.lengths)
+            leg.target_point((0, 0, z))
+
+        # Execute.
+        self.set_head((0, 0), 1000)
+        self.maestro.end_together(s1, 1000, True)
 
         # Wait until completion.
         self.wait()
