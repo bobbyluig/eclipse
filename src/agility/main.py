@@ -517,6 +517,7 @@ class Leg:
 
         self.servos = [servo1, servo2, servo3]
         self.lengths = lengths
+        self.length = sum(lengths)
         self.index = index
 
         self.ik_solver = ik
@@ -939,6 +940,56 @@ class Agility:
             self.maestro.end_together(servos, dt)
             self.wait(servos)
 
+    def execute_long(self, prev_frame, frames, dt):
+        """
+        Execute frames with constant but possibly long dt.
+        Automatically computes distance, and, if necessary, interpolates to get more accurate synchronization.
+        :param prev_frame: The previous frame.
+        :param frames: An array of frames.
+        :param dt: Delta t.
+        """
+
+        # Get all legs and servos for quick access.
+        legs = self.robot.legs
+        servos = self.robot.leg_servos
+
+        # Define break constant (ms / cm).
+        k = 100
+
+        # Update initial leg locations.
+        self.maestro.get_multiple_positions(servos)
+
+        for frame in frames:
+            # Compute max distance.
+            d = max(np.linalg.norm(frame - prev_frame, axis=1))
+
+            # Less than break. Too long. Linearly interpolate.
+            if dt / d > k:
+                n = int(round(dt / d / k))
+                l_frames = self.smooth(prev_frame, frame, n)
+                l_frames = l_frames[1:]
+
+                # Compute time.
+                t = dt / n
+
+                # Execute intermediate frames.
+                for l_frame in l_frames:
+                    for i in range(4):
+                        legs[i].target_point(l_frame[i])
+
+                    self.maestro.end_together(servos, t)
+                    self.wait(servos)
+            else:
+                t = dt
+
+            for i in range(4):
+                legs[i].target_point(frame[i])
+
+            self.maestro.end_together(servos, t)
+            self.wait(servos)
+
+            prev_frame = frame
+
     def execute_variable(self, frames, dts):
         """
         Execute some frames with different dt.
@@ -1046,18 +1097,72 @@ class Agility:
 
         return np.array(pose, dtype=float)
 
+    def target_point(self, leg, point, t):
+        """
+        Move a leg to a given point in t time.
+        Blocks until completion.
+        :param leg: Leg index.
+        :param point: (x, y, z).
+        :param t: Time in milliseconds.
+        """
+
+        # Assertion check.
+        assert(0 <= leg <= 3)
+
+        # Get legs for quick access.
+        legs = self.robot.legs
+
+        # Target.
+        leg = legs[leg]
+        leg.target_point(point)
+
+        # Execute.
+        servos = leg.servos
+        self.maestro.end_together(servos, t)
+
+        # Block until completion.
+        self.wait(servos)
+
+    def lift_leg(self, leg, lift, t):
+        """
+        Lift a leg (change pose) in t time.
+        Blcoks until completion.
+        :param leg: The leg index.
+        :param lift: How high to lift leg.
+        :param t: Time to execute pose change.
+        """
+
+        # Assertion check.
+        assert (0 <= leg <= 3)
+
+        # Get legs for quick access.
+        legs = self.robot.legs
+
+        # Define ground.
+        ground = -min([leg.length for leg in legs]) + 1
+
+        # Empty pose.
+        pose = np.zeros((4, 3))
+
+        # Leg lift.
+        pose[:, 2] = ground
+        pose[leg][2] = ground + lift
+
+        # Execute.
+        self.target_pose(pose, t)
+
     def target_pose(self, target, t, lift=1):
         """
-        Get the robot from its current pose to a new pose.
+        Get the robot from its current pose to a new pose. Block until completion.
         The robot will lift legs appropriately to eliminate dragging.
+        Automatically adjusts the center of mass during transition and target if necessary.
         :param target: The target pose.
         :param t: The total time for the adjustment.
         :param lift: How much to lift each leg.
         :return: (frames, dt) ready for execution.
         """
 
-        # Get all legs and body for quick access.
-        legs = self.robot.legs
+        # Get body for quick access.
         body = self.robot.body
 
         # Create data array.
@@ -1065,6 +1170,10 @@ class Agility:
 
         # Get pose. Assume updated.
         pose = self.get_pose()
+
+        # Early exit.
+        if np.array_equal(pose, target):
+            return
 
         # Get ground, which is the lowest point.
         curr_g = np.min(pose[:, 2])
@@ -1122,7 +1231,7 @@ class Agility:
         # Compute times. Assume equal dt.
         dt = t / len(frames)
 
-        return frames, dt
+        self.execute_long(pose, frames, dt)
 
     def prepare_lift(self, index, target, lift, t):
         """
@@ -1380,7 +1489,7 @@ class Agility:
             a -= x
             b -= y
             c -= z
-            leg.target_point((-x, -y, -sum(leg.lengths) - z))
+            leg.target_point((-x, -y, -leg.length - z))
 
         self.maestro.end_together(servos, t)
         self.wait(servos)
@@ -1429,18 +1538,12 @@ class Agility:
         :param t: Time in milliseconds
         """
 
-        # Get all legs and servos for quick access.
-        legs = self.robot.legs
-        servos = self.robot.leg_servos
+        # Compute desired pose.
+        pose = np.zeros((4, 3))
+        pose[:, 2] = z
 
-        # Update initial leg locations.
-        self.maestro.get_multiple_positions(servos)
-
-        for i in range(4):
-            legs[i].target_point((0, 0, z))
-
-        self.maestro.end_together(servos, t)
-        self.wait(servos)
+        # Execute position.
+        self.target_pose(pose, t)
 
     def zero(self):
         """
@@ -1452,7 +1555,7 @@ class Agility:
         s1 = self.robot.leg_servos
 
         for leg in legs:
-            z = -sum(leg.lengths)
+            z = -leg.length
             leg.target_point((0, 0, z))
 
         # Execute.
