@@ -41,9 +41,8 @@ class Camera:
 
 
 class Eye:
-    def __init__(self, camera, debug=False):
+    def __init__(self, camera):
         self.frame = None
-        self.debug = debug
 
         source = camera.source
         self.cap = cv2.VideoCapture(source)
@@ -73,11 +72,20 @@ class Eye:
             _, self.frame = self.cap.read()
 
     def close(self):
+        """
+        Shuts down the thread.
+        """
+
         self.event.set()
         self.thread.join()
         self.cap.release()
 
-    def encoded_base64(self):
+    def get_base64(self):
+        """
+        Encode the current frame into base64.
+        :return: The data in base64, ready for display in browser.
+        """
+
         encode_param = (cv2.IMWRITE_JPEG_QUALITY, 90)
         cnt = cv2.imencode('.jpg', self.frame, encode_param)[1]
         data = 'data:image/jpeg;base64,' + base64.encodebytes(cnt.flatten()).decode()
@@ -85,14 +93,47 @@ class Eye:
         return data
 
     def get_gray_frame(self):
-        return cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
+        """
+        Get a gray frame.
+        :return: Frame.
+        """
+
+        if self.frame is not None:
+            return cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
+        else:
+            return None
 
     def get_color_frame(self):
-        return self.frame.copy()
+        """
+        Get a color frame.
+        :return: Frame.
+        """
+
+        if self.frame is not None:
+            return self.frame.copy()
+        else:
+            return None
 
     def get_flipped_frame(self):
-        frame = self.get_color_frame()
-        return cv2.flip(frame, flipCode=-1)
+        """
+        Get a flipped frame.
+        :return: Frame
+        """
+
+        if self.frame is not None:
+            return cv2.flip(self.frame, flipCode=-1)
+        else:
+            return None
 
     def get_both_frames(self):
-        return self.frame.copy(), cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
+        """
+        Get bot the gray and colored frame.
+        Guaranteed to be the same frame.
+        :return: Color, Gray.
+        """
+
+        if self.frame is not None:
+            frame = self.frame.copy()
+            return frame, cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        else:
+            return None

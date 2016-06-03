@@ -114,29 +114,23 @@
 
             <div class="eight wide column">
                 <div class="ui raised segment blue center aligned controller">
+                    <div class="ui button" rv-on-click="pack.pack1.startWatch">
+                        Start Watch
+                    </div>
                     <div class="ui button" rv-on-click="pack.pack1.stop">
-                        Stop
-                    </div>
-                    <div class="ui button" rv-on-click="pack.pack1.terminate">
-                        Terminate
-                    </div>
-                    <div class="ui button" rv-on-click="pack.pack1.centerHead">
-                        Center Head
+                        Stop (Watch)
                     </div>
                     <div class="ui button" rv-on-click="pack.pack1.pushup">
                         Push Up
                     </div>
-                    <div class="ui button" rv-on-click="pack.pack1.watch">
-                        Watch
-                    </div>
                     <div class="ui button" rv-on-click="pack.pack1.zero">
                         Zero
                     </div>
+                    <div class="ui button" rv-on-click="pack.pack1.readRFID">
+                        Read RFID
+                    </div>
                     <div class="ui button" rv-on-click="pack.pack1.bind">
                         Keyboard
-                    </div>
-                    <div class="ui button" rv-on-click="pack.pack1.follow">
-                        Follow
                     </div>
                 </div>
 
@@ -201,7 +195,7 @@
                             Pack 1 Direct
                         </div>
                     </div>
-                    <div class="ui segment blue">
+                    <div class="ui center aligned segment blue">
                         <form class="ui form">
                             <div class="fields">
                                 <div class="eight wide field">
@@ -226,11 +220,17 @@
 
                             <div class="ui divider"></div>
 
-                            <div class="ui fluid button" rv-on-click="pack.pack1.setVector">
+                            <div class="ui button" rv-on-click="pack.pack1.setVector">
                                 Set Motion
                             </div>
-                            <div class="ui fluid button" rv-on-click="pack.pack1.setHead">
+                            <div class="ui button" rv-on-click="pack.pack1.setHead">
                                 Set Head
+                            </div>
+                            <div class="ui button" rv-on-click="pack.pack1.zeroMotion">
+                                Zero Motion
+                            </div>
+                            <div class="ui button" rv-on-click="pack.pack1.zeroHead">
+                                Zero Head
                             </div>
                         </form>
                     </div>

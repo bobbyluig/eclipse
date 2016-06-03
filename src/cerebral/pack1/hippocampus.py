@@ -46,12 +46,6 @@ class Android:
     # Robot.
     robot = Robot(leg1, leg2, leg3, leg4, body, head)
 
-    # Information.
-    info = {
-        'max_speed': 10,            # Max forward speed in cm/sec.
-        'max_rotation': 1.0472      # Max rotation speed in rads/sec.
-    }
-
 
 #######################
 # Connection variables.
@@ -59,7 +53,7 @@ class Android:
 
 class Crossbar:
     # Crossbar.
-    ip = '192.168.43.245'
+    ip = '127.0.0.1'
     realm = 'lycanthrope'
     authid = 'DOG-1E5'
     secret = 'de2432k,/s-=/8Eu'

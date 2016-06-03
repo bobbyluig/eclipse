@@ -7,16 +7,21 @@ from cerebral.pack1.hippocampus import Android
 from agility.main import Agility
 from threading import Thread, Lock, Event
 import time
+import logging
+
 
 # Configure pyro.
 Pyro4.config.SERIALIZERS_ACCEPTED = frozenset(['pickle', 'serpent'])
 Pyro4.config.SERIALIZER = 'pickle'
 
+# Logging.
+logger = logging.getLogger('universe')
+
 
 class SuperAgility:
-    def __init__(self, agility):
+    def __init__(self):
         self.robot = Android.robot
-        self.agility = agility
+        self.agility = Agility(Android.robot)
         self.gait = Dynamic(self.robot.body)
 
         # Event and lock.
@@ -30,6 +35,11 @@ class SuperAgility:
         self.thread = None
 
     def start_watch(self):
+        """
+        Readies the robot for executing vectors.
+        :return: True if the thread was started, otherwise False.
+        """
+
         with self.lock:
             if self.thread is None:
                 self.thread = Thread(target=self._watch)
@@ -39,6 +49,11 @@ class SuperAgility:
         return False
 
     def start_pushup(self):
+        """
+        Begins the pushup thread.
+        :return: True if the thread was started, otherwise False.
+        """
+
         with self.lock:
             if self.thread is None:
                 self.thread = Thread(target=self._pushup)
@@ -48,6 +63,11 @@ class SuperAgility:
         return False
 
     def stop(self):
+        """
+        Global stop. Stops all threads in module.
+        :return: True if a thread exists and was stopped, False otherwise.
+        """
+
         with self.lock:
             if self.thread is not None:
                 self.event.set()
@@ -59,6 +79,11 @@ class SuperAgility:
         return False
 
     def zero(self):
+        """
+        Calls the zero function of Agility.
+        :return: True if function was executed, False otherwise.
+        """
+
         with self.lock:
             if self.thread is None:
                 self.agility.zero()
@@ -66,7 +91,20 @@ class SuperAgility:
 
         return False
 
+    def set_head(self, position):
+        """
+        Set the position of the head.
+        :param position: Input position (LR rotation, UD rotation).
+        """
+
+        self.agility.set_head(position)
+
     def set_vector(self, vector):
+        """
+        Set the target vector.
+        :param vector: Input vector of (forward, rotation).
+        """
+
         self.vector = vector
 
     def _pushup(self):
@@ -77,6 +115,9 @@ class SuperAgility:
     def _watch(self):
         self.agility.ready(self.gait.ground)
 
+        prev_hash = hash((0, 0))
+        prev = None
+
         while not self.event.is_set():
             vector = self.vector
 
@@ -84,14 +125,17 @@ class SuperAgility:
                 time.sleep(0.001)
                 continue
 
-            g = self.gait.generate(*vector)
-            frames, dt = self.agility.prepare_smoothly(g)
+            if hash(vector) == prev_hash and prev is not None:
+                frames, dt = prev
+            else:
+                g = self.gait.generate(*vector)
+                frames, dt = self.agility.prepare_smoothly(g)
+                prev = frames, dt
 
             self.agility.execute_frames(frames, dt)
 
 
-agility = Agility(Android.robot)
-super_agility = SuperAgility(agility)
+super_agility = SuperAgility()
 
 
 if __name__ == '__main__':
@@ -100,8 +144,10 @@ if __name__ == '__main__':
     daemon = Pyro4.Daemon('localhost', port)
 
     # Register all objects.
-    daemon.register(agility, 'agility')
     daemon.register(super_agility, 'super_agility')
+
+    # Log server event.
+    logger.info('Worker 1 started!')
 
     # Start event loop.
     daemon.requestLoop()

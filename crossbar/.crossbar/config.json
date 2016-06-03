@@ -38,8 +38,8 @@
             "type":"tcp",
             "port":443,
             "tls": {
-              "key": "server_key.pem",
-              "certificate": "server_cert.pem"
+              "key": "server.pkey",
+              "certificate": "server.cer"
             }
           },
           "paths":{

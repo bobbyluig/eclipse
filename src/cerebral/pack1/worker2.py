@@ -1,130 +1,65 @@
 from cerebral import logger as l
 import logging
 
-import Pyro4
-from cerebral.nameserver import ports
 
-from theia.main import Oculus, Theia
-from theia.eye import Eye, Camera
 from cerebral.pack1.hippocampus import Android
+from theia.eye import Eye
+from socketserver import ThreadingMixIn
+from http.server import SimpleHTTPRequestHandler, HTTPServer
+from cerebral.nameserver import ports
+import cv2
+import ssl
+import os
 
-from threading import Thread, Lock, Event
-
-
-# Configure pyro.
-Pyro4.config.SERIALIZERS_ACCEPTED = frozenset(['pickle', 'serpent'])
-Pyro4.config.SERIALIZER = 'pickle'
 
 # Logging.
 logger = logging.getLogger('universe')
 
-
-class SuperTheia:
-    def __init__(self):
-        self.eye = Eye(Android.camera)
-        self.oculus = None
-
-        # Current status.
-        self.found = False
-        self.position = None
-        self.center = None
-
-        # Event and lock.
-        self.event = Event()
-        self.lock = Lock()
-
-        # Start.
-        self.thread = None
-
-    def get(self):
-        return self.eye.encoded_base64()
-
-    def start_track(self, frame):
-        with self.lock:
-            if self.thread is None:
-                self.thread = Thread(target=self._track)
-                self.thread.start()
-                return True
-
-        return False
-
-    def find(self):
-        with self.lock:
-            # Ensure tracker is not running.
-            if self.thread is not None:
-                return None
-
-            # Reset.
-            self.event.clear()
-            self.found = False
-            self.position = None
-            self.center = None
-            self.oculus = Oculus()
-
-        # Locate the moving object.
-        blob = None
-        frame = None
-
-        # Loop until capture.
-        while blob is None and not self.event.is_set():
-            mask, frame = Theia.get_foreground(self.eye, 100, self.event)
-
-            # Check early exit condition.
-            if mask is not None:
-                blob = Theia.bound_blobs(mask, 1)
-            else:
-                return None
-
-        # Check early exit condition.
-        if blob is None:
-            return None
-
-        # Blob exists.
-        bb = blob[0]
-
-        # Initialize tracker with bounding box.
-        success = self.oculus.initialize(frame, bb)
-
-        if not success:
-            logger.error('Unable to initialize tracker. Stopping Theia.')
-            return None
-        else:
-            if not self.start_track(frame):
-                return None
-            else:
-                return bb
-
-    def stop(self):
-        with self.lock:
-            self.event.set()
-
-            if self.thread is not None:
-                self.thread.join()
-                self.thread = None
-                self.event.clear()
-                return True
-
-        return False
-
-    def get_status(self):
-        return self.found, self.position, self.center
-
-    def _track(self):
-        while not self.event.is_set():
-            frame = self.eye.get_color_frame()
-            self.found, self.position, self.center = self.oculus.track(frame)
+# Get camera and connect.
+camera = Android.camera
+eye = Eye(camera)
 
 
-super_theia = SuperTheia()
+class ThreadedServer(ThreadingMixIn, HTTPServer):
+    pass
+
+
+class CameraHandler(SimpleHTTPRequestHandler):
+    def do_GET(self):
+        try:
+            self.send_response(200)
+            self.send_header('Content-type', 'image/jpeg')
+            self.end_headers()
+
+            frame = eye.get_color_frame()
+
+            # Early exit condition.
+            if frame is None:
+                return
+
+            encode_param = (cv2.IMWRITE_JPEG_QUALITY, 80)
+            data = cv2.imencode('.jpg', frame, encode_param)[1]
+            data = data.tobytes()
+
+            self.wfile.write(data)
+        except ConnectionAbortedError:
+            pass
+
+    def log_message(self, format, *args):
+        return
 
 
 if __name__ == '__main__':
-    # Create a daemon.
     port = ports['worker2']
-    daemon = Pyro4.Daemon('localhost', port)
+    server = ThreadedServer(('localhost', port), CameraHandler)
 
-    # Register all objects.
-    daemon.register(super_theia, 'super_theia')
+    script_dir = os.path.dirname(__file__)
+    certfile = os.path.join(script_dir, 'server.cer')
+    keyfile = os.path.join(script_dir, 'server.pkey')
+    server.socket = ssl.wrap_socket(server.socket, certfile=certfile, keyfile=keyfile, server_side=True)
 
-    # Start event loop.
-    daemon.requestLoop()
+    # Log server event.
+    logger.info('Worker 2 started!')
+
+    server.serve_forever()
+

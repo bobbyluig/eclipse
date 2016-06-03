@@ -68,30 +68,20 @@ ctrlWamp.connect = function () {
 ctrlWamp.subscribeAll = function () {
     wamp.subscribe('wamp.session.on_join', function (data) {
         data = data[0];
-        var session = data.session;
-        var authid = data.authid;
 
-        if (authid == 'DOG-1E5') {
-            state.pack1.connected = true;
-            state.pack1.session = session;
-
-        }
-        else if (authid == 'DOG-4S1') {
-            state.pack2.connected = true;
-            state.pack2.session = session;
-        }
+        if (data.authid == 'DOG-1E5')
+            ctrlWamp.robot_on('pack1', data);
+        else if (data.authid == 'DOG-4S1')
+            ctrlWamp.robot_on('pack2', data);
     });
+    
     wamp.subscribe('wamp.session.on_leave', function (id) {
         id = id[0];
 
-        if (state.pack1.session == id) {
-            state.pack1.connected = false;
-            ctrlPack.stopStream('pack1');
-        }
-        else if (state.pack2.session == id) {
-            state.pack2.connected = false;
-            ctrlPack.stopStream('pack2');
-        }
+        if (state.pack1.session == id)
+            ctrlWamp.robot_off('pack1');
+        else if (state.pack2.session == id)
+            ctrlWamp.robot_off('pack2');
     });
 };
 
@@ -102,12 +92,24 @@ ctrlWamp.check = function () {
                 wamp.call('wamp.session.get', [id]).then(
                     function (data) {
                         if (data.authid == 'DOG-1E5')
-                            state.pack1.connected = true;
+                            ctrlWamp.robot_on('pack1', data);
                         else if (data.authid == 'DOG-4S1')
-                            state.pack2.connected = true;
+                            ctrlWamp.robot_on('pack2', data);
                     }
                 );
             });
         }
     );
+};
+
+ctrlWamp.robot_on = function(robot, data) {
+    state[robot].ip = data.transport.peer.split(':')[1];
+    state[robot].session = data.session;
+    state[robot].connected = true;
+};
+
+ctrlWamp.robot_off = function(robot) {
+    state[robot].connected = false;
+    state[robot].ip = '';
+    ctrlPack.stopStream(robot);
 };

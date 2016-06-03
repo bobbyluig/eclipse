@@ -32,9 +32,7 @@ class Cerebral(ApplicationSession):
         self.loop = asyncio.get_event_loop()
 
         # Get remote objects.
-        self.agility = Pyro4.Proxy(lookup('worker1', 'agility'))
         self.super_agility = Pyro4.Proxy(lookup('worker1', 'super_agility'))
-        self.super_theia = Pyro4.Proxy(lookup('worker2', 'super_theia'))
         self.super_ares = Pyro4.Proxy(lookup('worker3', 'super_ares'))
 
         # Create a thread executor for slightly CPU-bound async functions.
@@ -85,12 +83,15 @@ class Cerebral(ApplicationSession):
     # Main remote functions.
     ########################
 
-    @wamp.register('{}.get_frame'.format(Crossbar.prefix))
-    async def get_frame(self):
-        future = self.run(self.super_theia.get)
+    @wamp.register('{}.read_rfid'.format(Crossbar.prefix))
+    async def read_rfid(self):
+        future = self.run(self.super_ares.read)
         data = await future
 
-        return data
+        if data is None:
+            return False
+        else:
+            return data
 
     @wamp.register('{}.set_vector'.format(Crossbar.prefix))
     async def set_vector(self, a, b):
@@ -99,12 +100,12 @@ class Cerebral(ApplicationSession):
 
     @wamp.register('{}.set_head'.format(Crossbar.prefix))
     async def set_head(self, a, b):
-        await self.run(self.agility.set_head, (a, b))
+        await self.run(self.super_agility.set_head, (a, b))
         return True
 
-    @wamp.register('{}.terminate'.format(Crossbar.prefix))
-    async def terminate(self):
-        future = self.run(self.super_ares.stop)
+    @wamp.register('{}.stop'.format(Crossbar.prefix))
+    async def stop(self):
+        future = self.run(self.super_agility.stop)
         success = await future
         return success
 
@@ -114,8 +115,8 @@ class Cerebral(ApplicationSession):
         success = await future
         return success
 
-    @wamp.register('{}.watch'.format(Crossbar.prefix))
-    async def watch(self):
+    @wamp.register('{}.start_watch'.format(Crossbar.prefix))
+    async def start_watch(self):
         future = self.run(self.super_agility.start_watch)
         success = await future
         return success
@@ -126,21 +127,9 @@ class Cerebral(ApplicationSession):
         success = await future
         return success
 
-    @wamp.register('{}.follow'.format(Crossbar.prefix))
-    async def follow(self):
-        future = self.run(self.super_ares.start_follow)
-        success = await future
-        return success
-
     #####################
     # Blocking functions.
     #####################
-
-    @staticmethod
-    def get_ip():
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        s.connect((Crossbar.ip, 443))
-        return s.getsockname()[0]
 
     def watch_logging(self):
         uri = lookup('database', 'logging')
@@ -154,7 +143,6 @@ class Cerebral(ApplicationSession):
 if __name__ == '__main__':
     # Configure SSL.
     context = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
-    context.verify_mode = ssl.CERT_REQUIRED
     context.check_hostname = False
     pem = ssl.get_server_certificate((Crossbar.ip, 443))
     context.load_verify_locations(cadata=pem)

@@ -159,6 +159,6 @@ cp -R www /usr/local/www
 # Copy files.
 #############
 
-cp ~/Eclipse/deploy/supervisor/edd.conf /etc/supervisor/conf.d/
+cp ~/Eclipse/deploy/supervisor/pack1.conf /etc/supervisor/conf.d/
 supervisorctl reread
 supervisorctl update

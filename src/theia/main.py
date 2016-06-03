@@ -225,19 +225,21 @@ class Theia:
         return colors[index]
 
     @staticmethod
-    def get_foreground(eye, frames, event=None):
+    def get_foreground(eye, frames, fps=15, event=None):
         """
         Gets the foreground given an eye object.
         This uses the MOG2 background/foreground segmentation algorithm.
         This allows for identification of moving PreyBOTS.
         :param eye: An eye (camera) object.
         :param frames: The number of initial frames to capture.
+        :param fps: Frames per second.
         :param event: A threading event to exist early.
         :return: A binary image, where white is the foreground object.
         """
 
         subtractor = cv2.createBackgroundSubtractorMOG2(detectShadows=False)
         ksize = (5, 5)
+        s = (1000 / fps) / 1000
 
         for i in range(frames):
             frame = eye.get_color_frame()
@@ -248,6 +250,9 @@ class Theia:
                 return None, frame
 
             subtractor.apply(blurred)
+
+            # Sleep for some time.
+            time.sleep(s)
 
         # Get one additional frame for return.
         frame = eye.get_color_frame()

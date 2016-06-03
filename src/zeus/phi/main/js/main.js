@@ -33,6 +33,7 @@ state.bind = {
 state.pack1 = {
     connected: false,
     session: 0,
+    ip: '',
     v1: 0,
     v2: 0,
     p1: 0,
@@ -43,6 +44,7 @@ state.pack1 = {
 state.pack2 = {
     connected: false,
     session: 0,
+    ip: '',
     v1: 0,
     v2: 0,
     p1: 0,

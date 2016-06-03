@@ -65,6 +65,7 @@ class Ares:
 
         return forward, rotation
 
+
 class RFID:
     def __init__(self, port=None):
         """
@@ -88,28 +89,23 @@ class RFID:
         except:
             raise Exception('Unable to connect to RFID reader at %s.' % self.port)
 
-    def read(self, timeout=10):
+    def read(self):
         """
-        Read one tag from the buffer.
+        Reads the buffer. Returns immediately.
         :param timeout: Maximum time to wait.
-        :return: None if timeout, otherwise a 12 character RFID.
+        :return: Returns a 12 character RFID code, or None if not available.
         """
 
-        end = time.time() + 10
+        if self.usb.inWaiting() >= 16:
+            data = self.usb.read(size=16)
+            data = data.decode()
 
-        while time.time() <= end:
-            if self.usb.inWaiting() >= 16:
-                data = self.usb.read(size=16)
-                data = data.decode()
+            # Assert for debugging verification.
+            assert(data[0] == '\x02')
+            assert(data[13:] == '\r\n\x03')
 
-                # Assert for debugging verification.
-                assert(data[0] == '\x02')
-                assert(data[13:] == '\r\n\x03')
+            rfid = data[1:13]
 
-                rfid = data[1:13]
-
-                return rfid
-            else:
-                time.sleep(0.01)
-
-        return None
+            return rfid
+        else:
+            return None
