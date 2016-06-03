@@ -1380,7 +1380,7 @@ class Agility:
             a -= x
             b -= y
             c -= z
-            self.target_euclidean(leg, (-x, -y, -sum(leg.lengths) - z))
+            leg.target_point((-x, -y, -sum(leg.lengths) - z))
 
         self.maestro.end_together(servos, t)
         self.wait(servos)
