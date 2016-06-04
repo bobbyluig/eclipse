@@ -10,4 +10,4 @@ agility = Agility(robot)
 
 agility.zero()
 
-agility.lift_leg(0, 1, 2000)
+agility.lift_leg(0, 1, 1000)

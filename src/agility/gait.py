@@ -107,8 +107,9 @@ class Linear(Gait):
 
 
 class Dynamic:
-    def __init__(self, body):
-        self.body = body
+    def __init__(self, robot):
+        body = robot.body
+        ground = -max([leg.length for leg in robot.legs]) + 1
 
         # General constants.
         self.b = np.array((body.width, body.length), dtype=float)
@@ -123,8 +124,8 @@ class Dynamic:
         self.j0 = 2                 # Transition from slow forward to fast forward.
         self.j1 = math.radians(10)  # Transition from slow rotation to fast rotation.
 
-        self.ground = -13           # The ground plane.
-        self.lift = 2               # How much to lift each leg.
+        self.ground = ground        # The ground plane.
+        self.lift = 1.5             # How much to lift each leg.
         self.beta_crawl = 0.825     # Beta value for crawl gait.
         self.beta_trot = 0.800      # Beta value for trot gait.
         self.t = 2                  # Maximum cycle time.

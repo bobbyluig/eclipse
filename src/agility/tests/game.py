@@ -12,7 +12,7 @@ robot = Android.robot
 agility = Agility(robot)
 
 # Generic crawl.
-crawl = Dynamic(robot.body)
+crawl = Dynamic(robot)
 
 # Tkinter.
 root = Tk()

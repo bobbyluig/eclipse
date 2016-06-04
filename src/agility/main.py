@@ -1139,7 +1139,7 @@ class Agility:
         legs = self.robot.legs
 
         # Define ground.
-        ground = -min([leg.length for leg in legs]) + 1
+        ground = -max([leg.length for leg in legs]) + 1
 
         # Empty pose.
         pose = np.zeros((4, 3))

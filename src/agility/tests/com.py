@@ -9,7 +9,7 @@ robot = Android.robot
 agility = Agility(robot)
 
 # Gait.
-crawl = Dynamic(robot.body)
+crawl = Dynamic(robot)
 gait = crawl.generate(2, 0)
 
 # Main

@@ -21,8 +21,8 @@ logger = logging.getLogger('universe')
 class SuperAgility:
     def __init__(self):
         self.robot = Android.robot
-        self.agility = Agility(Android.robot)
-        self.gait = Dynamic(self.robot.body)
+        self.agility = Agility(self.robot)
+        self.gait = Dynamic(self.robot)
 
         # Event and lock.
         self.event = Event()
