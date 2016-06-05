@@ -2,7 +2,7 @@ from cerebral import logger as l
 import logging
 
 
-from cerebral.pack1.hippocampus import Android
+from cerebral.pack1.hippocampus import Android, Crossbar
 from theia.eye import Eye
 from socketserver import ThreadingMixIn
 from http.server import SimpleHTTPRequestHandler, HTTPServer
@@ -10,6 +10,7 @@ from cerebral.nameserver import ports
 import cv2
 import ssl
 import os
+import socket
 
 
 # Logging.
@@ -51,7 +52,12 @@ class CameraHandler(SimpleHTTPRequestHandler):
 
 if __name__ == '__main__':
     port = ports['worker2']
-    server = ThreadedServer(('localhost', port), CameraHandler)
+
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.connect((Crossbar.ip, 443))  # connecting to a UDP address doesn't send packets
+    ip = s.getsockname()[0]
+
+    server = ThreadedServer((ip, port), CameraHandler)
 
     script_dir = os.path.dirname(__file__)
     certfile = os.path.join(script_dir, 'server.cer')

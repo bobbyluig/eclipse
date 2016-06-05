@@ -34,7 +34,7 @@ state.pack1 = {
     connected: false,
     session: 0,
     ip: '',
-
+    
     direct: {
         v1: 0,
         v2: 0,

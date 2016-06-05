@@ -4,9 +4,10 @@ import Pyro4
 from cerebral.nameserver import ports
 from agility.gait import Dynamic
 from cerebral.pack1.hippocampus import Android
-from agility.main import Agility
+from agility.main import Agility, ServoError
 from threading import Thread, Lock, Event
 from functools import lru_cache
+import time
 import logging
 
 
@@ -76,6 +77,15 @@ class SuperAgility:
             self.leg_lock.release()
 
         return True
+
+    def emergency(self):
+        """
+        Force stop all wait in agility.
+        """
+
+        self.agility.stop()
+        time.sleep(0.2)
+        self.agility.clear()
 
     def stop(self):
         """
@@ -210,7 +220,12 @@ class SuperAgility:
         while True:
             self.new_position.wait()
             position = self.position
-            self.agility.set_head(position)
+
+            try:
+                self.agility.set_head(position)
+            except ServoError:
+                pass
+
             self.new_position.clear()
 
 

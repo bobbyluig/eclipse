@@ -31,9 +31,9 @@ class Cerebral(ApplicationSession):
         # Get loop.
         self.loop = asyncio.get_event_loop()
 
-        # Get remote objects.
-        self.super_agility = Pyro4.Proxy(lookup('worker1', 'super_agility'))
-        self.super_ares = Pyro4.Proxy(lookup('worker3', 'super_ares'))
+        # Get remote objects URI.
+        self.super_agility = lookup('worker1', 'super_agility')
+        self.super_ares = lookup('worker3', 'super_ares')
 
         # Create a thread executor for slightly CPU-bound async functions.
         self.executor = ThreadPoolExecutor(20)
@@ -83,8 +83,15 @@ class Cerebral(ApplicationSession):
     # Main remote functions.
     ########################
 
+    @wamp.register('{}.emergency'.format(Crossbar.prefix))
+    async def em_on(self):
+        super_agility = Pyro4.Proxy(self.super_agility)
+        await self.run(super_agility.emergency)
+        return True
+
     @wamp.register('{}.read_rfid'.format(Crossbar.prefix))
     async def read_rfid(self):
+        super_ares = Pyro4.Proxy(self.super_ares)
         future = self.run(self.super_ares.read)
         data = await future
 
@@ -95,47 +102,58 @@ class Cerebral(ApplicationSession):
 
     @wamp.register('{}.lift_leg'.format(Crossbar.prefix))
     async def lift_leg(self, leg, lift, t):
-        future = self.run(self.super_agility.lift_leg, leg, lift, t)
+        super_agility = Pyro4.Proxy(self.super_agility)
+        future = self.run(super_agility.lift_leg, leg, lift, t)
         success = await future
         return success
 
     @wamp.register('{}.target_point'.format(Crossbar.prefix))
     async def target_point(self, leg, x, y, z, t):
-        future = self.run(self.super_agility.target_point, leg, (x, y, z), t)
+        super_agility = Pyro4.Proxy(self.super_agility)
+        future = self.run(super_agility.target_point, leg, (x, y, z), t)
         success = await future
         return success
 
     @wamp.register('{}.set_vector'.format(Crossbar.prefix))
     async def set_vector(self, a, b):
-        await self.run(self.super_agility.set_vector, (a, b))
+        if abs(a) > 15.0 or abs(b) > 2.0:
+            return False
+
+        super_agility = Pyro4.Proxy(self.super_agility)
+        await self.run(super_agility.set_vector, (a, b))
         return True
 
     @wamp.register('{}.set_head'.format(Crossbar.prefix))
     async def set_head(self, a, b):
-        await self.run(self.super_agility.set_head, (a, b))
+        super_agility = Pyro4.Proxy(self.super_agility)
+        await self.run(super_agility.set_head, (a, b))
         return True
 
     @wamp.register('{}.stop'.format(Crossbar.prefix))
     async def stop(self):
-        future = self.run(self.super_agility.stop)
+        super_agility = Pyro4.Proxy(self.super_agility)
+        future = self.run(super_agility.stop)
         success = await future
         return success
 
     @wamp.register('{}.pushup'.format(Crossbar.prefix))
     async def pushup(self):
-        future = self.run(self.super_agility.start_pushup)
+        super_agility = Pyro4.Proxy(self.super_agility)
+        future = self.run(super_agility.start_pushup)
         success = await future
         return success
 
     @wamp.register('{}.start_watch'.format(Crossbar.prefix))
     async def start_watch(self):
-        future = self.run(self.super_agility.start_watch)
+        super_agility = Pyro4.Proxy(self.super_agility)
+        future = self.run(super_agility.start_watch)
         success = await future
         return success
 
     @wamp.register('{}.zero'.format(Crossbar.prefix))
     async def zero(self):
-        future = self.run(self.super_agility.zero)
+        super_agility = Pyro4.Proxy(self.super_agility)
+        future = self.run(super_agility.zero)
         success = await future
         return success
 

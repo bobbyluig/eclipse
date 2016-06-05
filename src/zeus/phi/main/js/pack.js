@@ -95,10 +95,10 @@ ctrlPack.setHead = function (robot) {
     var p1 = parseFloat(state[robot].direct.p1);
     var p2 = parseFloat(state[robot].direct.p2);
 
-    wamp.call(robot + '.' + 'set_vector', [p1, p2]).then(
+    wamp.call(robot + '.' + 'set_head', [p1, p2]).then(
         function (res) {
             if (!res) {
-                ctrlLog.log(robot, 'Unable to set position.', 2);
+                ctrlLog.log(robot, 'Unable to set head.', 2);
             }
         },
         function (err) {
@@ -168,6 +168,25 @@ ctrlPack.readRFID = function (robot) {
                 ctrlLog.log(robot, 'Last read RFID is ' + res + '.', 1);
             } else {
                 ctrlLog.log(robot, 'No RFID in buffer.', 2);
+            }
+        },
+        function (err) {
+            ctrlPack.logError(robot, err);
+        }
+    );
+};
+
+ctrlPack.emergency = function (robot) {
+    if (!ctrlPack.check(robot)) {
+        return;
+    }
+
+    wamp.call(robot + '.' + 'emergency').then(
+        function (res) {
+            if (res) {
+                ctrlLog.log(robot, 'Emergency break executed.', 1);
+            } else {
+                ctrlLog.log(robot, 'Unable to execute emergency break.', 2);
             }
         },
         function (err) {
@@ -324,6 +343,10 @@ ctrlPack.pack1.targetPoint = function () {
     ctrlPack.targetPoint('pack1');
 };
 
+ctrlPack.pack1.emergency = function () {
+    ctrlPack.emergency('pack1');
+};
+
 
 // Pack 2.
 
@@ -378,4 +401,8 @@ ctrlPack.pack2.liftLeg = function () {
 
 ctrlPack.pack2.targetPoint = function () {
     ctrlPack.targetPoint('pack2');
+};
+
+ctrlPack.pack2.emergency = function () {
+    ctrlPack.emergency('pack2');
 };

@@ -1,8 +1,7 @@
 from agility.maestro import Maestro
 from agility.pololu.enumeration import uscSerialMode, ChannelMode, HomeMode
 from agility.pololu.usc import Usc
-from scipy import interpolate
-from finesse.eclipse import Finesse
+from threading import Event
 from shared.debug import Dummy
 import numpy as np
 import math
@@ -696,7 +695,25 @@ class Agility:
             logger.warn("Failed to attached to Maestro's command port. "
                         "If not debugging, consider this a fatal error.")
 
+        # Emergency stop.
+        self.emergency = Event()
+
+        # Zero.
         self.zero()
+
+    def stop(self):
+        """
+        Emergency stop. Stop all wait functions.
+        """
+
+        self.emergency.set()
+
+    def clear(self):
+        """
+        Clear emergency flag.
+        """
+
+        self.emergency.clear()
 
     def head_rotation(self):
         """
@@ -1120,7 +1137,7 @@ class Agility:
 
         # Execute.
         servos = leg.servos
-        self.maestro.end_together(servos, t)
+        self.maestro.end_together(servos, t, True)
 
         # Block until completion.
         self.wait(servos)
@@ -1530,7 +1547,7 @@ class Agility:
         :param servos: An array of servos. If None, checks if all servos have reached their targets (more efficient).
         """
 
-        while not self.is_at_target(servos=servos):
+        while not self.is_at_target(servos=servos) and not self.emergency.is_set():
             time.sleep(0.001)
 
     def is_at_target(self, servos=None):
