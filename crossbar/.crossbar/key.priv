@@ -1,6 +1,6 @@
 Crossbar.io private key for node authentication - KEEP THIS SAFE!
 
 creator: bobbyluig@MSI
-created-at: 2016-06-05T01:22:34.957Z
-public-key-ed25519: 32aad162ffc82c11817d2a6ba9d9be9d5890e74dd7666691ed6cf25e45b5f86e
-private-key-ed25519: 0d1842bf7eaaa4450f8d87e35847daf43d14bee15b57a1fdace3b758b04e0367
+created-at: 2016-06-05T01:32:39.821Z
+public-key-ed25519: c100a6788af6e8320df49ee31d9a089518df262758b56f47b35779c0bd4c8fed
+private-key-ed25519: 2b9310f8d86b7f6e8cc31935c535d874ac1edecc6692de4d4695b1d786a335b4
