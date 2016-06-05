@@ -56,7 +56,7 @@ ctrlPack.registerStream = function (robot) {
         else if (feed.play) {
             var url = 'https://' + state[robot].ip + ':27182/?' + new Date().getTime();
             image.attr('src', url);
-            setTimeout(feed.get, 50);
+            setTimeout(feed.get, 500);
         }
     };
 
