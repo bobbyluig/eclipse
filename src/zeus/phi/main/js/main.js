@@ -72,7 +72,7 @@ state.pack2 = {
     lift: {
         leg: 0,
         height: 1,
-        t: 500
+        t: 1000
     },
 
     target: {
@@ -80,7 +80,7 @@ state.pack2 = {
         x: 0,
         y: 0,
         z: 0,
-        t: 500
+        t: 1000
     }
 };
 
