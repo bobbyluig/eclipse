@@ -94,7 +94,7 @@ class Cerebral(ApplicationSession):
             return data
 
     @wamp.register('{}.lift_leg'.format(Crossbar.prefix))
-    async def lift_leg(self, leg, lift ,t):
+    async def lift_leg(self, leg, lift, t):
         future = self.run(self.super_agility.lift_leg, leg, lift, t)
         success = await future
         return success

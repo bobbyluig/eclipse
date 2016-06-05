@@ -22,7 +22,7 @@ span.light {
   }
 
   .container {
-    height: 300px;
+    height: 308px;
   }
 }
 
@@ -30,4 +30,8 @@ span.light {
   .button {
     margin-bottom: 0.75em;
   }
+}
+
+.marginless {
+  margin: 0 !important;
 }

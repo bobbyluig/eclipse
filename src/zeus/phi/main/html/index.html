@@ -31,281 +31,344 @@
     </div>
 </div>
 
-<div class="ui bottom attached segment">
+<div class="ui bottom attached segment marginless">
     <div class="ui stackable grid">
-        <div class="stretched row">
-            <div class="eight wide column">
-                <div class="ui segment raised black center aligned">
-                     <h1>Command Center (Phi)</h1>
-                </div>
-            </div>
-
-            <div class="eight wide column">
-                    <div class="ui segment raised blue center aligned controller">
-                        <div class="ui button" rv-on-click="wamp.connect">
-                            Connect to Server
-                        </div>
-                        <div class="ui button" rv-on-click="pack.unbindKeys">
-                            Unbind Keys
-                        </div>
-                        <div class="ui button" rv-on-click="speech.start">
-                            Start Voice Recognition
-                        </div>
-                        <div class="ui button" rv-on-click="speech.stop">
-                            Stop Voice Recognition
-                        </div>
-                    </div>
+        <!-- System Title -->
+        <div class="eight wide column">
+            <div class="ui segment raised black center aligned">
+                <h1>Command Center (Phi)</h1>
             </div>
         </div>
 
-        <div class="stretched row">
-            <div class="sixteen wide column">
-                <div class="ui raised segments logger" data-name="system" rv-on-click="log.zero">
-                    <div class="ui segment">
-                        <div class="ui middle aligned two column grid">
-                            <div class="left aligned column">
+        <!-- System Control -->
+        <div class="eight wide column">
+            <div class="ui segment raised blue center aligned controller">
+                <div class="ui button" rv-on-click="wamp.connect">
+                    Connect to Server
+                </div>
+                <div class="ui button" rv-on-click="pack.unbindKeys">
+                    Unbind Keys
+                </div>
+                <div class="ui button" rv-on-click="speech.start">
+                    Start Voice Recognition
+                </div>
+                <div class="ui button" rv-on-click="speech.stop">
+                    Stop Voice Recognition
+                </div>
+            </div>
+        </div>
+
+        <!-- System Log -->
+        <div class="sixteen wide column">
+            <div class="ui raised segments logger" data-name="system" rv-on-click="log.zero">
+                <div class="ui segment">
+                    <div class="ui middle aligned two column grid">
+                        <div class="left aligned column">
+                            <div class="ui large purple label">
+                                System Log
+                                <div class="detail">{{ log.new }}</div>
+                            </div>
+                            <div class="ui large green label" rv-show="state.com.state |=== 'open'">
+                                <i class="wifi icon"></i> On
+                            </div>
+                            <div class="ui large red label" rv-show="state.com.state |!== 'open'">
+                                <i class="wifi icon"></i> Off
+                            </div>
+                        </div>
+                        <div class="right aligned column">
+                            <div class="ui compact icon button" rv-on-click="log.changeScroll">
+                                <i class="icon" rv-class-play="log.scroll | !" rv-class-pause="log.scroll"></i>
+                            </div>
+                            <div class="ui compact button" rv-on-click="log.clear">
+                                Clear
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ui segment scrollable blue">
+                    <div class="ui divided items">
+                        <div class="item" rv-each-event="log.events">
+                            <div class="middle aligned content">
+                                <i class="grey info icon" rv-if="event.level |=== 0"></i>
+                                <i class="green checkmark icon" rv-if="event.level |=== 1"></i>
+                                <i class="orange warning sign icon" rv-if="event.level |=== 2"></i>
+                                <i class="red remove icon" rv-if="event.level |=== 3"></i>
+                                {{ event.message }} <span class="light">({{ event.time }})</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Divider -->
+        <div class="sixteen wide column">
+            <div class="ui divider"></div>
+        </div>
+
+        <!-- Pack 1 -->
+        <div class="eight wide column">
+            <div class="ui stackable grid">
+                <!-- Pack 1 Title -->
+                <div class="sixteen wide column">
+                    <div class="ui segment raised black center aligned">
+                        <h1>Pack 1 (DOG-1E5)</h1>
+                    </div>
+                </div>
+
+                <!-- Pack 1 Control-->
+                <div class="sixteen wide column">
+                    <div class="ui raised segment center aligned controller">
+                        <div class="ui button" rv-on-click="pack.pack1.startWatch">
+                            Start Watch
+                        </div>
+                        <div class="ui button" rv-on-click="pack.pack1.stop">
+                            Stop (Watch)
+                        </div>
+                        <div class="ui button" rv-on-click="pack.pack1.pushup">
+                            Push Up
+                        </div>
+                        <div class="ui button" rv-on-click="pack.pack1.zero">
+                            Zero
+                        </div>
+                        <div class="ui button" rv-on-click="pack.pack1.readRFID">
+                            Read RFID
+                        </div>
+                        <div class="ui button" rv-on-click="pack.pack1.bind">
+                            Keyboard
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pack 1 Log -->
+                <div class="sixteen wide column">
+                    <div class="ui raised segments logger" data-name="pack1" rv-on-click="log.zero">
+                        <div class="ui segment">
+                            <div class="ui middle aligned grid">
+                                <div class="left floated left aligned eleven wide column">
+                                    <div class="ui large purple label">
+                                        Pack 1 Log
+                                        <div class="detail">{{ log.new }}</div>
+                                    </div>
+                                    <div class="ui large green label" rv-show="state.pack1.connected">
+                                        <i class="wifi icon"></i> On
+                                    </div>
+                                    <div class="ui large red label" rv-show="state.pack1.connected | !">
+                                        <i class="wifi icon"></i> Off
+                                    </div>
+                                    <div class="ui large green label" rv-show="state.bind.active |=== 'pack1'">
+                                        <i class="keyboard icon"></i> On
+                                    </div>
+                                    <div class="ui large red label" rv-show="state.bind.active |!== 'pack1'">
+                                        <i class="keyboard icon"></i> Off
+                                    </div>
+                                </div>
+                                <div class="right floated right aligned five wide column">
+                                    <div class="ui compact icon button" rv-on-click="log.changeScroll">
+                                        <i class="play icon" rv-show="log.scroll | !"></i>
+                                        <i class="pause icon" rv-show="log.scroll"></i>
+                                    </div>
+                                    <div class="ui compact button" rv-on-click="log.clear">
+                                        Clear
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="ui segment scrollable blue">
+                            <div class="ui divided items">
+                                <div class="item" rv-each-event="log.events">
+                                    <div class="middle aligned content">
+                                        <i class="grey info icon" rv-if="event.level |== 0"></i>
+                                        <i class="green checkmark icon" rv-if="event.level |=== 1"></i>
+                                        <i class="orange warning sign icon" rv-if="event.level |=== 2"></i>
+                                        <i class="red remove icon" rv-if="event.level |=== 3"></i>
+                                        {{ event.message }} <span class="light">({{ event.time }})</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stretched row">
+                    <!-- Pack 1 Direct -->
+                    <div class="eight wide column">
+                        <div class="ui raised segments controller">
+                            <div class="ui segment">
                                 <div class="ui large purple label">
-                                    System Log
-                                    <div class="detail">{{ log.new }}</div>
-                                </div>
-                                <div class="ui large green label" rv-show="state.com.state |=== 'open'">
-                                    <i class="wifi icon"></i> On
-                                </div>
-                                <div class="ui large red label" rv-show="state.com.state |!== 'open'">
-                                    <i class="wifi icon"></i> Off
+                                    Pack 1 Direct
                                 </div>
                             </div>
-                            <div class="right aligned column">
-                                <div class="ui compact icon button" rv-on-click="log.changeScroll">
-                                    <i class="icon" rv-class-play="log.scroll | !" rv-class-pause="log.scroll"></i>
-                                </div>
-                                <div class="ui compact button" rv-on-click="log.clear">
-                                    Clear
-                                </div>
+                            <div class="ui center aligned segment blue">
+                                <form class="ui form">
+                                    <div class="fields">
+                                        <div class="eight wide field">
+                                            <label>Forward (cm/s)</label>
+                                            <input type="number" step="0.5" name="v1" placeholder="v1"
+                                                   rv-value="state.pack1.direct.v1">
+                                        </div>
+                                        <div class="eight wide field">
+                                            <label>Rotation (rad/s)</label>
+                                            <input type="number" step="0.02" name="v1" placeholder="v2"
+                                                   rv-value="state.pack1.direct.v2">
+                                        </div>
+                                    </div>
+                                    <div class="fields">
+                                        <div class="eight wide field">
+                                            <label>Head LR (deg)</label>
+                                            <input type="number" step="2" name="p1" placeholder="p1"
+                                                   rv-value="state.pack1.direct.p1">
+                                        </div>
+                                        <div class="eight wide field">
+                                            <label>Head UD (deg)</label>
+                                            <input type="number" step="2" name="p2" placeholder="p2"
+                                                   rv-value="state.pack1.direct.p2">
+                                        </div>
+                                    </div>
+
+                                    <div class="ui divider"></div>
+
+                                    <div class="ui grid">
+                                        <div class="eight wide column">
+                                            <div class="ui fluid button" rv-on-click="pack.pack1.setVector">
+                                                Set Motion
+                                            </div>
+                                        </div>
+                                        <div class="eight wide column">
+                                            <div class="ui fluid button" rv-on-click="pack.pack1.setHead">
+                                                Set Head
+                                            </div>
+                                        </div>
+                                        <div class="eight wide column">
+                                            <div class="ui fluid button" rv-on-click="pack.pack1.zeroMotion">
+                                                Zero Motion
+                                            </div>
+                                        </div>
+                                        <div class="eight wide column">
+                                            <div class="ui fluid button" rv-on-click="pack.pack1.zeroHead">
+                                                Zero Head
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </form>
                             </div>
                         </div>
                     </div>
 
-                    <div class="ui segment scrollable blue">
-                        <div class="ui divided items">
-                            <div class="item" rv-each-event="log.events">
-                                <div class="middle aligned content">
-                                    <i class="grey info icon" rv-if="event.level |=== 0"></i>
-                                    <i class="green checkmark icon" rv-if="event.level |=== 1"></i>
-                                    <i class="orange warning sign icon" rv-if="event.level |=== 2"></i>
-                                    <i class="red remove icon" rv-if="event.level |=== 3"></i>
-                                    {{ event.message }} <span class="light">({{ event.time }})</span>
+                    <!-- Pack 1 Video -->
+                    <div class="eight wide column">
+                        <div class="ui raised segments feed" data-name="pack1">
+                            <div class="ui segment">
+                                <div class="ui middle aligned grid">
+                                    <div class="left floated left aligned ten wide column">
+                                        <div class="ui large purple label">
+                                            Pack 1 Video
+                                        </div>
+                                    </div>
+                                    <div class="right floated right aligned six wide column">
+                                        <div class="ui compact icon button" rv-on-click="feed.changeStream">
+                                            <i class="play icon" rv-show="feed.play | !"></i>
+                                            <i class="pause icon" rv-show="feed.play"></i>
+                                        </div>
+                                    </div>
                                 </div>
+                            </div>
+                            <div class="ui segment center aligned container blue">
+                                <img src="https://unsplash.it/640/480">
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
 
-        <div class="ui divider"></div>
-
-        <div class="stretched row">
-            <div class="eight wide column">
-                <div class="ui segment raised black center aligned">
-                     <h1>Pack 1 (DOG-1E5)</h1>
-                </div>
-            </div>
-
-            <div class="eight wide column">
-                <div class="ui raised segment blue center aligned controller">
-                    <div class="ui button" rv-on-click="pack.pack1.startWatch">
-                        Start Watch
-                    </div>
-                    <div class="ui button" rv-on-click="pack.pack1.stop">
-                        Stop (Watch)
-                    </div>
-                    <div class="ui button" rv-on-click="pack.pack1.pushup">
-                        Push Up
-                    </div>
-                    <div class="ui button" rv-on-click="pack.pack1.zero">
-                        Zero
-                    </div>
-                    <div class="ui button" rv-on-click="pack.pack1.readRFID">
-                        Read RFID
-                    </div>
-                    <div class="ui button" rv-on-click="pack.pack1.bind">
-                        Keyboard
-                    </div>
-                </div>
-
-            </div>
-        </div>
-
-        <div class="stretched row">
-            <div class="eight wide column">
-                <div class="ui raised segments logger" data-name="pack1" rv-on-click="log.zero">
-                    <div class="ui segment">
-                        <div class="ui middle aligned grid">
-                            <div class="left floated left aligned eleven wide column">
+                <div class="stretched row">
+                    <!-- Pack 1 Lift -->
+                    <div class="eight wide column">
+                        <div class="ui raised segments controller">
+                            <div class="ui segment">
                                 <div class="ui large purple label">
-                                    Pack 1 Log
-                                    <div class="detail">{{ log.new }}</div>
-                                </div>
-                                <div class="ui large green label" rv-show="state.pack1.connected">
-                                    <i class="wifi icon"></i> On
-                                </div>
-                                <div class="ui large red label" rv-show="state.pack1.connected | !">
-                                    <i class="wifi icon"></i> Off
-                                </div>
-                                <div class="ui large green label" rv-show="state.bind.active |=== 'pack1'">
-                                    <i class="keyboard icon"></i> On
-                                </div>
-                                <div class="ui large red label" rv-show="state.bind.active |!== 'pack1'">
-                                    <i class="keyboard icon"></i> Off
+                                    Pack 1 Lift
                                 </div>
                             </div>
-                            <div class="right floated right aligned five wide column">
-                                <div class="ui compact icon button" rv-on-click="log.changeScroll">
-                                    <i class="play icon" rv-show="log.scroll | !"></i>
-                                    <i class="pause icon" rv-show="log.scroll"></i>
-                                </div>
-                                <div class="ui compact button" rv-on-click="log.clear">
-                                    Clear
-                                </div>
+                            <div class="ui center aligned segment blue">
+                                <form class="ui equal width form">
+                                    <div class="fields">
+                                        <div class="field">
+                                            <label>Leg (0 - 3)</label>
+                                            <input type="number" step="1" min="0" max="3" name="leg" placeholder="leg"
+                                                   rv-value="state.pack1.lift.leg">
+                                        </div>
+                                        <div class="field">
+                                            <label>Time (ms)</label>
+                                            <input type="number" step="500" min="0" name="t" placeholder="t"
+                                                   rv-value="state.pack1.lift.t">
+                                        </div>
+                                    </div>
+                                    <div class="fields">
+                                        <div class="field">
+                                            <label>Height (cm)</label>
+                                            <input type="number" step="0.1" min="0" name="height" placeholder="height"
+                                                   rv-value="state.pack1.lift.height">
+                                        </div>
+                                    </div>
+                                    <div class="ui divider"></div>
+
+                                    <div class="ui fluid button" rv-on-click="pack.pack1.liftLeg">
+                                        Execute
+                                    </div>
+                                </form>
                             </div>
                         </div>
                     </div>
 
-                    <div class="ui segment scrollable blue">
-                        <div class="ui divided items">
-                            <div class="item" rv-each-event="log.events">
-                                <div class="middle aligned content">
-                                    <i class="grey info icon" rv-if="event.level |== 0"></i>
-                                    <i class="green checkmark icon" rv-if="event.level |=== 1"></i>
-                                    <i class="orange warning sign icon" rv-if="event.level |=== 2"></i>
-                                    <i class="red remove icon" rv-if="event.level |=== 3"></i>
-                                    {{ event.message }} <span class="light">({{ event.time }})</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="four wide column">
-                <div class="ui raised segments controller padded">
-                    <div class="ui segment">
-                        <div class="ui large purple label">
-                            Pack 1 Direct
-                        </div>
-                    </div>
-                    <div class="ui center aligned segment blue">
-                        <form class="ui form">
-                            <div class="fields">
-                                <div class="eight wide field">
-                                    <label>Forward (cm/s)</label>
-                                    <input type="number" step="0.5" name="v1" placeholder="v1" rv-value="state.pack1.direct.v1">
-                                </div>
-                                <div class="eight wide field">
-                                    <label>Rotation (rad/s)</label>
-                                    <input type="number" step="0.02" name="v1" placeholder="v2" rv-value="state.pack1.direct.v2">
-                                </div>
-                            </div>
-                            <div class="fields">
-                                <div class="eight wide field">
-                                    <label>Head LR (deg)</label>
-                                    <input type="number" step="2" name="p1" placeholder="p1" rv-value="state.pack1.direct.p1">
-                                </div>
-                                <div class="eight wide field">
-                                    <label>Head UD (deg)</label>
-                                    <input type="number" step="2" name="p2" placeholder="p2" rv-value="state.pack1.direct.p2">
-                                </div>
-                            </div>
-
-                            <div class="ui divider"></div>
-
-                            <div class="ui button" rv-on-click="pack.pack1.setVector">
-                                Set Motion
-                            </div>
-                            <div class="ui button" rv-on-click="pack.pack1.setHead">
-                                Set Head
-                            </div>
-                            <div class="ui button" rv-on-click="pack.pack1.zeroMotion">
-                                Zero Motion
-                            </div>
-                            <div class="ui button" rv-on-click="pack.pack1.zeroHead">
-                                Zero Head
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-
-            <div class="four wide column">
-                <div class="ui raised segments feed" data-name="pack1">
-                    <div class="ui segment">
-                        <div class="ui middle aligned grid">
-                            <div class="left floated left aligned fourteen wide column">
+                    <!-- Pack 1 Target -->
+                    <div class="eight wide column">
+                        <div class="ui raised segments controller">
+                            <div class="ui segment">
                                 <div class="ui large purple label">
-                                    Pack 1 Video
+                                    Pack 1 Target
                                 </div>
                             </div>
-                            <div class="right floated right aligned two wide column">
-                                <div class="ui compact icon button" rv-on-click="feed.changeStream">
-                                    <i class="play icon" rv-show="feed.play | !"></i>
-                                    <i class="pause icon" rv-show="feed.play"></i>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="ui segment center aligned container blue">
-                        <img src="https://unsplash.it/640/480">
-                    </div>
-                </div>
-            </div>
+                            <div class="ui center aligned segment blue">
+                                <form class="ui equal width form">
+                                    <div class="fields">
+                                        <div class="field">
+                                            <label>Leg (0 - 3)</label>
+                                            <input type="number" step="1" min="0" max="3" name="leg" placeholder="leg"
+                                                   rv-value="state.pack1.target.leg">
+                                        </div>
+                                        <div class="field">
+                                            <label>Time (ms)</label>
+                                            <input type="number" step="500" min="0" name="t" placeholder="t"
+                                                   rv-value="state.pack1.target.t">
+                                        </div>
+                                    </div>
+                                    <div class="fields">
+                                        <div class="field">
+                                            <label>X (cm)</label>
+                                            <input type="number" step="0.1" name="x" placeholder="x"
+                                                   rv-value="state.pack1.target.x">
+                                        </div>
+                                        <div class="field">
+                                            <label>Y (cm)</label>
+                                            <input type="number" step="0.1" name="y" placeholder="y"
+                                                   rv-value="state.pack1.target.y">
+                                        </div>
+                                        <div class="field">
+                                            <label>Z (cm)</label>
+                                            <input type="number" step="0.1" name="z" placeholder="z"
+                                                   rv-value="state.pack1.target.z">
+                                        </div>
+                                    </div>
 
-        </div>
+                                    <div class="ui divider"></div>
 
-        <div class="stretched row">
-            <div class="column">
-                <div class="ui raised segments logger" data-name="pack2" rv-on-click="log.zero">
-                    <div class="ui segment">
-                        <div class="ui middle aligned grid">
-                            <div class="left floated left aligned eleven wide column">
-                                <div class="ui large purple label">
-                                    Pack 2 Log
-                                    <div class="detail">{{ log.new }}</div>
-                                </div>
-                                <div class="ui large green label" rv-show="state.pack2.connected">
-                                    <i class="wifi icon"></i> On
-                                </div>
-                                <div class="ui large red label" rv-show="state.pack2.connected | !">
-                                    <i class="wifi icon"></i> Off
-                                </div>
-                                <div class="ui large green label" rv-show="state.bind.active |=== 'pack2'">
-                                    <i class="keyboard icon"></i> On
-                                </div>
-                                <div class="ui large red label" rv-show="state.bind.active |!== 'pack2'">
-                                    <i class="keyboard icon"></i> Off
-                                </div>
-                            </div>
-                            <div class="right floated right aligned five wide column">
-                                <div class="ui compact icon button" rv-on-click="log.changeScroll">
-                                    <i class="icon" rv-class-play="log.scroll | !" rv-class-pause="log.scroll"></i>
-                                </div>
-                                <div class="ui compact button" rv-on-click="log.clear">
-                                    Clear
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="ui segment scrollable blue">
-                        <div class="ui divided items">
-                            <div class="item" rv-each-event="log.events">
-                                <div class="middle aligned content">
-                                    <i class="grey info icon" rv-if="event.level |== 0"></i>
-                                    <i class="green checkmark icon" rv-if="event.level |=== 1"></i>
-                                    <i class="orange warning sign icon" rv-if="event.level |=== 2"></i>
-                                    <i class="red remove icon" rv-if="event.level |=== 3"></i>
-                                    {{ event.message }} <span class="light">({{ event.time }})</span>
-                                </div>
+                                    <div class="ui fluid button" rv-on-click="pack.pack1.targetPoint">
+                                        Execute
+                                    </div>
+                                </form>
                             </div>
                         </div>
                     </div>
@@ -313,6 +376,274 @@
             </div>
         </div>
 
+        <!-- Pack 2 -->
+        <div class="eight wide column">
+            <div class="ui stackable grid">
+                <!-- Pack 2 Title -->
+                <div class="sixteen wide column">
+                    <div class="ui segment raised black center aligned">
+                        <h1>Pack 2 (DOG-4S1)</h1>
+                    </div>
+                </div>
+
+                <!-- Pack 2 Control-->
+                <div class="sixteen wide column">
+                    <div class="ui raised segment center aligned controller">
+                        <div class="ui button" rv-on-click="pack.pack2.startWatch">
+                            Start Watch
+                        </div>
+                        <div class="ui button" rv-on-click="pack.pack2.stop">
+                            Stop (Watch)
+                        </div>
+                        <div class="ui button" rv-on-click="pack.pack2.pushup">
+                            Push Up
+                        </div>
+                        <div class="ui button" rv-on-click="pack.pack2.zero">
+                            Zero
+                        </div>
+                        <div class="ui button" rv-on-click="pack.pack2.readRFID">
+                            Read RFID
+                        </div>
+                        <div class="ui button" rv-on-click="pack.pack2.bind">
+                            Keyboard
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pack 2 Log -->
+                <div class="sixteen wide column">
+                    <div class="ui raised segments logger" data-name="pack2" rv-on-click="log.zero">
+                        <div class="ui segment">
+                            <div class="ui middle aligned grid">
+                                <div class="left floated left aligned eleven wide column">
+                                    <div class="ui large purple label">
+                                        Pack 2 Log
+                                        <div class="detail">{{ log.new }}</div>
+                                    </div>
+                                    <div class="ui large green label" rv-show="state.pack2.connected">
+                                        <i class="wifi icon"></i> On
+                                    </div>
+                                    <div class="ui large red label" rv-show="state.pack2.connected | !">
+                                        <i class="wifi icon"></i> Off
+                                    </div>
+                                    <div class="ui large green label" rv-show="state.bind.active |=== 'pack2'">
+                                        <i class="keyboard icon"></i> On
+                                    </div>
+                                    <div class="ui large red label" rv-show="state.bind.active |!== 'pack2'">
+                                        <i class="keyboard icon"></i> Off
+                                    </div>
+                                </div>
+                                <div class="right floated right aligned five wide column">
+                                    <div class="ui compact icon button" rv-on-click="log.changeScroll">
+                                        <i class="play icon" rv-show="log.scroll | !"></i>
+                                        <i class="pause icon" rv-show="log.scroll"></i>
+                                    </div>
+                                    <div class="ui compact button" rv-on-click="log.clear">
+                                        Clear
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="ui segment scrollable blue">
+                            <div class="ui divided items">
+                                <div class="item" rv-each-event="log.events">
+                                    <div class="middle aligned content">
+                                        <i class="grey info icon" rv-if="event.level |== 0"></i>
+                                        <i class="green checkmark icon" rv-if="event.level |=== 1"></i>
+                                        <i class="orange warning sign icon" rv-if="event.level |=== 2"></i>
+                                        <i class="red remove icon" rv-if="event.level |=== 3"></i>
+                                        {{ event.message }} <span class="light">({{ event.time }})</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stretched row">
+                    <!-- Pack 2 Direct -->
+                    <div class="eight wide column">
+                        <div class="ui raised segments controller">
+                            <div class="ui segment">
+                                <div class="ui large purple label">
+                                    Pack 2 Direct
+                                </div>
+                            </div>
+                            <div class="ui center aligned segment blue">
+                                <form class="ui form">
+                                    <div class="fields">
+                                        <div class="eight wide field">
+                                            <label>Forward (cm/s)</label>
+                                            <input type="number" step="0.5" name="v1" placeholder="v1"
+                                                   rv-value="state.pack2.direct.v1">
+                                        </div>
+                                        <div class="eight wide field">
+                                            <label>Rotation (rad/s)</label>
+                                            <input type="number" step="0.02" name="v1" placeholder="v2"
+                                                   rv-value="state.pack2.direct.v2">
+                                        </div>
+                                    </div>
+                                    <div class="fields">
+                                        <div class="eight wide field">
+                                            <label>Head LR (deg)</label>
+                                            <input type="number" step="2" name="p1" placeholder="p1"
+                                                   rv-value="state.pack2.direct.p1">
+                                        </div>
+                                        <div class="eight wide field">
+                                            <label>Head UD (deg)</label>
+                                            <input type="number" step="2" name="p2" placeholder="p2"
+                                                   rv-value="state.pack2.direct.p2">
+                                        </div>
+                                    </div>
+
+                                    <div class="ui divider"></div>
+
+                                    <div class="ui grid">
+                                        <div class="eight wide column">
+                                            <div class="ui fluid button" rv-on-click="pack.pack2.setVector">
+                                                Set Motion
+                                            </div>
+                                        </div>
+                                        <div class="eight wide column">
+                                            <div class="ui fluid button" rv-on-click="pack.pack2.setHead">
+                                                Set Head
+                                            </div>
+                                        </div>
+                                        <div class="eight wide column">
+                                            <div class="ui fluid button" rv-on-click="pack.pack2.zeroMotion">
+                                                Zero Motion
+                                            </div>
+                                        </div>
+                                        <div class="eight wide column">
+                                            <div class="ui fluid button" rv-on-click="pack.pack2.zeroHead">
+                                                Zero Head
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Pack 2 Video -->
+                    <div class="eight wide column">
+                        <div class="ui raised segments feed" data-name="pack2">
+                            <div class="ui segment">
+                                <div class="ui middle aligned grid">
+                                    <div class="left floated left aligned ten wide column">
+                                        <div class="ui large purple label">
+                                            Pack 2 Video
+                                        </div>
+                                    </div>
+                                    <div class="right floated right aligned six wide column">
+                                        <div class="ui compact icon button" rv-on-click="feed.changeStream">
+                                            <i class="play icon" rv-show="feed.play | !"></i>
+                                            <i class="pause icon" rv-show="feed.play"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="ui segment center aligned container blue">
+                                <img src="https://unsplash.it/640/480">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stretched row">
+                    <!-- Pack 2 Lift -->
+                    <div class="eight wide column">
+                        <div class="ui raised segments controller">
+                            <div class="ui segment">
+                                <div class="ui large purple label">
+                                    Pack 2 Lift
+                                </div>
+                            </div>
+                            <div class="ui center aligned segment blue">
+                                <form class="ui equal width form">
+                                    <div class="fields">
+                                        <div class="field">
+                                            <label>Leg (0 - 3)</label>
+                                            <input type="number" step="1" min="0" max="3" name="leg" placeholder="leg"
+                                                   rv-value="state.pack2.lift.leg">
+                                        </div>
+                                        <div class="field">
+                                            <label>Time (ms)</label>
+                                            <input type="number" step="500" min="0" name="t" placeholder="t"
+                                                   rv-value="state.pack2.lift.t">
+                                        </div>
+                                    </div>
+                                    <div class="fields">
+                                        <div class="field">
+                                            <label>Height (cm)</label>
+                                            <input type="number" step="0.1" min="0" name="height" placeholder="height"
+                                                   rv-value="state.pack2.lift.height">
+                                        </div>
+                                    </div>
+                                    <div class="ui divider"></div>
+
+                                    <div class="ui fluid button" rv-on-click="pack.pack2.liftLeg">
+                                        Execute
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Pack 2 Target -->
+                    <div class="eight wide column">
+                        <div class="ui raised segments controller">
+                            <div class="ui segment">
+                                <div class="ui large purple label">
+                                    Pack 2 Target
+                                </div>
+                            </div>
+                            <div class="ui center aligned segment blue">
+                                <form class="ui equal width form">
+                                    <div class="fields">
+                                        <div class="field">
+                                            <label>Leg (0 - 3)</label>
+                                            <input type="number" step="1" min="0" max="3" name="leg" placeholder="leg"
+                                                   rv-value="state.pack2.target.leg">
+                                        </div>
+                                        <div class="field">
+                                            <label>Time (ms)</label>
+                                            <input type="number" step="500" min="0" name="t" placeholder="t"
+                                                   rv-value="state.pack2.target.t">
+                                        </div>
+                                    </div>
+                                    <div class="fields">
+                                        <div class="field">
+                                            <label>X (cm)</label>
+                                            <input type="number" step="0.1" name="x" placeholder="x"
+                                                   rv-value="state.pack2.target.x">
+                                        </div>
+                                        <div class="field">
+                                            <label>Y (cm)</label>
+                                            <input type="number" step="0.1" name="y" placeholder="y"
+                                                   rv-value="state.pack2.target.y">
+                                        </div>
+                                        <div class="field">
+                                            <label>Z (cm)</label>
+                                            <input type="number" step="0.1" name="z" placeholder="z"
+                                                   rv-value="state.pack2.target.z">
+                                        </div>
+                                    </div>
+
+                                    <div class="ui divider"></div>
+
+                                    <div class="ui fluid button" rv-on-click="pack.pack2.targetPoint">
+                                        Execute
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 

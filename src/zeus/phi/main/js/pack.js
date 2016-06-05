@@ -78,7 +78,7 @@ ctrlPack.setVector = function (robot) {
     wamp.call(robot + '.' + 'set_vector', [v1, v2]).then(
         function (res) {
             if (!res) {
-                ctrlLog.log(robot, 'Unable to set vector.');
+                ctrlLog.log(robot, 'Unable to set vector.', 2);
             }
         },
         function (err) {
@@ -98,7 +98,57 @@ ctrlPack.setHead = function (robot) {
     wamp.call(robot + '.' + 'set_vector', [p1, p2]).then(
         function (res) {
             if (!res) {
-                ctrlLog.log(robot, 'Unable to set position.');
+                ctrlLog.log(robot, 'Unable to set position.', 2);
+            }
+        },
+        function (err) {
+            ctrlPack.logError(robot, err);
+        }
+    );
+};
+
+ctrlPack.liftLeg = function (robot) {
+    if (!ctrlPack.check(robot)) {
+        return;
+    }
+
+    var leg = parseInt(state[robot].lift.leg);
+    var t = parseFloat(state[robot].lift.t);
+    var height = parseFloat(state[robot].lift.height);
+
+    wamp.call(robot + '.' + 'lift_leg', [leg, height, t]).then(
+        function (res) {
+            if (res) {
+                ctrlLog.log(robot, 'Lifted leg ' + leg + '.', 1);
+            } else {
+                ctrlLog.log(robot, 'Unable to lift leg.', 2);
+            }
+        },
+        function (err) {
+            ctrlPack.logError(robot, err);
+        }
+    );
+};
+
+ctrlPack.targetPoint = function (robot) {
+    if (!ctrlPack.check(robot)) {
+        return;
+    }
+
+    var leg = parseInt(state[robot].target.leg);
+    var t = parseFloat(state[robot].target.t);
+    var x = parseFloat(state[robot].target.x);
+    var y = parseFloat(state[robot].target.y);
+    var z = parseFloat(state[robot].target.z);
+
+    var text = [x, y, z].join(', ');
+
+    wamp.call(robot + '.' + 'target_point', [leg, x, y, z, t]).then(
+        function (res) {
+            if (res) {
+                ctrlLog.log(robot, 'Moved leg ' + leg + ' to (' + text + ').', 1);
+            } else {
+                ctrlLog.log(robot, 'Unable to move leg.', 2);
             }
         },
         function (err) {
@@ -264,4 +314,68 @@ ctrlPack.pack1.bind = function () {
 
 ctrlPack.pack1.readRFID = function () {
     ctrlPack.readRFID('pack1');
+};
+
+ctrlPack.pack1.liftLeg = function () {
+    ctrlPack.liftLeg('pack1');
+};
+
+ctrlPack.pack1.targetPoint = function () {
+    ctrlPack.targetPoint('pack1');
+};
+
+
+// Pack 2.
+
+ctrlPack.pack2.zeroMotion = function () {
+    state.pack2.direct.v1 = 0;
+    state.pack2.direct.v2 = 0;
+    ctrlPack.setVector('pack2');
+};
+
+ctrlPack.pack2.zeroHead = function () {
+    state.pack2.direct.p1 = 0;
+    state.pack2.direct.p2 = 0;
+    ctrlPack.setHead('pack2');
+};
+
+ctrlPack.pack2.stop = function () {
+    ctrlPack.basicCall('pack2', 'stop');
+};
+
+ctrlPack.pack2.setVector = function () {
+    ctrlPack.setVector('pack2');
+};
+
+ctrlPack.pack2.setHead = function () {
+    ctrlPack.setHead('pack2');
+};
+
+ctrlPack.pack2.pushup = function () {
+    ctrlPack.basicCall('pack2', 'pushup');
+};
+
+ctrlPack.pack2.startWatch = function () {
+    ctrlPack.basicCall('pack2', 'start_watch');
+};
+
+ctrlPack.pack2.zero = function () {
+    ctrlPack.basicCall('pack2', 'zero');
+};
+
+ctrlPack.pack2.bind = function () {
+    ctrlPack.bindKeys('pack2');
+    state.bind.active = 'pack2';
+};
+
+ctrlPack.pack2.readRFID = function () {
+    ctrlPack.readRFID('pack2');
+};
+
+ctrlPack.pack2.liftLeg = function () {
+    ctrlPack.liftLeg('pack2');
+};
+
+ctrlPack.pack2.targetPoint = function () {
+    ctrlPack.targetPoint('pack2');
 };
