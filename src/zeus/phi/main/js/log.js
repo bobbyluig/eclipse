@@ -20,10 +20,10 @@ ctrlLog.log = function (logger, message, level) {
         display.scrollTop(display.prop('scrollHeight'));
     }
 
-
-    var voice = settings.speech[name];
-    ctrlSpeech.speak(voice, message);
-    
+    if (log.narrate) {
+        var voice = settings.speech[name];
+        ctrlSpeech.speak(voice, message);
+    }
 };
 
 ctrlLog.loggers = {};
@@ -38,8 +38,12 @@ ctrlLog.init = function (logger) {
     log.new = 0;
     log.events = [];
     log.scroll = true;
+    log.narrate = true;
     log.changeScroll = function () {
         log.scroll = !log.scroll;
+    };
+    log.changeNarrate = function () {
+        log.narrate = !log.narrate;
     };
     log.zero = function() {
         log.new = 0;

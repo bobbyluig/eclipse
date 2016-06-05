@@ -79,6 +79,10 @@
                             <div class="ui compact icon button" rv-on-click="log.changeScroll">
                                 <i class="icon" rv-class-play="log.scroll | !" rv-class-pause="log.scroll"></i>
                             </div>
+                            <div class="ui compact icon button" rv-on-click="log.changeNarrate">
+                                <i class="volume up icon" rv-show="log.narrate"></i>
+                                <i class="volume off icon" rv-show="log.narrate | !"></i>
+                            </div>
                             <div class="ui compact button" rv-on-click="log.clear">
                                 Clear
                             </div>
@@ -168,6 +172,10 @@
                                     <div class="ui compact icon button" rv-on-click="log.changeScroll">
                                         <i class="play icon" rv-show="log.scroll | !"></i>
                                         <i class="pause icon" rv-show="log.scroll"></i>
+                                    </div>
+                                    <div class="ui compact icon button" rv-on-click="log.changeNarrate">
+                                        <i class="volume up icon" rv-show="log.narrate"></i>
+                                        <i class="volume off icon" rv-show="log.narrate | !"></i>
                                     </div>
                                     <div class="ui compact button" rv-on-click="log.clear">
                                         Clear
@@ -437,6 +445,10 @@
                                     <div class="ui compact icon button" rv-on-click="log.changeScroll">
                                         <i class="play icon" rv-show="log.scroll | !"></i>
                                         <i class="pause icon" rv-show="log.scroll"></i>
+                                    </div>
+                                    <div class="ui compact icon button" rv-on-click="log.changeNarrate">
+                                        <i class="volume up icon" rv-show="log.narrate"></i>
+                                        <i class="volume off icon" rv-show="log.narrate | !"></i>
                                     </div>
                                     <div class="ui compact button" rv-on-click="log.clear">
                                         Clear

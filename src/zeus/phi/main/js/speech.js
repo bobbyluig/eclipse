@@ -38,69 +38,240 @@ window.speechSynthesis.onvoiceschanged = function () {
 
 ctrlSpeech.voices = [];
 
+ctrlSpeech.getRobot = function (id) {
+    if (id == 'one' || id == '1')
+        return 'pack1';
+    else if (id == 'too' || id == 'two' || id == '2' || id == 'to')
+        return 'pack2';
+    else
+        return '';
+};
+
 ctrlSpeech.commands = {
     'pack :id walk': function (id) {
-        ctrlPack.setRobot(id);
-        ctrlPack.watch();
-        ctrlPack.setVector([3, 0]);
+        var robot = ctrlSpeech.getRobot(id);
+
+        if (!robot) {
+            ctrlLog.log('system', 'Unknown identifier ' + id + '.', 2);
+            return;
+        }
+
+        state[robot].direct.v1 = 3;
+        state[robot].direct.v2 = 0;
+        ctrlPack[robot].setVector();
     },
 
     'pack :id run': function (id) {
-        ctrlPack.setRobot(id);
-        ctrlPack.watch();
-        ctrlPack.setVector([8, 0]);
+        var robot = ctrlSpeech.getRobot(id);
+
+        if (!robot) {
+            ctrlLog.log('system', 'Unknown identifier ' + id + '.', 2);
+            return;
+        }
+
+        state[robot].direct.v1 = 8;
+        state[robot].direct.v2 = 0;
+        ctrlPack[robot].setVector();
     },
 
     'pack :id walk left': function (id) {
-        ctrlPack.setRobot(id);
-        ctrlPack.watch();
-        ctrlPack.setVector([3, 0.2]);
+        var robot = ctrlSpeech.getRobot(id);
+
+        if (!robot) {
+            ctrlLog.log('system', 'Unknown identifier ' + id + '.', 2);
+            return;
+        }
+
+        state[robot].direct.v1 = 3;
+        state[robot].direct.v2 = 0.2;
+        ctrlPack[robot].setVector();
     },
 
     'pack :id walk right': function (id) {
-        ctrlPack.setRobot(id);
-        ctrlPack.watch();
-        ctrlPack.setVector([3, -0.2]);
+        var robot = ctrlSpeech.getRobot(id);
+
+        if (!robot) {
+            ctrlLog.log('system', 'Unknown identifier ' + id + '.', 2);
+            return;
+        }
+
+        state[robot].direct.v1 = 3;
+        state[robot].direct.v2 = -0.2;
+        ctrlPack[robot].setVector();
     },
 
     'pack :id run left': function (id) {
-        ctrlPack.setRobot(id);
-        ctrlPack.watch();
-        ctrlPack.setVector([8, 0.2]);
+        var robot = ctrlSpeech.getRobot(id);
+
+        if (!robot) {
+            ctrlLog.log('system', 'Unknown identifier ' + id + '.', 2);
+            return;
+        }
+
+        state[robot].direct.v1 = 8;
+        state[robot].direct.v2 = 0.2;
+        ctrlPack[robot].setVector();
     },
 
     'pack :id run right': function (id) {
-        ctrlPack.setRobot(id);
-        ctrlPack.watch();
-        ctrlPack.setVector([8, -0.2]);
+        var robot = ctrlSpeech.getRobot(id);
+
+        if (!robot) {
+            ctrlLog.log('system', 'Unknown identifier ' + id + '.', 2);
+            return;
+        }
+
+        state[robot].direct.v1 = 8;
+        state[robot].direct.v2 = -0.2;
+        ctrlPack[robot].setVector();
     },
 
     'pack :id chase tail': function (id) {
-        ctrlPack.setRobot(id);
-        ctrlPack.watch();
-        ctrlPack.setVector([0, 0.9]);
+        var robot = ctrlSpeech.getRobot(id);
+
+        if (!robot) {
+            ctrlLog.log('system', 'Unknown identifier ' + id + '.', 2);
+            return;
+        }
+
+        state[robot].direct.v1 = 3;
+        state[robot].direct.v2 = 0.8;
+        ctrlPack[robot].setVector();
     },
 
     'pack :id turn right': function (id) {
-        ctrlPack.setRobot(id);
-        ctrlPack.watch();
-        ctrlPack.setVector([0, -0.9]);
-    },
+        var robot = ctrlSpeech.getRobot(id);
 
-    'pack :id home': function (id) {
-        ctrlPack.setRobot(id);
-        ctrlPack.stop();
-        ctrlPack.zero();
-    },
+        if (!robot) {
+            ctrlLog.log('system', 'Unknown identifier ' + id + '.', 2);
+            return;
+        }
 
-    'pack :id center head': function (id) {
-        ctrlPack.setRobot(id);
-        ctrlPack.centerHead();
+        state[robot].direct.v1 = 3;
+        state[robot].direct.v2 = -0.8;
+        ctrlPack[robot].setVector();
     },
 
     'pack :id stop': function (id) {
-        ctrlPack.setRobot(id);
-        ctrlPack.stopWatch();
+        var robot = ctrlSpeech.getRobot(id);
+
+        if (!robot) {
+            ctrlLog.log('system', 'Unknown identifier ' + id + '.', 2);
+            return;
+        }
+
+        state[robot].direct.v1 = 0;
+        state[robot].direct.v2 = 0;
+        ctrlPack[robot].setVector();
+    },
+
+    'pack :id look left': function (id) {
+        var robot = ctrlSpeech.getRobot(id);
+
+        if (!robot) {
+            ctrlLog.log('system', 'Unknown identifier ' + id + '.', 2);
+            return;
+        }
+
+        state[robot].direct.p1 = 20;
+        state[robot].direct.p2 = 0;
+        ctrlPack[robot].setHead();
+    },
+
+    'pack :id look right': function (id) {
+        var robot = ctrlSpeech.getRobot(id);
+
+        if (!robot) {
+            ctrlLog.log('system', 'Unknown identifier ' + id + '.', 2);
+            return;
+        }
+
+        state[robot].direct.p1 = -20;
+        state[robot].direct.p2 = 0;
+        ctrlPack[robot].setHead();
+    },
+
+    'pack :id look up': function (id) {
+        var robot = ctrlSpeech.getRobot(id);
+
+        if (!robot) {
+            ctrlLog.log('system', 'Unknown identifier ' + id + '.', 2);
+            return;
+        }
+
+        state[robot].direct.p1 = 0;
+        state[robot].direct.p2 = 10;
+        ctrlPack[robot].setHead();
+    },
+
+    'pack :id look down': function (id) {
+        var robot = ctrlSpeech.getRobot(id);
+
+        if (!robot) {
+            ctrlLog.log('system', 'Unknown identifier ' + id + '.', 2);
+            return;
+        }
+
+        state[robot].direct.p1 = 0;
+        state[robot].direct.p2 = -10;
+        ctrlPack[robot].setHead();
+    },
+
+    'pack :id center head': function (id) {
+        var robot = ctrlSpeech.getRobot(id);
+
+        if (!robot) {
+            ctrlLog.log('system', 'Unknown identifier ' + id + '.', 2);
+            return;
+        }
+
+        state[robot].direct.p1 = 0;
+        state[robot].direct.p2 = 0;
+        ctrlPack[robot].setHead();
+    },
+
+    'pack :id zero': function (id) {
+        var robot = ctrlSpeech.getRobot(id);
+
+        if (!robot) {
+            ctrlLog.log('system', 'Unknown identifier ' + id + '.', 2);
+            return;
+        }
+
+        ctrlPack[robot].zero();
+    },
+
+    'pack :id watch': function (id) {
+        var robot = ctrlSpeech.getRobot(id);
+
+        if (!robot) {
+            ctrlLog.log('system', 'Unknown identifier ' + id + '.', 2);
+            return;
+        }
+
+        ctrlPack[robot].startWatch();
+    },
+
+    'pack :id push-up': function (id) {
+        var robot = ctrlSpeech.getRobot(id);
+
+        if (!robot) {
+            ctrlLog.log('system', 'Unknown identifier ' + id + '.', 2);
+            return;
+        }
+
+        ctrlPack[robot].pushup();
+    },
+
+    'pack :id stop thread': function (id) {
+        var robot = ctrlSpeech.getRobot(id);
+
+        if (!robot) {
+            ctrlLog.log('system', 'Unknown identifier ' + id + '.', 2);
+            return;
+        }
+
+        ctrlPack[robot].stop();
     }
 };
 
