@@ -83,15 +83,6 @@ gulp.task('watch', function() {
     gulp.watch('semantic/dist/**/*', ['copy_semantic']);
 });
 
-// Server.
-gulp.task('server', function() {
-   return gulp.src('build')
-       .pipe(webserver({
-           livereload: false,
-           open: true
-       }));
-});
-
 // Development.
-gulp.task('dev', ['copy', 'js', 'sass', 'watch_semantic', 'watch', 'server']);
+gulp.task('dev', ['copy', 'js', 'sass', 'watch_semantic', 'watch']);
 
