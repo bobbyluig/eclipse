@@ -1,81 +1,101 @@
 {
-  "controller":{},
-  "workers":[
+  "version": 2,
+  "controller": {},
+  "workers": [
     {
-      "type":"router",
-      "realms":[
+      "type": "router",
+      "realms": [
         {
-          "name":"lycanthrope",
-          "roles":[
+          "name": "lycanthrope",
+          "roles": [
             {
-              "name":"anonymous",
-              "permissions":[
+              "name": "anonymous",
+              "permissions": [
                 {
-                  "uri":"public.*",
-                  "subscribe":true
+                  "uri": "public.",
+                  "match": "prefix",
+                  "allow": {
+                    "call": false,
+                    "register": false,
+                    "publish": false,
+                    "subscribe": true
+                  },
+                  "disclose": {
+                    "caller": false,
+                    "publisher": false
+                  },
+                  "cache": true
                 }
               ]
             },
             {
-              "name":"full",
-              "permissions":[
+              "name": "full",
+              "permissions": [
                 {
-                  "uri":"*",
-                  "publish":true,
-                  "subscribe":true,
-                  "call":true,
-                  "register":true
+                  "uri": "",
+                  "match": "prefix",
+                  "allow": {
+                    "call": true,
+                    "register": true,
+                    "publish": true,
+                    "subscribe": true
+                  },
+                  "disclose": {
+                    "caller": false,
+                    "publisher": false
+                  },
+                  "cache": true
                 }
               ]
             }
           ]
         }
       ],
-      "transports":[
+      "transports": [
         {
-          "type":"web",
-          "endpoint":{
-            "type":"tcp",
-            "port":443,
+          "type": "web",
+          "endpoint": {
+            "type": "tcp",
+            "port": 443,
             "tls": {
               "key": "server.pkey",
               "certificate": "server.cer"
             }
           },
-          "paths":{
-            "/":{
-              "type":"static",
-              "directory":"../../src/zeus/phi/build"
+          "paths": {
+            "/": {
+              "type": "static",
+              "directory": "../../src/zeus/phi/build"
             },
-            "ws":{
-              "type":"websocket",
-              "options":{
-                "auto_ping_timeout":3000,
-                "auto_ping_interval":5000
+            "ws": {
+              "type": "websocket",
+              "options": {
+                "auto_ping_timeout": 3000,
+                "auto_ping_interval": 5000
               },
-              "auth":{
-                "wampcra":{
-                  "type":"static",
-                  "users":{
-                    "DOG-1E5":{
-                      "secret":"de2432k,/s-=/8Eu",
-                      "role":"full"
+              "auth": {
+                "wampcra": {
+                  "type": "static",
+                  "users": {
+                    "DOG-1E5": {
+                      "secret": "de2432k,/s-=/8Eu",
+                      "role": "full"
                     },
-                    "DOG-4S1":{
-                      "secret":"A@Q+xfQ[9<<5,+YG",
-                      "role":"full"
+                    "DOG-4S1": {
+                      "secret": "A@Q+xfQ[9<<5,+YG",
+                      "role": "full"
                     },
-                    "Alpha":{
-                      "secret":"YCd:<Tfw73ga}AL3",
-                      "role":"full"
+                    "Alpha": {
+                      "secret": "YCd:<Tfw73ga}AL3",
+                      "role": "full"
                     },
-                    "Zeus":{
-                      "secret":"+Ew~77XrvW-c<6sZ",
-                      "role":"full"
+                    "Zeus": {
+                      "secret": "+Ew~77XrvW-c<6sZ",
+                      "role": "full"
                     },
-                    "Voice":{
-                      "secret":"ALyfTuqZvHHbwQCE",
-                      "role":"full"
+                    "Voice": {
+                      "secret": "ALyfTuqZvHHbwQCE",
+                      "role": "full"
                     }
                   }
                 }
