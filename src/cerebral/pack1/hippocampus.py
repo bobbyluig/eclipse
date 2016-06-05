@@ -1,7 +1,6 @@
 from agility.main import Servo, Leg, Robot, Head, Body
 from finesse.eclipse import Finesse
 from theia.eye import Camera
-import os
 
 
 ################
@@ -58,20 +57,3 @@ class Crossbar:
     authid = 'DOG-1E5'
     secret = 'de2432k,/s-=/8Eu'
     prefix = 'pack1'
-
-
-#############################
-# Basic conversation topics.
-#############################
-
-class Conversation:
-    topics = {
-        'hello': "Hello World!",
-        'identify': "Hello. I am DOG-1E5, Eclipse Technology's first generation quadruped. "
-                    "I am designed for Project Lycanthrope by E D D Red Team 2016. "
-                    "Rawr.",
-        'introduce': "Hello. I am DOG-1E5 from Eclipse Technologies. Welcome to our Proof of Concept.",
-        'how are you': "I am very nervous. I hope I am doing everything correctly."
-    }
-
-

@@ -375,7 +375,7 @@ class Body:
 
         return com
 
-    def adjust_crawl(self, off, next_frame, sigma=1.5):
+    def adjust_crawl(self, off, next_frame, sigma=2.0):
         """
         Adjust the center of mass for the crawl gait.
         :param off: An array defining which legs are in the air.
@@ -1153,7 +1153,7 @@ class Agility:
         # Execute.
         self.target_pose(pose, t)
 
-    def target_pose(self, target, t, lift=1):
+    def target_pose(self, target, t, lift=2):
         """
         Get the robot from its current pose to a new pose. Block until completion.
         The robot will lift legs appropriately to eliminate dragging.
