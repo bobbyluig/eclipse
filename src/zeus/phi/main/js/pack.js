@@ -188,7 +188,7 @@ ctrlPack.bindKeys = function (robot) {
     $(document).keydown(function(e) {
         var v = 0.5;
         var r = 0.08;
-        var h = 1;
+        var h = 2;
 
         var v1 = parseFloat(state[robot].direct.v1);
         var v2 = parseFloat(state[robot].direct.v2);
@@ -212,20 +212,20 @@ ctrlPack.bindKeys = function (robot) {
                 // D key. Turn right.
                 v2 -= r;
                 break;
-            case 37:
-                // Left arrow key. Head turn left.
+            case 74:
+                // J. Head turn left.
                 p1 += h;
                 break;
-            case 39:
-                // Right arrow key. Head turn right.
+            case 76:
+                // L. Head turn right.
                 p1 -= h;
                 break;
-            case 38:
-                // Up arrow key. Head up.
+            case 73:
+                // I. Head up.
                 p2 += h;
                 break;
-            case 40:
-                // Down arrow key. Head down.
+            case 75:
+                // K. Head down.
                 p2 -= h;
                 break;
             default:
