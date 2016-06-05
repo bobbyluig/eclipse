@@ -34,22 +34,41 @@ state.pack1 = {
     connected: false,
     session: 0,
     ip: '',
-    v1: 0,
-    v2: 0,
-    p1: 0,
-    p2: 0,
-    area: 0
+
+    set: {
+        v1: 0,
+        v2: 0,
+        p1: 0,
+        p2: 0
+    },
+
+    lift: {
+        leg: 0,
+        height: 1,
+        t: 500
+    },
+
+    target: {
+        leg: 0,
+        x: 0,
+        y: 0,
+        z: 0,
+        t: 500
+    }
 };
 
 state.pack2 = {
     connected: false,
     session: 0,
     ip: '',
-    v1: 0,
-    v2: 0,
-    p1: 0,
-    p2: 0,
-    area: 0
+
+    set: {
+        v1: 0,
+        v2: 0,
+        p1: 0,
+        p2: 0
+    }
+
 };
 
 // Main

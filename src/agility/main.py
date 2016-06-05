@@ -1179,10 +1179,17 @@ class Agility:
         curr_g = np.min(pose[:, 2])
         next_g = np.min(target[:, 2])
 
-        # Get all legs to ground if necessary.
-        if not all(pose[:, 2] == curr_g):
+        # Generate leg state array.
+        pose_state = np.greater(pose[:, 2], (curr_g + self.epsilon))  # Defines which legs are in the air.
+
+        # Get all legs to (0, 0, curr_g) if they are in the air.
+        if any(pose_state):
             f1 = pose.copy()
-            f1[:, 2] = curr_g
+
+            for i in range(4):
+                if pose_state[i]:
+                    f1[i] = (0, 0, curr_g)
+
             frames.append(f1)
 
         # Get legs to next height if necessary.
@@ -1191,12 +1198,12 @@ class Agility:
             f2[:, 2] = next_g
             frames.append(f2)
 
-        # Generate leg state arrays.
-        state = np.greater(target[:, 2], (next_g + self.epsilon))      # Defines which legs are in the air.
+        # Generate leg state array.
+        target_state = np.greater(target[:, 2], (next_g + self.epsilon))      # Defines which legs are in the air.
 
         # For every leg that is not at the right (x, y) and is on the ground in target, lift and down.
         for i in range(4):
-            if not np.array_equal(pose[i][:2], target[i][:2]) and not state[i]:
+            if not np.array_equal(pose[i][:2], target[i][:2]) and not target_state[i]:
                 # Get previous frame.
                 prev = frames[-1]
                 f4, f5 = prev.copy(), prev.copy()
@@ -1221,9 +1228,9 @@ class Agility:
 
         # Move to final target if necessary.
         if not np.array_equal(frames[-1], target):
-            if any(state):
+            if any(target_state):
                 prev = frames[-1]
-                bias = body.adjust(state, target)
+                bias = body.adjust(target_state, target)
                 frames.extend((prev - bias, target - bias))
             else:
                 frames.append(target)
@@ -1531,7 +1538,7 @@ class Agility:
 
         self.maestro.go_home()
 
-    def ready(self, z, t=1000):
+    def ready(self, z, t=2000):
         """
         Ready a gait by lower robot to plane.
         :param z: Height of gait.
