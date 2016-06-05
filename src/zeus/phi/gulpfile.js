@@ -86,3 +86,6 @@ gulp.task('watch', function() {
 // Development.
 gulp.task('dev', ['copy', 'js', 'sass', 'watch_semantic', 'watch']);
 
+// Build.
+gulp.task('build', ['copy', 'js', 'sass']);
+
