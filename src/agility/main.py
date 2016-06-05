@@ -575,9 +575,9 @@ class Leg:
         Update current leg position based on servo data.
         """
 
-        a = self.servos[0].get_position()
-        b = self.servos[1].get_position()
-        c = self.servos[2].get_position()
+        a = math.radians(self.servos[0].get_position())
+        b = math.radians(self.servos[1].get_position())
+        c = math.radians(self.servos[2].get_position())
 
         self.position = self.fk_solver(self.lengths, (a, b, c))
 
@@ -695,6 +695,8 @@ class Agility:
             self.maestro = Dummy()
             logger.warn("Failed to attached to Maestro's command port. "
                         "If not debugging, consider this a fatal error.")
+
+        self.zero()
 
     def head_rotation(self):
         """
@@ -965,7 +967,7 @@ class Agility:
 
             # Less than break. Too long. Linearly interpolate.
             if dt / d > k:
-                n = int(round(dt / d / k))
+                n = int(round(dt / d / k)) + 1
                 l_frames = self.smooth(prev_frame, frame, n)
                 l_frames = l_frames[1:]
 
@@ -1179,8 +1181,9 @@ class Agility:
         curr_g = np.min(pose[:, 2])
         next_g = np.min(target[:, 2])
 
-        # Generate leg state array.
+        # Generate leg state arrays.
         pose_state = np.greater(pose[:, 2], (curr_g + self.epsilon))  # Defines which legs are in the air.
+        target_state = np.greater(target[:, 2], (next_g + self.epsilon))      # Defines which legs are in the air.
 
         # Get all legs to (0, 0, curr_g) if they are in the air.
         if any(pose_state):
@@ -1192,39 +1195,47 @@ class Agility:
 
             frames.append(f1)
 
-        # Get legs to next height if necessary.
-        if curr_g != next_g:
+        # Define optimization procedure.
+        def up_down(ground):
+            # For every leg that is not at the right (x, y) and is on the ground in target, lift and down.
+            for i in range(4):
+                if not np.array_equal(pose[i][:2], target[i][:2]) and not target_state[i]:
+                    # Get previous frame.
+                    prev = frames[-1]
+                    f4, f5 = prev.copy(), prev.copy()
+
+                    # Move leg to target (x, y) in air.
+                    x, y = target[i][:2]
+                    f4[i] = (x, y, ground + lift)
+
+                    # Compute bias and adjust.
+                    s = [False, False, False, False]
+                    s[i] = True
+                    bias = body.adjust(s, f4, 1)
+                    f3 = prev - bias
+                    f4 -= bias
+
+                    # Move leg down to target. Keep bias.
+                    f5[i] = target[i]
+                    f5 -= bias
+
+                    # Append data.
+                    frames.extend((f3, f4, f5))
+
+        def to_next():
             f2 = pose.copy()
             f2[:, 2] = next_g
             frames.append(f2)
 
-        # Generate leg state array.
-        target_state = np.greater(target[:, 2], (next_g + self.epsilon))      # Defines which legs are in the air.
-
-        # For every leg that is not at the right (x, y) and is on the ground in target, lift and down.
-        for i in range(4):
-            if not np.array_equal(pose[i][:2], target[i][:2]) and not target_state[i]:
-                # Get previous frame.
-                prev = frames[-1]
-                f4, f5 = prev.copy(), prev.copy()
-
-                # Move leg to target (x, y) in air.
-                x, y = target[i][:2]
-                f4[i] = (x, y, next_g + lift)
-
-                # Compute bias and adjust.
-                s = [False, False, False, False]
-                s[i] = True
-                bias = body.adjust(s, f4, 1)
-                f3 = prev - bias
-                f4 -= bias
-
-                # Move leg down to target. Keep bias.
-                f5[i] = target[i]
-                f5 -= bias
-
-                # Append data.
-                frames.extend((f3, f4, f5))
+        # Different optimization order.
+        if next_g > curr_g:
+            # For body high -> low, get legs to next height first.
+            to_next()
+            up_down(next_g)
+        elif curr_g > next_g:
+            # For body low -> high, get legs to next height last.
+            up_down(curr_g)
+            to_next()
 
         # Move to final target if necessary.
         if not np.array_equal(frames[-1], target):
@@ -1239,73 +1250,6 @@ class Agility:
         dt = t / len(frames)
 
         self.execute_long(pose, frames, dt)
-
-    def prepare_lift(self, index, target, lift, t):
-        """
-        Get the leg from a to b by lifting.
-        From the current position, lift leg. Move to target, then adjust z.
-        :param index: The leg index.
-        :param target: The target point.
-        :param lift: How much to lift.
-        :param t: The time in milliseconds.
-        :return: (frames, dt)
-        """
-
-        # Get all legs and servos for quick access.
-        legs = self.robot.legs
-        servos = self.robot.leg_servos
-
-        # Update positions.
-        self.maestro.get_multiple_positions(servos)
-
-        # Get pose of all legs.
-        pose = self.get_pose()
-
-        # Get "ground".
-        ground = np.min(pose[:, 2])
-
-        # Compute steps.
-        steps = int(round(t / 50))
-        if steps > 100:
-            steps = 100
-        elif steps < 20:
-            steps = 20
-
-        # Compute dt.
-        dt = t / steps
-
-        # Construct array.
-        x, y, z = pose[index]
-        tx, ty, tz = target
-
-        p0 = (x, y, z)
-        p1 = (x, y, z + lift)
-        p2 = (tx, ty, z + lift)
-        p3 = (tx, ty, tz)
-
-        frames = np.array((p0, p1, p2, p3), dtype=float)
-
-        # Linearize.
-        times = self.linearize(frames)
-
-        # Interpolate.
-        ts = np.linspace(0, 1000, num=steps + 1, endpoint=True)
-        tck, _ = interpolate.splprep(frames.T, u=times, s=0, k=1)
-        p = np.array(interpolate.splev(ts, tck))
-        p = p.T
-
-        # Fill in non-motion frames.
-        f = [None] * 4
-        f[index] = p
-
-        for i in range(4):
-            if i != index:
-                l = pose[i].reshape((1, 3))
-                f[i] = np.repeat(l, steps + 1, axis=0)
-
-        frames = np.concatenate(f).reshape((steps + 1, 4, 3), order='F')
-
-        return self.prepare_frames(frames, dt, ground)
 
     def prepare_frames(self, frames, dt, ground):
         """
@@ -1486,6 +1430,14 @@ class Agility:
         return frames, dt
 
     def move_body(self, x, y, z, t=0):
+        """
+        Move the body some x, y, and z.
+        :param x: Move x.
+        :param y: Move y.
+        :param z: Move z.
+        :param t: The time in ms.
+        """
+
         legs = self.robot.legs
         servos = self.robot.leg_servos
 

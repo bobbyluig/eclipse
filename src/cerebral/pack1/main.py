@@ -93,6 +93,18 @@ class Cerebral(ApplicationSession):
         else:
             return data
 
+    @wamp.register('{}.lift_leg'.format(Crossbar.prefix))
+    async def lift_leg(self, leg, lift ,t):
+        future = self.run(self.super_agility.lift_leg, leg, lift, t)
+        success = await future
+        return success
+
+    @wamp.register('{}.target_point'.format(Crossbar.prefix))
+    async def target_point(self, leg, x, y, z, t):
+        future = self.run(self.super_agility.target_point, leg, (x, y, z), t)
+        success = await future
+        return success
+
     @wamp.register('{}.set_vector'.format(Crossbar.prefix))
     async def set_vector(self, a, b):
         await self.run(self.super_agility.set_vector, (a, b))

@@ -46,10 +46,10 @@ class SuperAgility:
         if not self.leg_lock.acquire(blocking=False):
             return False
 
-        if self.leg_thread is not None:
-            return False
-
         try:
+            if self.leg_thread is not None:
+                return False
+
             self.leg_thread = Thread(target=self._watch)
             self.leg_thread.start()
         finally:
@@ -66,10 +66,10 @@ class SuperAgility:
         if not self.leg_lock.acquire(blocking=False):
             return False
 
-        if self.leg_thread is not None:
-            return False
-
         try:
+            if self.leg_thread is not None:
+                return False
+
             self.leg_thread = Thread(target=self._pushup)
             self.leg_thread.start()
         finally:
@@ -86,14 +86,21 @@ class SuperAgility:
         if not self.leg_lock.acquire(blocking=False):
             return False
 
-        if self.leg_thread is None:
-            return False
-
         try:
+            if self.leg_thread is None:
+                return False
+
+            # Set stop events.
             self.leg_stop.set()
+            self.new_vector.set()
+
+            # Wait for termination.
             self.leg_thread.join()
             self.leg_thread = None
+
+            # Clear all events.
             self.leg_stop.clear()
+            self.new_vector.clear()
         finally:
             self.leg_lock.release()
 
@@ -108,10 +115,10 @@ class SuperAgility:
         if not self.leg_lock.acquire(blocking=False):
             return False
 
-        if self.leg_thread is not None:
-            return False
-
         try:
+            if self.leg_thread is not None:
+                return False
+
             self.agility.zero()
         finally:
             self.leg_lock.release()
@@ -127,10 +134,10 @@ class SuperAgility:
         if not self.leg_lock.acquire(blocking=False):
             return False
 
-        if self.leg_thread is not None:
-            return False
-
         try:
+            if self.leg_thread is not None:
+                return False
+
             self.agility.lift_leg(leg, lift, t)
         finally:
             self.leg_lock.release()
@@ -146,10 +153,10 @@ class SuperAgility:
         if not self.leg_lock.acquire(blocking=False):
             return False
 
-        if self.leg_thread is not None:
-            return False
-
         try:
+            if self.leg_thread is not None:
+                return False
+
             self.agility.target_point(leg, point, t)
         finally:
             self.leg_lock.release()

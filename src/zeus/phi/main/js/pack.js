@@ -72,8 +72,8 @@ ctrlPack.setVector = function (robot) {
         return;
     }
 
-    var v1 = parseFloat(state[robot].set.v1);
-    var v2 = parseFloat(state[robot].set.v2);
+    var v1 = parseFloat(state[robot].direct.v1);
+    var v2 = parseFloat(state[robot].direct.v2);
 
     wamp.call(robot + '.' + 'set_vector', [v1, v2]).then(
         function (res) {
@@ -92,8 +92,8 @@ ctrlPack.setHead = function (robot) {
         return;
     }
 
-    var p1 = parseFloat(state[robot].set.p1);
-    var p2 = parseFloat(state[robot].set.p2);
+    var p1 = parseFloat(state[robot].direct.p1);
+    var p2 = parseFloat(state[robot].direct.p2);
 
     wamp.call(robot + '.' + 'set_vector', [p1, p2]).then(
         function (res) {
@@ -140,10 +140,10 @@ ctrlPack.bindKeys = function (robot) {
         var r = 0.08;
         var h = 1;
 
-        var v1 = parseFloat(state[robot].set.v1);
-        var v2 = parseFloat(state[robot].set.v2);
-        var p1 = parseFloat(state[robot].set.p1);
-        var p2 = parseFloat(state[robot].set.p2);
+        var v1 = parseFloat(state[robot].direct.v1);
+        var v2 = parseFloat(state[robot].direct.v2);
+        var p1 = parseFloat(state[robot].direct.p1);
+        var p2 = parseFloat(state[robot].direct.p2);
 
         switch (e.which) {
             case 87:
@@ -198,15 +198,15 @@ ctrlPack.bindKeys = function (robot) {
             v2 = 0;
         }
 
-        if (v1 !== state[robot].set.v1 || v2 !== state[robot].set.v2) {
-            state[robot].set.v1 = v1;
-            state[robot].set.v2 = v2;
+        if (v1 !== state[robot].direct.v1 || v2 !== state[robot].direct.v2) {
+            state[robot].direct.v1 = v1;
+            state[robot].direct.v2 = v2;
             ctrlPack.setVector(robot);
         }
-        else if (p1 !== state[robot].set.p1 || p2 !== state[robot].set.p2) {
+        else if (p1 !== state[robot].direct.p1 || p2 !== state[robot].direct.p2) {
             console.log('head');
-            state[robot].set.p1 = p1;
-            state[robot].set.p2 = p2;
+            state[robot].direct.p1 = p1;
+            state[robot].direct.p2 = p2;
             ctrlPack.setHead(robot);
         }
     });
@@ -222,14 +222,14 @@ String.prototype.capitalizeFirstLetter = function() {
 // Pack 1.
 
 ctrlPack.pack1.zeroMotion = function () {
-    state.pack1.set.v1 = 0;
-    state.pack1.set.v2 = 0;
+    state.pack1.direct.v1 = 0;
+    state.pack1.direct.v2 = 0;
     ctrlPack.setVector('pack1');
 };
 
 ctrlPack.pack1.zeroHead = function () {
-    state.pack1.set.p1 = 0;
-    state.pack1.set.p2 = 0;
+    state.pack1.direct.p1 = 0;
+    state.pack1.direct.p2 = 0;
     ctrlPack.setHead('pack1');
 };
 

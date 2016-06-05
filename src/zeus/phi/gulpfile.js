@@ -49,11 +49,17 @@ gulp.task('copy_img', function() {
 // Copy Semantic.
 gulp.task('copy_semantic', function() {
    return gulp.src('semantic/dist/**/*')
-       .pipe(gulp.dest('build/semantic'))
+       .pipe(gulp.dest('build/semantic'));
+});
+
+// Oopy fonts.
+gulp.task('copy_fonts', function() {
+   return gulp.src('main/fonts/**/*')
+       .pipe(gulp.dest('build/fonts'));
 });
 
 // Complete copy.
-gulp.task('copy', ['copy_bower', 'copy_html', 'copy_img', 'copy_semantic']);
+gulp.task('copy', ['copy_bower', 'copy_html', 'copy_img', 'copy_semantic', 'copy_fonts']);
 
 // Compile SASS.
 gulp.task('sass', function() {
