@@ -35,7 +35,7 @@ class Android:
     leg4 = Leg(servo10, servo11, servo12, (6.3, 7.13), 3, Finesse.inverse_pack, Finesse.forward_pack)
 
     # Head
-    head_lr = Servo(17, -90, 90, 400, 2400, 100, bias=0, direction=1, left_bound=-45, right_bound=45)
+    head_lr = Servo(17, -90, 90, 400, 2400, 100, bias=6, direction=1, left_bound=-45, right_bound=45)
     head_ud = Servo(16, -90, 90, 400, 2400, 100, bias=0, direction=1, left_bound=-20, right_bound=20)
     head = Head(head_lr, head_ud, camera)
 
