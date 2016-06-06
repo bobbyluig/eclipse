@@ -8,7 +8,7 @@ from theia.eye import Camera
 ################
 
 class Android:
-    camera = Camera(1, 90, 60)
+    camera = Camera(0, 90, 60)
 
     # Leg 1.
     servo1 = Servo(0, -180, 90, 500, 2500, 150, bias=2, direction=1)
