@@ -171,7 +171,7 @@ ctrlPack.readRFID = function (robot) {
     wamp.call(robot + '.' + 'read_rfid').then(
         function (res) {
             if (res) {
-                ctrlLog.log(robot, 'Last read RFID is ' + res + '.', 1);
+                ctrlLog.log(robot, 'Earliest read RFID is ' + res + '.', 1);
             } else {
                 ctrlLog.log(robot, 'No RFID in buffer.', 2);
             }
