@@ -34,7 +34,7 @@ ctrlPack.logError = function (robot, err) {
     ctrlLog.log(robot, message + '.', 3);
 };
 
-ctrlPack.streams = {};
+ctrlPack.streams = {};  
 
 ctrlPack.registerStream = function (robot) {
     var query = $('.feed[data-name="' + robot + '"]');
@@ -55,8 +55,14 @@ ctrlPack.registerStream = function (robot) {
         }
         else if (feed.play) {
             var url = 'https://' + state[robot].ip + ':27182/?' + new Date().getTime();
+
+            // Other method is slightly hacky.
+            image.off('load');
+            image.on('load', function () {
+                setTimeout(feed.get, 100);
+            });
+
             image.attr('src', url);
-            setTimeout(feed.get, 500);
         }
     };
 
