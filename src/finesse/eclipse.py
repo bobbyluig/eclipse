@@ -53,6 +53,7 @@ class Finesse:
         # theta3 *= -1
         # Returns [0, 180]. +/- expands solution to [-180, 180].
         theta3 = (l1 ** 2 + l2 ** 2 - dist ** 2) / (2 * l1 * l2)
+        theta3 = round(theta3, 13)
         theta3 = acos(theta3) - pi
         if a3:
             theta3 *= -1
@@ -60,6 +61,7 @@ class Finesse:
         # theta2 = (pi - theta2)
         # Returns [-90, 90]. (pi - theta2) expands solution to [-180, 180].
         theta2 = y / (l1 + l2 * cos(theta3))
+        theta2 = round(theta2, 13)
         theta2 = asin(theta2)
         if a2:
             theta2 = pi - theta2
