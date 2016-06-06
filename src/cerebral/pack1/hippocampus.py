@@ -40,7 +40,7 @@ class Android:
     head = Head(servo16, servo17, camera)
 
     # Body
-    body = Body(length=16.5, width=15.5, cx=0.6, cy=0.2, mb=20, ml=0)
+    body = Body(length=16.5, width=15.5, cx=0.5, cy=0, mb=20, ml=0)
 
     # Robot.
     robot = Robot(leg1, leg2, leg3, leg4, body, head)
