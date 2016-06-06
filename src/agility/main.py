@@ -374,7 +374,7 @@ class Body:
 
         return com
 
-    def adjust_crawl(self, off, next_frame, sigma=2.0):
+    def adjust_crawl(self, off, next_frame, sigma=1.5):
         """
         Adjust the center of mass for the crawl gait.
         :param off: An array defining which legs are in the air.
