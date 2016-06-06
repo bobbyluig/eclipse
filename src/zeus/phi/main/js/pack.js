@@ -34,7 +34,7 @@ ctrlPack.logError = function (robot, err) {
     ctrlLog.log(robot, message + '.', 3);
 };
 
-ctrlPack.streams = {};  
+ctrlPack.streams = {};
 
 ctrlPack.registerStream = function (robot) {
     var query = $('.feed[data-name="' + robot + '"]');
