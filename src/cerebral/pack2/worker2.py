@@ -2,7 +2,7 @@ from cerebral import logger as l
 import logging
 
 
-from cerebral.pack1.hippocampus import Android, Crossbar
+from cerebral.pack2.hippocampus import Android, Crossbar
 from theia.eye import Eye
 from socketserver import ThreadingMixIn
 from http.server import SimpleHTTPRequestHandler, HTTPServer
