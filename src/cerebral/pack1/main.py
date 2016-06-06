@@ -72,6 +72,9 @@ class Cerebral(ApplicationSession):
     def onDisconnect(self):
         logger.info('Connection lost!')
 
+        # Stop robot.
+        self.stop()
+
     ####################
     # Special functions.
     ####################

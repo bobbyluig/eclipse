@@ -55,14 +55,8 @@ ctrlPack.registerStream = function (robot) {
         }
         else if (feed.play) {
             var url = 'https://' + state[robot].ip + ':27182/?' + new Date().getTime();
-
-            // Other method is slightly hacky.
-            image.off('load');
-            image.on('load', function () {
-                setTimeout(feed.get, 100);
-            });
-
             image.attr('src', url);
+            setTimeout(feed.get, 1000);
         }
     };
 
