@@ -1,0 +1,168 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <meta name="author" content="Lujing Cen" />
+  <title>Usage and Documentation</title>
+  <style type="text/css">code{white-space: pre;}</style>
+  <style type="text/css">
+div.sourceCode { overflow-x: auto; }
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code > span.dt { color: #902000; } /* DataType */
+code > span.dv { color: #40a070; } /* DecVal */
+code > span.bn { color: #40a070; } /* BaseN */
+code > span.fl { color: #40a070; } /* Float */
+code > span.ch { color: #4070a0; } /* Char */
+code > span.st { color: #4070a0; } /* String */
+code > span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code > span.ot { color: #007020; } /* Other */
+code > span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code > span.fu { color: #06287e; } /* Function */
+code > span.er { color: #ff0000; font-weight: bold; } /* Error */
+code > span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+code > span.cn { color: #880000; } /* Constant */
+code > span.sc { color: #4070a0; } /* SpecialChar */
+code > span.vs { color: #4070a0; } /* VerbatimString */
+code > span.ss { color: #bb6688; } /* SpecialString */
+code > span.im { } /* Import */
+code > span.va { color: #19177c; } /* Variable */
+code > span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code > span.op { color: #666666; } /* Operator */
+code > span.bu { } /* BuiltIn */
+code > span.ex { } /* Extension */
+code > span.pp { color: #bc7a00; } /* Preprocessor */
+code > span.at { color: #7d9029; } /* Attribute */
+code > span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code > span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code > span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+  </style>
+  <link rel="stylesheet" href="template/template.css" type="text/css" />
+</head>
+<body>
+    <div class="navbar navbar-static-top">
+    <div class="navbar-inner">
+      <div class="container">
+        <span class="doc-title">Usage and Documentation</span>
+        <ul class="nav pull-right doc-info">
+                    <li><p class="navbar-text">Lujing Cen</p></li>
+                              <li><p class="navbar-text">7/30/2016</p></li>
+                  </ul>
+      </div>
+    </div>
+  </div>
+    <div class="container">
+    <div class="row">
+            <div id="TOC" class="span3">
+        <div class="well toc">
+        <ul>
+          <li class="nav-header">Table of Contents</li>
+        </ul>
+        <ul>
+        <li><a href="#introduction">Introduction</a></li>
+        <li><a href="#development">Development</a><ul>
+        <li><a href="#project-hardware">Project Hardware</a></li>
+        <li><a href="#recommended-specifications">Recommended Specifications</a></li>
+        <li><a href="#development-requirements">Development Requirements</a></li>
+        <li><a href="#root-directory">Root Directory</a></li>
+        <li><a href="#maestro-usb-configuration">Maestro USB Configuration</a></li>
+        <li><a href="#oculus-and-slam">Oculus and SLAM</a></li>
+        <li><a href="#zeus">Zeus</a></li>
+        <li><a href="#crossbar">Crossbar</a></li>
+        <li><a href="#style">Style</a></li>
+        <li><a href="#tests">Tests</a></li>
+        <li><a href="#ide">IDE</a></li>
+        </ul></li>
+        <li><a href="#deployment">Deployment</a><ul>
+        <li><a href="#hardware-requirements">Hardware Requirements</a></li>
+        <li><a href="#installation">Installation</a></li>
+        <li><a href="#wireless-configuration">Wireless Configuration</a></li>
+        <li><a href="#command-interface">Command Interface</a></li>
+        </ul></li>
+        </ul>
+        </div>
+      </div>
+            <div class="span9">
+            <h1 id="introduction">Introduction</h1>
+<p>Welcome to the usage and documentation guide. This guide applies to DOG-1E5 and DOG-4S1. It is meant as a more thorough documentation of certain functions and classes and a guide for development and manual operation.</p>
+<h1 id="development">Development</h1>
+<p>After cloning the package, all the prerequisites for the project must be installed. This project has not been tested in Mac but should work fine due to the versatility of Python.</p>
+<h3 id="project-hardware">Project Hardware</h3>
+<ul>
+<li>Pololu Mini Maestro 18</li>
+<li>SparkFun RedBoard</li>
+<li>Arduino UNO</li>
+<li>ODROID-C1+</li>
+<li>ODROID-C2</li>
+<li>Raspberry Pi 2 Model B</li>
+<li>Raspberry Pi 3</li>
+</ul>
+<h3 id="recommended-specifications">Recommended Specifications</h3>
+<ul>
+<li>Intel i7 (4th generation and up) if real-time SLAM is desired</li>
+<li>16 GB of RAM</li>
+<li>250+ GB HDD</li>
+</ul>
+<h3 id="development-requirements">Development Requirements</h3>
+<ul>
+<li>Windows 7 or higher, Linux Debian / Ubuntu, or OS X (untested but should work).</li>
+<li>CMake 2.8.7 or higher.</li>
+<li>Node.js and required components (for <code>phi</code> development).</li>
+<li>64-bit Python 3.5+ (usage of new async and await syntax).</li>
+<li>Boost Python (sudo apt-get install libboost-dev-all should be good).</li>
+<li>OpenCV 3 and contrib module with Python 3 binding.</li>
+<li>C++14 capable compiler. Project tested on MSVC 2015.</li>
+<li>The latest version of the following Python packages and their dependencies: <code>numpy</code>, <code>pyserial</code>, <code>autobahn</code>, <code>pyusb</code>, <code>pyaudio</code>, <code>psutil</code>, <code>scipy</code>, <code>pyro4</code>, <code>matplotlib</code>, and <code>pydub</code>.</li>
+<li>Processor support for SSE2 intrinsics (on most Intel and AMD processors).</li>
+</ul>
+<h3 id="root-directory">Root Directory</h3>
+<p>The root directory for the Python code is the <code>src</code> folder. Ensure that your IDE (like PyCharm) knows that it is the root directory. Otherwise, make sure that the absolute path of <code>src</code> is in <code>PYTHONPATH</code>.</p>
+<h3 id="maestro-usb-configuration">Maestro USB Configuration</h3>
+<p>USB is quite interesting. Pololu's configuation software is written in C# and uses an outdated version of WinUSB. However, pyusb requires libusb-win32 (or equivalent). First, configure the Mini Maestro using the Pololu software. Ensure that CRC check is disabled and that the serial mode is set to &quot;USB Dual Port.&quot; Other modes should work as well but this is the most stable and well-tested mode. You may modify other parameters to your liking but be prepared to change code parameters if things like period and timeout are changed from their default value.</p>
+<p>For Windows, it is necessary after initial configuration to install a driver compatible with pyusb. This can be done using <a href="http://zadig.akeo.ie/">zadig</a>. Ensure that you replace the driver (which should be WinUSB) for the actual device and not its two virtual COM ports. To reuse the Pololu controller interface, open device manager and uninstall the device. After a refresh, the original driver should reappear.</p>
+<h3 id="oculus-and-slam">Oculus and SLAM</h3>
+<p>If installing manually on Windows, you will need to compile <code>oculus</code>, which implements DSST and KCF corelation-based trackers and exposes them to Python 3. Check the README in <code>src/theia/oculus</code> for more information. You will also need to compile <code>slam</code>, which implements monocular location and mapping. Check <code>src/theia/slam</code> for more information. Basically, point CMake to the directory with <code>CMakeLists.txt</code> and create a new folder named <code>build</code> in the directory. Generate the correct configuration for MSVC. Make sure you use the right MSVC version that corresponds to the current Python version. Also, compile everything in 64-bit Release format. I tried to ensure that required modules are automatically found. However, you may have to manually compile and install things like Eigen and OpenCV 3. Have fun resolving the dependencies!</p>
+<p>ORB-SLAM requires a training file, which is not included in the repository. The vocabulary can be donwload from the <a href="https://github.com/raulmur/ORB_SLAM2/tree/master/Vocabulary">original repository</a>.</p>
+<h3 id="zeus">Zeus</h3>
+<p>To develop the front-end command interface, first install the required packages.</p>
+<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">cd</span> src/zeus/phi
+<span class="kw">npm</span> install</code></pre></div>
+<p>The gulp configuration has been set to watch for updates automatically.</p>
+<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">gulp</span> build
+<span class="kw">gulp</span> watch</code></pre></div>
+<p>Now, editing any project files will cause gulp to automatically update the webpage. Open <code>index.html</code> to view the command interface.</p>
+<h3 id="crossbar">Crossbar</h3>
+<p>No communication between devices can occur without <a href="http://crossbar.io/">Crossbar</a>. Follow the installation instructions on the site and then run the script below.</p>
+<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">cd</span> crossbar
+<span class="kw">crossbar</span> start</code></pre></div>
+<p>Visit <a href="https://127.0.0.1" class="uri">https://127.0.0.1</a> after building <code>phi</code> and you should see the command interface.</p>
+<h3 id="style">Style</h3>
+<p>In most cases, all code styling abides by <a href="https://www.python.org/dev/peps/pep-0008/">PEP 8</a>. All objects should use <em>CamelCase</em> and all functions should used <em>lower_case</em>. The use of <em>mixedCase</em> is present due to the nature of OpenCV and Pololu libraries where such is the prevailing style. Variables, especially those of a class, should also used <em>lower_case</em>. File names are always all lowercase with no underscores.</p>
+<p>For JavaScript, functions and objects should use <em>mixedCase</em>.</p>
+<h3 id="tests">Tests</h3>
+<p>There are no unit tests written. However, all tests are located in <code>tests</code> folders. Add tests there before moving them to main files to avoid confusion.</p>
+<h3 id="ide">IDE</h3>
+<p>I would personally recommend PyCharm professional. Autocomplete works really well, even with binary Python packages like OpenCV and Oculus. It also saves you a lot of time by finding various syntax, static semantic, and even some semantic errors. The professional version also supports JavaScript and web development. If you have a CSUDH email or another .edu email, you can get it for free.</p>
+<h1 id="deployment">Deployment</h1>
+<p>This section covers deploying code to the robot and using the command interface.</p>
+<h3 id="hardware-requirements">Hardware Requirements</h3>
+<p>While the code can be deployed to pretty much any OS and hardware configuration, it is recommended that it is deployed to a 64-bit ARM computer with at least 1 GB of RAM. The computer must support NEON Intrinsics, so it must be an ARM-A processor. When in doubt, use the ODROID-C2 or Raspberry Pi 3.</p>
+<h3 id="installation">Installation</h3>
+<p>The project has only been tested on the <a href="http://oph.mdrjr.net/odrobian/images/s905/">ODROBIAN Jessie OS</a>. However, any Debian-based OS should work. Use the <code>deploy/install.sh</code> script to automatically install everything. Note that the script will clone Eclipse into the home directory. Make sure you run as root and follow instructions in the file.</p>
+<h3 id="wireless-configuration">Wireless Configuration</h3>
+<p>All robots are configured to automatically connect to a WPA/WPA2 Wi-Fi named <code>Eclipse</code> with the password <code>eclipse4lyfe</code>. You can emulate this using a mobile hotspot or the paid Connectify app for PC. Configure wireless on the robots using <code>wicd-curses</code>. Make sure you check &quot;Use these settings for all networks sharing this essid&quot; and &quot;Automatically connect to this network&quot;.</p>
+<p>After connecting to the Wi-Fi network, the IP address of the computer running Crossbar needs to be identified. This information will need to be updated in all of the robots' <code>hippocampus.py</code> and the command interface.</p>
+<h3 id="command-interface">Command Interface</h3>
+<p>The command interface is pretty easy to use. More than one person can use it at the same time. The <code>w a s d</code> buttons control movement and <code>↑ ↓ ← →</code> controls the head. Get a Mac for cool voices. Be sure to connect to Crossbar before trying to do anything. All other buttons do what they say, with the exception of <code>watch</code>, which basically prepares the robot to accept manual movement commands.</p>
+            </div>
+    </div>
+  </div>
+</body>
+</html>
