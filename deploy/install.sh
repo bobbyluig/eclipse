@@ -18,10 +18,6 @@
 echo "Enter robot hostname: "
 read newhost
 
-# Request GitHub password.
-echo "Enter GitHub password: "
-read password
-
 #####################
 # Configure hostname.
 #####################
@@ -60,7 +56,7 @@ cmake pkg-config s905-zram
 
 apt-get -y install git
 cd ~
-git clone https://bobbyluig:$password@github.com/bobbyluig/Eclipse.git
+git clone https://github.com/bobbyluig/Eclipse.git
 
 #########################
 # Python 3 and libraries.

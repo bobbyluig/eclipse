@@ -1,0 +1,108 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+  <style type="text/css">
+div.sourceCode { overflow-x: auto; }
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code > span.dt { color: #902000; } /* DataType */
+code > span.dv { color: #40a070; } /* DecVal */
+code > span.bn { color: #40a070; } /* BaseN */
+code > span.fl { color: #40a070; } /* Float */
+code > span.ch { color: #4070a0; } /* Char */
+code > span.st { color: #4070a0; } /* String */
+code > span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code > span.ot { color: #007020; } /* Other */
+code > span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code > span.fu { color: #06287e; } /* Function */
+code > span.er { color: #ff0000; font-weight: bold; } /* Error */
+code > span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+code > span.cn { color: #880000; } /* Constant */
+code > span.sc { color: #4070a0; } /* SpecialChar */
+code > span.vs { color: #4070a0; } /* VerbatimString */
+code > span.ss { color: #bb6688; } /* SpecialString */
+code > span.im { } /* Import */
+code > span.va { color: #19177c; } /* Variable */
+code > span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code > span.op { color: #666666; } /* Operator */
+code > span.bu { } /* BuiltIn */
+code > span.ex { } /* Extension */
+code > span.pp { color: #bc7a00; } /* Preprocessor */
+code > span.at { color: #7d9029; } /* Attribute */
+code > span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code > span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code > span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+  </style>
+  <link rel="stylesheet" href="template/template.css" type="text/css" />
+</head>
+<body>
+    <div class="container">
+    <div class="row">
+            <div id="TOC" class="span3">
+        <div class="well toc">
+        <ul>
+          <li class="nav-header">Table of Contents</li>
+        </ul>
+        <ul>
+        <li><a href="#repair-and-troubleshooting">Repair and Troubleshooting</a></li>
+        </ul>
+        </div>
+      </div>
+            <div class="span9">
+            <h1 id="repair-and-troubleshooting">Repair and Troubleshooting</h1>
+<p>Welcome to the repair and troubleshooting guide. This guide applies to DOG-1E5 and DOG-4S1. Hopefully, this guide will resolve any problems with robot operation.</p>
+<p>The normal power up sequence should include the following visible steps:</p>
+<ol style="list-style-type: decimal">
+<li>ODROID powers on.</li>
+<li>All legs move to uncalibrated zero position.</li>
+<li>All legs move to calibrated zero position.</li>
+<li>Sequence begins.</li>
+</ol>
+<p>If this does not happen in the way it should, or the sequence fails, find the issue below and follow the instructions.</p>
+<h3 id="odroid-does-not-power-on.">ODROID does not power on.</h3>
+<p>There are multiple possibilties here. First, check if there is a solid red light. If there is none, this indicates that there is no power flowing to the ODROID. To resolve this, first check the voltage of the battery to ensure that it is functional and charged. Then, verify that there is indeed 5 volts running to the ODROID. If there is voltage running but the computer still does not turn on, it may be broken.</p>
+<p>Proper boot up is indicated by the blue light. It should have a constant flash when the kernel is running. If this does not happen, then the SD card is either corrupt or damaged (this happend to us).</p>
+<h3 id="odroid-powers-on-but-legs-do-not-move.">ODROID powers on, but legs do not move.</h3>
+<p>Again, check the voltage. Verify that the Mini Maestro has power. To perform a servo test, move all the legs slightly out of zero position. When the Mini Maestro powers on, they should all move to uncalibrated zero. If one does not, a servo is probably damaged.</p>
+<h3 id="legs-move-but-sequence-does-not-start.">Legs move, but sequence does not start.</h3>
+<p>This is probably an issue with the software inside of the ODROID. It is highly unlikely to happen. Simply restart the computer. If it still does not work, you may have to manually test by logging in to the ODROID.</p>
+<h3 id="sequence-is-not-stable.">Sequence is not stable.</h3>
+<p>If the robot is tripping, a servo is probably damaged. However, if that is not the case, it may just be that the center of mass changed. Refer to the usage guid for calibration.</p>
+<h3 id="the-battery-is-broken.">The battery is broken.</h3>
+<p>Buy another one.</p>
+<h3 id="a-piece-of-the-robot-is-broken.">A piece of the robot is broken.</h3>
+<p>Make another one.</p>
+<h3 id="a-servo-is-broken.">A servo is broken.</h3>
+<p>This is a fun thing to repair. Once the broken servo is located, the leg will need to be disassembled. However, it needs to be calibrated. Do not assemble before calibration!</p>
+<p>First, disconnect the Maestro from the ODROID. Hook up the Maestro to another computer. It only needs power. Once it is powered on, the servos should to move to their optimal zero position. Now, assemble the leg as close to zero position as possible. Remember, once you tighten everything, there is no going back without taking everything apart!</p>
+<p>Now that the leg is assembled, locate the the proper <code>hippocampus.py</code> in either <code>src/cerebral/pack1</code> (DOG-1E5) or <code>src/cerebral/pack2</code> (DOG-4S1). Locate the leg with the broken servo. Set all <code>bias</code> to 0, then execute the code below. Replace <code>packX</code> with the proper number.</p>
+<div class="sourceCode"><pre class="sourceCode python"><code class="sourceCode python"><span class="im">from</span> cerebral.packX.hippocampus <span class="im">import</span> Android
+<span class="im">from</span> agility.main <span class="im">import</span> Agility
+
+<span class="co"># Robot by reference.</span>
+robot <span class="op">=</span> Android.robot
+agility <span class="op">=</span> Agility(robot)
+
+<span class="co"># Zero</span>
+agility.zero()</code></pre></div>
+<p>For every servo that is not at the correct zero position, tweak its bias until it is. After that, reconnect everything and the robot should be fully functional again. Do not ask if the bias is positive or negative. Testing both cases is way faster. Trust me.</p>
+<h3 id="the-odroid-is-broken.">The ODROID is broken.</h3>
+<p>Rebuilding the image takes a few hours, but is not difficult. Obtain the <a href="http://oph.mdrjr.net/odrobian/images/s905/">ODROBIAN Jessie OS</a> and load it onto an SD card. Log in to the ODROID using Ethernet and move <code>src/deploy</code> over using SFTP. Go to the <code>deploy</code> directory and run the code.</p>
+<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">chmod</span> +x install.sh
+<span class="kw">source</span> install.sh</code></pre></div>
+<p>Assuming everything is okay (it probably won't be lol), the basic image is now installed and ready for demo usage. For manual control, you'll need to set up wireless communications. This is covered in the usage guide.</p>
+            </div>
+    </div>
+  </div>
+</body>
+</html>
