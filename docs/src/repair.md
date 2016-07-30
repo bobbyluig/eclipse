@@ -27,7 +27,7 @@ This is probably an issue with the software inside of the ODROID. It is highly u
 
 ### Sequence is not stable.
 
-If the robot is tripping, a servo is probably damaged. However, if that is not the case, it may just be that the center of mass changed. Refer to the usage guid for calibration.
+If the robot is tripping, a servo is probably damaged. However, if that is not the case, it may just be that the center of mass changed. Refer to the usage guide for calibration.
 
 ### The battery is broken.
 
