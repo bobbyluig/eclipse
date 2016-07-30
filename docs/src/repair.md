@@ -1,4 +1,8 @@
-# Repair and Troubleshooting
+% Repair and Troubleshooting
+% Lujing Cen
+% 7/30/2016
+
+# Introduction
 
 Welcome to the repair and troubleshooting guide. This guide applies to DOG-1E5 and DOG-4S1. Hopefully, this guide will resolve any problems with robot operation.
 

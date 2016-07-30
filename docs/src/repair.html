@@ -4,7 +4,8 @@
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <meta http-equiv="Content-Style-Type" content="text/css" />
   <meta name="generator" content="pandoc" />
-  <title></title>
+  <meta name="author" content="Lujing Cen" />
+  <title>Repair and Troubleshooting</title>
   <style type="text/css">code{white-space: pre;}</style>
   <style type="text/css">
 div.sourceCode { overflow-x: auto; }
@@ -46,6 +47,17 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
   <link rel="stylesheet" href="template/template.css" type="text/css" />
 </head>
 <body>
+    <div class="navbar navbar-static-top">
+    <div class="navbar-inner">
+      <div class="container">
+        <span class="doc-title">Repair and Troubleshooting</span>
+        <ul class="nav pull-right doc-info">
+                    <li><p class="navbar-text">Lujing Cen</p></li>
+                              <li><p class="navbar-text">7/30/2016</p></li>
+                  </ul>
+      </div>
+    </div>
+  </div>
     <div class="container">
     <div class="row">
             <div id="TOC" class="span3">
@@ -54,12 +66,21 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
           <li class="nav-header">Table of Contents</li>
         </ul>
         <ul>
-        <li><a href="#repair-and-troubleshooting">Repair and Troubleshooting</a></li>
+        <li><a href="#introduction">Introduction</a><ul>
+        <li><a href="#odroid-does-not-power-on.">ODROID does not power on.</a></li>
+        <li><a href="#odroid-powers-on-but-legs-do-not-move.">ODROID powers on, but legs do not move.</a></li>
+        <li><a href="#legs-move-but-sequence-does-not-start.">Legs move, but sequence does not start.</a></li>
+        <li><a href="#sequence-is-not-stable.">Sequence is not stable.</a></li>
+        <li><a href="#the-battery-is-broken.">The battery is broken.</a></li>
+        <li><a href="#a-piece-of-the-robot-is-broken.">A piece of the robot is broken.</a></li>
+        <li><a href="#a-servo-is-broken.">A servo is broken.</a></li>
+        <li><a href="#the-odroid-is-broken.">The ODROID is broken.</a></li>
+        </ul></li>
         </ul>
         </div>
       </div>
             <div class="span9">
-            <h1 id="repair-and-troubleshooting">Repair and Troubleshooting</h1>
+            <h1 id="introduction">Introduction</h1>
 <p>Welcome to the repair and troubleshooting guide. This guide applies to DOG-1E5 and DOG-4S1. Hopefully, this guide will resolve any problems with robot operation.</p>
 <p>The normal power up sequence should include the following visible steps:</p>
 <ol style="list-style-type: decimal">
