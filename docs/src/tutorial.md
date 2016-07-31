@@ -14,7 +14,7 @@ This guide is in no way comprehensive. I am not accountable for errors in this d
 
 ### Read Me
 
-While researching, I chanced upon the Springer Handbook of Robotics. Before proceeding, read section 16.5 of the book found [here](http://home.deib.polimi.it/gini/robot/docs/legged.pdf). If you are serious about robotics, I recommend that you find this book in the library or get an eBook. This book basically covers everything you need to know about advanced robotics and even provides historical background. You probably won't understand everything in this literature. That is completely okay. This is just an introduction.
+While researching, I chanced upon the *Springer Handbook of Robotics*. Before proceeding, read section 16.5 of the book found [here](http://home.deib.polimi.it/gini/robot/docs/legged.pdf). If you are serious about robotics, I recommend that you find this book in the library or get an eBook. This book basically covers everything you need to know about advanced robotics and even provides historical background. You probably won't understand everything in this literature. That is completely okay. This is just an introduction.
 
 ### Prerequisites
 
@@ -76,6 +76,8 @@ This is perhaps the most math intensive and important portion of the project.
 
 # Movement
 
+We want to translate user inputs of rotational motion ($rad / sec$) and forward motion ($cm / sec$) to physical robot motion. The first challenge is to use $d\theta$, the amount of rotation per cycle, and $dv$, the amount of forward motion per cycle, to generate proper gaits. The second challenge is to perform various gait optimizations to ensure that the robot walks smoothly.
+
 ### Vectors
 
 My friend Alastair MacMillan came up with this amazing idea one day that basically made complex motion possible. For a moment, pretend that the robot is just a rectangle.
@@ -92,12 +94,23 @@ The harder part is using $\theta$ to find $x$ and $y$. At every instantaneous mo
 
 ![](assets/vector2.png)
 
-We define the width $w$ to be the distance along y and length $l$ to be the distance along x. The magnitude of the vector is defined to be $|\Delta|$ and the radius of the circle is $r$. A few things become immediately evident.
+We define the width $w$ to be the distance along y and length $l$ to be the distance along x. Let $u$ be a matrix or width and length. The magnitude of the vector is defined to be $|\Delta|$ and the radius of the circle is $r$. A few things become immediately evident.
 
 $$r = \frac{1}{2} \sqrt{w^2 + l^2}$$
 $$|\Delta| = \sqrt{x^2 + y^2}$$
+$$u = \begin{bmatrix} w \\ l \end{bmatrix}$$
 
+$\theta$, how much the robot will turn when the leg moves $\Delta$, is between $r$ and the hypotenuse. It can be solved using inverse tangent.
 
+$$\theta = \arctan \left(\frac{|\Delta|}{r}\right)$$
+
+The desired theta input is twice of that. So the input $d\theta = 2 \times \theta$. We can then solve for $|\Delta|$.
+
+$$|\Delta| = r \times \tan \left(\frac{1}{2} d\theta \right)$$
+
+The $(x, y)$ contribution from the rotation part is always perpendicular to the line from the center to the vertex. This means that we can use the [normalized vector](https://en.wikipedia.org/wiki/Unit_vector) $\hat{u}$ to find the desired values. Finally, add the desired rotational contribution value for $dv$.
+
+$$m = \begin{bmatrix} x \\ y \end{bmatrix} = |\Delta| \times \hat{u} + \begin{bmatrix}dv \\ 0 \end{bmatrix}$$
 
 ### Gait Types
 

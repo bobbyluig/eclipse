@@ -122,7 +122,7 @@
 <p>This guide is in no way comprehensive. I am not accountable for errors in this document. Don't let this guide prevent you from thinking of new designs, concepts, and algorithms. Remember that I am no expert on this subject. Your ideas could very well be better than mine. At the same time, don't attempt to reinvent the wheel. If something is efficient and works for your purpose, use it.</p>
 <p>&quot;Premature optimization is the root of all evil.&quot; Test and measure. Don't guess.</p>
 <h3 id="read-me">Read Me</h3>
-<p>While researching, I chanced upon the Springer Handbook of Robotics. Before proceeding, read section 16.5 of the book found <a href="http://home.deib.polimi.it/gini/robot/docs/legged.pdf">here</a>. If you are serious about robotics, I recommend that you find this book in the library or get an eBook. This book basically covers everything you need to know about advanced robotics and even provides historical background. You probably won't understand everything in this literature. That is completely okay. This is just an introduction.</p>
+<p>While researching, I chanced upon the <em>Springer Handbook of Robotics</em>. Before proceeding, read section 16.5 of the book found <a href="http://home.deib.polimi.it/gini/robot/docs/legged.pdf">here</a>. If you are serious about robotics, I recommend that you find this book in the library or get an eBook. This book basically covers everything you need to know about advanced robotics and even provides historical background. You probably won't understand everything in this literature. That is completely okay. This is just an introduction.</p>
 <h3 id="prerequisites">Prerequisites</h3>
 <p>Trying to accomplish this project requires that you are not scared of math and physics. You will need a strong foundation in geometry, trigonometry, algebra, classical mechanics, and prelimiary linear algebra. You will also need a deep understanding of calculus, although you might not ever need to take a derivative in this project. It would help that you also understand some practical electricity and magnetism.</p>
 <h1 id="definitions">Definitions</h1>
@@ -161,6 +161,7 @@
 <h3 id="synchronization">Synchronization</h3>
 <h3 id="maestro-class">Maestro (class)</h3>
 <h1 id="movement">Movement</h1>
+<p>We want to translate user inputs of rotational motion (<span class="math inline">\(rad / sec\)</span>) and forward motion (<span class="math inline">\(cm / sec\)</span>) to physical robot motion. The first challenge is to use <span class="math inline">\(d\theta\)</span>, the amount of rotation per cycle, and <span class="math inline">\(dv\)</span>, the amount of forward motion per cycle, to generate proper gaits. The second challenge is to perform various gait optimizations to ensure that the robot walks smoothly.</p>
 <h3 id="vectors">Vectors</h3>
 <p>My friend Alastair MacMillan came up with this amazing idea one day that basically made complex motion possible. For a moment, pretend that the robot is just a rectangle.</p>
 <div class="center">
@@ -173,8 +174,14 @@
 <img src="assets/vector2.png" />
 
 </div>
-<p>We define the width <span class="math inline">\(w\)</span> to be the distance along y and length <span class="math inline">\(l\)</span> to be the distance along x. The magnitude of the vector is defined to be <span class="math inline">\(|\Delta|\)</span> and the radius of the circle is <span class="math inline">\(r\)</span>. A few things become immediately evident.</p>
-<p><span class="math display">\[r = \frac{1}{2} \sqrt{w^2 + l^2}\]</span> <span class="math display">\[|\Delta| = \sqrt{x^2 + y^2}\]</span></p>
+<p>We define the width <span class="math inline">\(w\)</span> to be the distance along y and length <span class="math inline">\(l\)</span> to be the distance along x. Let <span class="math inline">\(u\)</span> be a matrix or width and length. The magnitude of the vector is defined to be <span class="math inline">\(|\Delta|\)</span> and the radius of the circle is <span class="math inline">\(r\)</span>. A few things become immediately evident.</p>
+<p><span class="math display">\[r = \frac{1}{2} \sqrt{w^2 + l^2}\]</span> <span class="math display">\[|\Delta| = \sqrt{x^2 + y^2}\]</span> <span class="math display">\[u = \begin{bmatrix} w \\ l \end{bmatrix}\]</span></p>
+<p><span class="math inline">\(\theta\)</span>, how much the robot will turn when the leg moves <span class="math inline">\(\Delta\)</span>, is between <span class="math inline">\(r\)</span> and the hypotenuse. It can be solved using inverse tangent.</p>
+<p><span class="math display">\[\theta = \arctan \left(\frac{|\Delta|}{r}\right)\]</span></p>
+<p>The desired theta input is twice of that. So the input <span class="math inline">\(d\theta = 2 \times \theta\)</span>. We can then solve for <span class="math inline">\(|\Delta|\)</span>.</p>
+<p><span class="math display">\[|\Delta| = r \times \tan \left(\frac{1}{2} d\theta \right)\]</span></p>
+<p>The <span class="math inline">\((x, y)\)</span> contribution from the rotation part is always perpendicular to the line from the center to the vertex. This means that we can use the <a href="https://en.wikipedia.org/wiki/Unit_vector">normalized vector</a> <span class="math inline">\(\hat{u}\)</span> to find the desired values. Finally, add the desired rotational contribution value for <span class="math inline">\(dv\)</span>.</p>
+<p><span class="math display">\[m = \begin{bmatrix} x \\ y \end{bmatrix} = |\Delta| \times \hat{u} + \begin{bmatrix}dv \\ 0 \end{bmatrix}\]</span></p>
 <h3 id="gait-types">Gait Types</h3>
 <h3 id="gait-generation">Gait Generation</h3>
 <h3 id="gait-execution">Gait Execution</h3>
