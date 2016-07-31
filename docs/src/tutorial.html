@@ -1,0 +1,76 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <meta name="author" content="Lujing Cen" />
+  <title>Tutorial</title>
+  <style type="text/css">code{white-space: pre;}</style>
+  <link rel="stylesheet" href="template/template.css" type="text/css" />
+</head>
+<body>
+    <div class="navbar navbar-static-top">
+    <div class="navbar-inner">
+      <div class="container">
+        <span class="doc-title">Tutorial</span>
+        <ul class="nav pull-right doc-info">
+                    <li><p class="navbar-text">Lujing Cen</p></li>
+                              <li><p class="navbar-text">7/30/2016</p></li>
+                  </ul>
+      </div>
+    </div>
+  </div>
+    <div class="container">
+    <div class="row">
+            <div id="TOC" class="span3">
+        <div class="well toc">
+        <ul>
+          <li class="nav-header">Table of Contents</li>
+        </ul>
+        <ul>
+        <li><a href="#introduction">Introduction</a><ul>
+        <li><a href="#warnings">Warnings</a></li>
+        <li><a href="#read-me">Read Me</a></li>
+        <li><a href="#prerequisites">Prerequisites</a></li>
+        </ul></li>
+        <li><a href="#definitions">Definitions</a><ul>
+        <li><a href="#coordinate-system">Coordinate System</a></li>
+        <li><a href="#vocabulary">Vocabulary</a></li>
+        </ul></li>
+        </ul>
+        </div>
+      </div>
+            <div class="span9">
+            <h1 id="introduction">Introduction</h1>
+<p>Are you trying to build a quadruped robot? Are you trying to understand code in this repository? If you answered yes to either question, you are in the right place. This tutorial will provide a comprehensive guide for building a quadruped robot while providing details on how important pieces of code in this repository function and relate to their conceptual counterparts.</p>
+<h3 id="warnings">Warnings</h3>
+<p>This guide is in no way comprehensive. I am not accountable for errors in this document. Don't let this guide prevent you from thinking of new designs, concepts, and algorithms. Remember that I am no expert on this subject. Your ideas could very well be better than mine. At the same time, don't attempt to reinvent the wheel. If something is efficient and works for your purpose, use it.</p>
+<p>&quot;Premature optimization is the root of all evil.&quot; Test and measure. Don't guess.</p>
+<h3 id="read-me">Read Me</h3>
+<p>While researching, I chanced upon the Springer Handbook of Robotics. Before proceeding, read section 16.5 of the book found <a href="http://home.deib.polimi.it/gini/robot/docs/legged.pdf">here</a>. If you are serious about robotics, I recommend that you find this book in the library or get an eBook. This book basically covers everything you need to know about advanced robotics and even provides historical background. You probably won't understand everything in this literature. That is completely okay. This is just an introduction.</p>
+<h3 id="prerequisites">Prerequisites</h3>
+<p>Trying to accomplish this project requires that you are not scared of math and physics. You will need a strong foundation in geometry, trigonometry, algebra, classical mechanics, and prelimiary linear algebra. You will also need a deep understanding of calculus, although you might not ever need to take a derivative in this project. It would help that you also understand some practical electricity and magnetism.</p>
+<h1 id="definitions">Definitions</h1>
+<p>It is important to define everything before starting this project. It will save you a lot of time. Don't invent your own coordinate system like me and waste 2 weeks :p.</p>
+<h3 id="coordinate-system">Coordinate System</h3>
+<p>The world runs on the right-handed coordinate system. Being left-handed, I accidentally used the left-handed coordinate system, which ended up causing me a lot of confusion. Don't be like me. Clearly define the coordinate system before beginning. This is not to say you can't use the left-handed system. Just make sure you know what you're doing, because pretty much everything on the internet uses the right-handed system.</p>
+<div class="figure">
+<img src="assets/table.jpg" />
+
+</div>
+<p>Pretend the robot is a table. The head points in the positive x direction. The left side points in the positive y direction. The top of the table points to the positive z axis. The image is there for clarification.</p>
+<h3 id="vocabulary">Vocabulary</h3>
+<dl>
+<dt>End Effector</dt>
+<dd>In kinematics, the end of a robotic arm or leg. In this case, it is the tip of the feet.
+</dd>
+<dt>Root</dt>
+<dd>In kinematics, the point at which the arm or leg attaches to the body.
+</dd>
+</dl>
+            </div>
+    </div>
+  </div>
+</body>
+</html>
