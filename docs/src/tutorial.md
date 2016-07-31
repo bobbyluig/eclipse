@@ -110,9 +110,15 @@ $$|\Delta| = r \times \tan \left(\frac{1}{2} d\theta \right)$$
 
 The $(x, y)$ contribution from the rotation part is always perpendicular to the line from the center to the vertex. This means that we can use the [normalized vector](https://en.wikipedia.org/wiki/Unit_vector) $\hat{u}$ to find the desired values. Finally, add the desired rotational contribution value for $dv$.
 
-$$m = \begin{bmatrix} x \\ y \end{bmatrix} = |\Delta| \times \hat{u} + \begin{bmatrix}dv \\ 0 \end{bmatrix}$$
+$$\begin{bmatrix} x \\ y \end{bmatrix} = |\Delta| \times \hat{u} + \begin{bmatrix}dv \\ 0 \end{bmatrix}$$
 
 ### Gait Types
+
+There are various gait types described in *Springer Handbook of Robotics*. However, I believe that trot and crawl are the two easier gaits to implement. Obviously, trot is much faster than crawl. However, testing should reveal the optimal transition speed and time. If both are graphed, if can be seen that this is an optimization problem. I did not have sufficient time to test thoroughly. However, if time $t$ can be found, it is easy to convert $rad / sec$ and $cm / sec$ to $d\theta$ and $dv$.
+
+$$\begin{bmatrix} d\theta \\ dv \end{bmatrix} = t \times \begin{bmatrix} rad/sec \\ cm/sec \end{bmatrix}$$
+
+I have not found significant differences between different leg orderings. However, this is because I have not done extensive testing. The robots use 1423 creeping gaits, although the other orderings work as well.
 
 ### Gait Generation
 

@@ -181,8 +181,11 @@
 <p>The desired theta input is twice of that. So the input <span class="math inline">\(d\theta = 2 \times \theta\)</span>. We can then solve for <span class="math inline">\(|\Delta|\)</span>.</p>
 <p><span class="math display">\[|\Delta| = r \times \tan \left(\frac{1}{2} d\theta \right)\]</span></p>
 <p>The <span class="math inline">\((x, y)\)</span> contribution from the rotation part is always perpendicular to the line from the center to the vertex. This means that we can use the <a href="https://en.wikipedia.org/wiki/Unit_vector">normalized vector</a> <span class="math inline">\(\hat{u}\)</span> to find the desired values. Finally, add the desired rotational contribution value for <span class="math inline">\(dv\)</span>.</p>
-<p><span class="math display">\[m = \begin{bmatrix} x \\ y \end{bmatrix} = |\Delta| \times \hat{u} + \begin{bmatrix}dv \\ 0 \end{bmatrix}\]</span></p>
+<p><span class="math display">\[\begin{bmatrix} x \\ y \end{bmatrix} = |\Delta| \times \hat{u} + \begin{bmatrix}dv \\ 0 \end{bmatrix}\]</span></p>
 <h3 id="gait-types">Gait Types</h3>
+<p>There are various gait types described in <em>Springer Handbook of Robotics</em>. However, I believe that trot and crawl are the two easier gaits to implement. Obviously, trot is much faster than crawl. However, testing should reveal the optimal transition speed and time. If both are graphed, if can be seen that this is an optimization problem. I did not have sufficient time to test thoroughly. However, if time <span class="math inline">\(t\)</span> can be found, it is easy to convert <span class="math inline">\(rad / sec\)</span> and <span class="math inline">\(cm / sec\)</span> to <span class="math inline">\(d\theta\)</span> and <span class="math inline">\(dv\)</span>.</p>
+<p><span class="math display">\[\begin{bmatrix} d\theta \\ dv \end{bmatrix} = t \times \begin{bmatrix} rad/sec \\ cm/sec \end{bmatrix}\]</span></p>
+<p>I have not found significant differences between different leg orderings. However, this is because I have not done extensive testing. The robots use 1423 creeping gaits, although the other orderings work as well.</p>
 <h3 id="gait-generation">Gait Generation</h3>
 <h3 id="gait-execution">Gait Execution</h3>
 <h3 id="center-of-mass">Center of Mass</h3>
