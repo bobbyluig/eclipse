@@ -40,3 +40,145 @@ End Effector
 Root
 : In kinematics, the point at which the arm or leg attaches to the body.
 	
+# Leg Design
+
+### Alignment
+
+### Considerations
+
+# Kinematics
+
+This is perhaps the most math intensive and important portion of the project.
+
+### Forward Kinematics
+
+### Inverse Kinematics
+
+### Finesse (class)
+
+# Servos
+
+### Configuration
+
+### Information
+
+### Servo (class)
+
+# Mini Maestro
+
+### Protocol
+
+### USC
+
+### Synchronization
+
+### Maestro (class)
+
+# Movement
+
+### Vectors
+
+My friend Alastair MacMillan came up with this amazing idea one day that basically made complex motion possible. For a moment, pretend that the robot is just a rectangle.
+
+<div class="center">
+![](assets/vector.png)\ ![](assets/vector1.png)
+</div>
+
+The verticies or legs are number 0-3 accordingly. To rotate the rectangle, we can simply apply a vector at each vertex. The cool thing about vectors is that they can be view as separate components. To add forward or backward movement, simply add to the x component.
+
+The easiest method to physically reproduce the vector is to compute $(x, y)$ and generate a line between $(x, y)$ and $(-x, -y)$. Moving one cycle along the line will be twice the desired vector. 
+
+The harder part is using $\theta$ to find $x$ and $y$. At every instantaneous moment in time, each leg applies a force. Relative to their respective roots the force is linear over time. However, when all four legs work together, the linear force becomes rotational. 
+
+![](assets/vector2.png)
+
+We define the width $w$ to be the distance along y and length $l$ to be the distance along x. The magnitude of the vector is defined to be $|\Delta|$ and the radius of the circle is $r$. A few things become immediately evident.
+
+$$r = \frac{1}{2} \sqrt{w^2 + l^2}$$
+$$|\Delta| = \sqrt{x^2 + y^2}$$
+
+
+
+### Gait Types
+
+### Gait Generation
+
+### Gait Execution
+
+### Center of Mass
+
+### Static Optimization
+
+### Dynamic Optimization
+
+### Dynamic (class)
+
+### Agility (class)
+
+# Vision
+
+### Tracking
+
+### Detection
+
+### SLAM
+
+### Optimization
+
+### Oculus (class)
+
+### Theia (class)
+
+# Audio
+
+### Concepts
+
+### Lykos
+
+# Automation
+
+### Synthesis
+
+### Decision Making
+
+### Ares (class)
+
+# Communication
+
+### Workers
+
+### Networking
+
+### Cerebral (class)
+
+# Control
+
+### Considerations
+
+### Phi (class)
+
+# Material Selection
+
+### Body
+
+### Legs
+
+# Component Selection
+
+### Servos
+
+### Steppers
+
+### Microcontroller
+
+### Battery
+
+### Camera
+
+# Electrical
+
+### Amperage Draw
+
+### Safety
+
+### Battery

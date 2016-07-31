@@ -8,6 +8,7 @@
   <title>Tutorial</title>
   <style type="text/css">code{white-space: pre;}</style>
   <link rel="stylesheet" href="template/template.css" type="text/css" />
+  <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_CHTML-full" type="text/javascript"></script>
 </head>
 <body>
     <div class="navbar navbar-static-top">
@@ -37,6 +38,79 @@
         <li><a href="#definitions">Definitions</a><ul>
         <li><a href="#coordinate-system">Coordinate System</a></li>
         <li><a href="#vocabulary">Vocabulary</a></li>
+        </ul></li>
+        <li><a href="#leg-design">Leg Design</a><ul>
+        <li><a href="#alignment">Alignment</a></li>
+        <li><a href="#considerations">Considerations</a></li>
+        </ul></li>
+        <li><a href="#kinematics">Kinematics</a><ul>
+        <li><a href="#forward-kinematics">Forward Kinematics</a></li>
+        <li><a href="#inverse-kinematics">Inverse Kinematics</a></li>
+        <li><a href="#finesse-class">Finesse (class)</a></li>
+        </ul></li>
+        <li><a href="#servos">Servos</a><ul>
+        <li><a href="#configuration">Configuration</a></li>
+        <li><a href="#information">Information</a></li>
+        <li><a href="#servo-class">Servo (class)</a></li>
+        </ul></li>
+        <li><a href="#mini-maestro">Mini Maestro</a><ul>
+        <li><a href="#protocol">Protocol</a></li>
+        <li><a href="#usc">USC</a></li>
+        <li><a href="#synchronization">Synchronization</a></li>
+        <li><a href="#maestro-class">Maestro (class)</a></li>
+        </ul></li>
+        <li><a href="#movement">Movement</a><ul>
+        <li><a href="#vectors">Vectors</a></li>
+        <li><a href="#gait-types">Gait Types</a></li>
+        <li><a href="#gait-generation">Gait Generation</a></li>
+        <li><a href="#gait-execution">Gait Execution</a></li>
+        <li><a href="#center-of-mass">Center of Mass</a></li>
+        <li><a href="#static-optimization">Static Optimization</a></li>
+        <li><a href="#dynamic-optimization">Dynamic Optimization</a></li>
+        <li><a href="#dynamic-class">Dynamic (class)</a></li>
+        <li><a href="#agility-class">Agility (class)</a></li>
+        </ul></li>
+        <li><a href="#vision">Vision</a><ul>
+        <li><a href="#tracking">Tracking</a></li>
+        <li><a href="#detection">Detection</a></li>
+        <li><a href="#slam">SLAM</a></li>
+        <li><a href="#optimization">Optimization</a></li>
+        <li><a href="#oculus-class">Oculus (class)</a></li>
+        <li><a href="#theia-class">Theia (class)</a></li>
+        </ul></li>
+        <li><a href="#audio">Audio</a><ul>
+        <li><a href="#concepts">Concepts</a></li>
+        <li><a href="#lykos">Lykos</a></li>
+        </ul></li>
+        <li><a href="#automation">Automation</a><ul>
+        <li><a href="#synthesis">Synthesis</a></li>
+        <li><a href="#decision-making">Decision Making</a></li>
+        <li><a href="#ares-class">Ares (class)</a></li>
+        </ul></li>
+        <li><a href="#communication">Communication</a><ul>
+        <li><a href="#workers">Workers</a></li>
+        <li><a href="#networking">Networking</a></li>
+        <li><a href="#cerebral-class">Cerebral (class)</a></li>
+        </ul></li>
+        <li><a href="#control">Control</a><ul>
+        <li><a href="#considerations-1">Considerations</a></li>
+        <li><a href="#phi-class">Phi (class)</a></li>
+        </ul></li>
+        <li><a href="#material-selection">Material Selection</a><ul>
+        <li><a href="#body">Body</a></li>
+        <li><a href="#legs">Legs</a></li>
+        </ul></li>
+        <li><a href="#component-selection">Component Selection</a><ul>
+        <li><a href="#servos-1">Servos</a></li>
+        <li><a href="#steppers">Steppers</a></li>
+        <li><a href="#microcontroller">Microcontroller</a></li>
+        <li><a href="#battery">Battery</a></li>
+        <li><a href="#camera">Camera</a></li>
+        </ul></li>
+        <li><a href="#electrical">Electrical</a><ul>
+        <li><a href="#amperage-draw">Amperage Draw</a></li>
+        <li><a href="#safety">Safety</a></li>
+        <li><a href="#battery-1">Battery</a></li>
         </ul></li>
         </ul>
         </div>
@@ -69,6 +143,80 @@
 <dd>In kinematics, the point at which the arm or leg attaches to the body.
 </dd>
 </dl>
+<h1 id="leg-design">Leg Design</h1>
+<h3 id="alignment">Alignment</h3>
+<h3 id="considerations">Considerations</h3>
+<h1 id="kinematics">Kinematics</h1>
+<p>This is perhaps the most math intensive and important portion of the project.</p>
+<h3 id="forward-kinematics">Forward Kinematics</h3>
+<h3 id="inverse-kinematics">Inverse Kinematics</h3>
+<h3 id="finesse-class">Finesse (class)</h3>
+<h1 id="servos">Servos</h1>
+<h3 id="configuration">Configuration</h3>
+<h3 id="information">Information</h3>
+<h3 id="servo-class">Servo (class)</h3>
+<h1 id="mini-maestro">Mini Maestro</h1>
+<h3 id="protocol">Protocol</h3>
+<h3 id="usc">USC</h3>
+<h3 id="synchronization">Synchronization</h3>
+<h3 id="maestro-class">Maestro (class)</h3>
+<h1 id="movement">Movement</h1>
+<h3 id="vectors">Vectors</h3>
+<p>My friend Alastair MacMillan came up with this amazing idea one day that basically made complex motion possible. For a moment, pretend that the robot is just a rectangle.</p>
+<div class="center">
+<p><img src="assets/vector.png" /> <img src="assets/vector1.png" /></p>
+</div>
+<p>The verticies or legs are number 0-3 accordingly. To rotate the rectangle, we can simply apply a vector at each vertex. The cool thing about vectors is that they can be view as separate components. To add forward or backward movement, simply add to the x component.</p>
+<p>The easiest method to physically reproduce the vector is to compute <span class="math inline">\((x, y)\)</span> and generate a line between <span class="math inline">\((x, y)\)</span> and <span class="math inline">\((-x, -y)\)</span>. Moving one cycle along the line will be twice the desired vector.</p>
+<p>The harder part is using <span class="math inline">\(\theta\)</span> to find <span class="math inline">\(x\)</span> and <span class="math inline">\(y\)</span>. At every instantaneous moment in time, each leg applies a force. Relative to their respective roots the force is linear over time. However, when all four legs work together, the linear force becomes rotational.</p>
+<div class="figure">
+<img src="assets/vector2.png" />
+
+</div>
+<p>We define the width <span class="math inline">\(w\)</span> to be the distance along y and length <span class="math inline">\(l\)</span> to be the distance along x. The magnitude of the vector is defined to be <span class="math inline">\(|\Delta|\)</span> and the radius of the circle is <span class="math inline">\(r\)</span>. A few things become immediately evident.</p>
+<p><span class="math display">\[r = \frac{1}{2} \sqrt{w^2 + l^2}\]</span> <span class="math display">\[|\Delta| = \sqrt{x^2 + y^2}\]</span></p>
+<h3 id="gait-types">Gait Types</h3>
+<h3 id="gait-generation">Gait Generation</h3>
+<h3 id="gait-execution">Gait Execution</h3>
+<h3 id="center-of-mass">Center of Mass</h3>
+<h3 id="static-optimization">Static Optimization</h3>
+<h3 id="dynamic-optimization">Dynamic Optimization</h3>
+<h3 id="dynamic-class">Dynamic (class)</h3>
+<h3 id="agility-class">Agility (class)</h3>
+<h1 id="vision">Vision</h1>
+<h3 id="tracking">Tracking</h3>
+<h3 id="detection">Detection</h3>
+<h3 id="slam">SLAM</h3>
+<h3 id="optimization">Optimization</h3>
+<h3 id="oculus-class">Oculus (class)</h3>
+<h3 id="theia-class">Theia (class)</h3>
+<h1 id="audio">Audio</h1>
+<h3 id="concepts">Concepts</h3>
+<h3 id="lykos">Lykos</h3>
+<h1 id="automation">Automation</h1>
+<h3 id="synthesis">Synthesis</h3>
+<h3 id="decision-making">Decision Making</h3>
+<h3 id="ares-class">Ares (class)</h3>
+<h1 id="communication">Communication</h1>
+<h3 id="workers">Workers</h3>
+<h3 id="networking">Networking</h3>
+<h3 id="cerebral-class">Cerebral (class)</h3>
+<h1 id="control">Control</h1>
+<h3 id="considerations-1">Considerations</h3>
+<h3 id="phi-class">Phi (class)</h3>
+<h1 id="material-selection">Material Selection</h1>
+<h3 id="body">Body</h3>
+<h3 id="legs">Legs</h3>
+<h1 id="component-selection">Component Selection</h1>
+<h3 id="servos-1">Servos</h3>
+<h3 id="steppers">Steppers</h3>
+<h3 id="microcontroller">Microcontroller</h3>
+<h3 id="battery">Battery</h3>
+<h3 id="camera">Camera</h3>
+<h1 id="electrical">Electrical</h1>
+<h3 id="amperage-draw">Amperage Draw</h3>
+<h3 id="safety">Safety</h3>
+<h3 id="battery-1">Battery</h3>
             </div>
     </div>
   </div>
