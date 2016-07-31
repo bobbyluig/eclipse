@@ -86,7 +86,7 @@ My friend Alastair MacMillan came up with this amazing idea one day that basical
 ![](assets/vector.png)\ ![](assets/vector1.png)
 </div>
 
-The verticies or legs are number 0-3 accordingly. To rotate the rectangle, we can simply apply a vector at each vertex. The cool thing about vectors is that they can be view as separate components. To add forward or backward movement, simply add to the x component.
+The verticies or legs are number 0-3 accordingly. To rotate the rectangle, we can simply apply a vector tangent to a circumscribed circle at each vertex. The cool thing about vectors is that they can be view as separate components. To add forward or backward movement, simply add to the x component.
 
 The easiest method to physically reproduce the vector is to compute $(x, y)$ and generate a line between $(x, y)$ and $(-x, -y)$. Moving one cycle along the line will be twice the desired vector. 
 
@@ -108,7 +108,7 @@ The desired theta input is twice of that. So the input $d\theta = 2 \times \thet
 
 $$|\Delta| = r \times \tan \left(\frac{1}{2} d\theta \right)$$
 
-The $(x, y)$ contribution from the rotation part is always perpendicular to the line from the center to the vertex. This means that we can use the [normalized vector](https://en.wikipedia.org/wiki/Unit_vector) $\hat{u}$ to find the desired values. Finally, add the desired rotational contribution value for $dv$.
+The $(x, y)$ contribution from the rotation part is always perpendicular to the line from the center to the vertex. This means that we can use the [normalized vector](https://en.wikipedia.org/wiki/Unit_vector) $\hat{u}$ to find the desired values. Finally, add the desired forward contribution value for $dv$.
 
 $$\begin{bmatrix} x \\ y \end{bmatrix} = |\Delta| \times \hat{u} + \begin{bmatrix}dv \\ 0 \end{bmatrix}$$
 
@@ -122,7 +122,23 @@ I have not found significant differences between different leg orderings. Howeve
 
 ### Gait Generation
 
+There are a few additional variables involved in gait generation. The variable $h$ defines how high the leg should lift and the variable $\beta$ determines the percent of time a leg is on the ground. My idea for gait generation was to have one gait per set of $(d\theta, dv)$. There are other ways to approach this of course.
+
+Assuming that we have already computed the necessary $(x, y)$ value for the gait, we can go through a set of points and interpolate the data in between when needed. For the sake of simplicity, I designed all leg paths to be a rectangle. However, this may not be the most efficient method considering the natural leg path of quadrupeds such as dogs. I defined 5 points, although 4 should be sufficient. Note that $g$ is the desired ground level. It should be negative, but greater than the z value of the end effector in zero position. Basically, the legs should be slightly bent during motion, to ensure that all points can be reached.
+
+$$(0, 0, g) \rightarrow (-x, -y, g) \rightarrow (-x, -y, g + h) \rightarrow (x, y, g + h) \rightarrow (x, y, g)$$
+
+The interpolation should be defined for all time values. To do this, you can use the interpolation feature that comes with `scipy`. By generating time values for each point based on normalized distance traveled. I used linear, which I believe is best for this case. However, more circular gaits should probably employ cubic interpolation.
+
+The next step is to apply the concepts of calculus and separate this gait into tiny $dt$ segments. Note that $t$ in this case would be the time for one complete cycle of the gait. This $dt$ value is really dependent on the speed of the servo controller and the servos themselves. Servos generally run at a 50 Hz loop, implying that $dt$ should be at least 20 ms. I have found that 20 ms - 100 ms work well.
+
+By generating $t / dt$ linearly spaced time points, we can then evaluate them in our intepolation equations to obtain points for execution.
+
 ### Gait Execution
+
+Execution requires interfacing with various other modules. Once points for all four legs are obtained, they can be fed one frame at a time to the inverse kinematics equations, which will provide angles for the servos. Each frame is exactly $dt$ long. There are two possible ways to approach this (that I've thought of). One way is to send the command to move all the servos and wait $dt$ before executing the next one. However, I've found that Python is not very good at keeping accurate time. Instead, I chose to check if all servos have reached their target before executing the next frame. This is actually slowered, as there is latency involved with checking and executing. Thus, one cycle will be slightly longer (probably negligible) than $t$.
+
+There are various other layers of complexity that must be performed to ensure that the robot can actually walk smoothly. They are discussed in the next three sections.
 
 ### Center of Mass
 
