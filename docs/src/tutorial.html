@@ -7,6 +7,43 @@
   <meta name="author" content="Lujing Cen" />
   <title>Tutorial</title>
   <style type="text/css">code{white-space: pre;}</style>
+  <style type="text/css">
+div.sourceCode { overflow-x: auto; }
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code > span.dt { color: #902000; } /* DataType */
+code > span.dv { color: #40a070; } /* DecVal */
+code > span.bn { color: #40a070; } /* BaseN */
+code > span.fl { color: #40a070; } /* Float */
+code > span.ch { color: #4070a0; } /* Char */
+code > span.st { color: #4070a0; } /* String */
+code > span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code > span.ot { color: #007020; } /* Other */
+code > span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code > span.fu { color: #06287e; } /* Function */
+code > span.er { color: #ff0000; font-weight: bold; } /* Error */
+code > span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+code > span.cn { color: #880000; } /* Constant */
+code > span.sc { color: #4070a0; } /* SpecialChar */
+code > span.vs { color: #4070a0; } /* VerbatimString */
+code > span.ss { color: #bb6688; } /* SpecialString */
+code > span.im { } /* Import */
+code > span.va { color: #19177c; } /* Variable */
+code > span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code > span.op { color: #666666; } /* Operator */
+code > span.bu { } /* BuiltIn */
+code > span.ex { } /* Extension */
+code > span.pp { color: #bc7a00; } /* Preprocessor */
+code > span.at { color: #7d9029; } /* Attribute */
+code > span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code > span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code > span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+  </style>
   <link rel="stylesheet" href="template/template.css" type="text/css" />
   <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_CHTML-full" type="text/javascript"></script>
 </head>
@@ -56,8 +93,8 @@
         <li><a href="#code-1">Code</a></li>
         </ul></li>
         <li><a href="#mini-maestro">Mini Maestro</a><ul>
-        <li><a href="#protocol">Protocol</a></li>
-        <li><a href="#usc">USC</a></li>
+        <li><a href="#communication">Communication</a></li>
+        <li><a href="#usc">Usc</a></li>
         <li><a href="#synchronization">Synchronization</a></li>
         <li><a href="#code-2">Code</a></li>
         </ul></li>
@@ -89,7 +126,7 @@
         <li><a href="#decision-making">Decision Making</a></li>
         <li><a href="#code-6">Code</a></li>
         </ul></li>
-        <li><a href="#communication">Communication</a><ul>
+        <li><a href="#communication-1">Communication</a><ul>
         <li><a href="#workers">Workers</a></li>
         <li><a href="#networking">Networking</a></li>
         <li><a href="#code-7">Code</a></li>
@@ -232,10 +269,72 @@
 </tbody>
 </table>
 <h1 id="mini-maestro">Mini Maestro</h1>
-<h3 id="protocol">Protocol</h3>
-<h3 id="usc">USC</h3>
+<p>The Pololu Maestro is perhaps the best servo controller in the world. I was not paid to advertise their product but honestly this project would not be possible without it. That is not to say that you cannot use an Arduino to complete this project. I'm just saying you should <a href="https://www.pololu.com/category/102/maestro-usb-servo-controllers">buy</a> a Mini Maestro if you want to make your life easier.</p>
+<h3 id="communication">Communication</h3>
+<p>The Maestro communicates using USB or TTL. It is very easy to use the virtual command port with the <code>pyserial</code> library. I have already written a fully functional Python library for this, so you don't have to write your own. Additional information on command protocols can be seen in the <a href="https://www.pololu.com/docs/pdf/0J40/maestro.pdf">documentation</a>.</p>
+<h3 id="usc">Usc</h3>
+<p>Pololu has a low-level development library for controlling things such as script writing and device configuration. These cannot be accessed from <code>pyserial</code>. Pololu provides an SDK written in C#. This is particularly frustrating for Mac and Linux users. I woke up one Saturday morning and decided to rewrite the entire library in Python. I even managed to make a functional script complier. However, the default driver that comes with the Maestro on Windows is not compatible with <code>pyusb</code>. I recommend that you get <a href="http://zadig.akeo.ie/">zadig</a> and install <code>libusb-win32</code> over the default driver. Make sure that you're not installing it over the virtual Command or TTL port!</p>
+<p>The Usc interface works exactly like the examples written in C#. You can take a look at them by downloading the <a href="https://www.pololu.com/docs/0J41">SDK</a>. Scripting is also fully functional. It can be used like the example shown below.</p>
+<div class="sourceCode"><pre class="sourceCode python"><code class="sourceCode python"><span class="im">from</span> agility.pololu.usc <span class="im">import</span> Usc
+<span class="im">from</span> agility.pololu.reader <span class="im">import</span> BytecodeReader
+
+<span class="co"># Initialize.</span>
+usc <span class="op">=</span> Usc()
+reader <span class="op">=</span> BytecodeReader()
+
+<span class="co"># Clear errors.</span>
+usc.clearErrors()
+
+<span class="co"># Load script.</span>
+<span class="cf">with</span> <span class="bu">open</span>(<span class="st">&#39;script.txt&#39;</span>) <span class="im">as</span> f:
+    data <span class="op">=</span> f.read()
+
+<span class="co"># Compile</span>
+program <span class="op">=</span> reader.read(data, <span class="va">False</span>)
+
+<span class="co"># Write output to file.</span>
+reader.writeListing(program, <span class="st">&#39;output.txt&#39;</span>)
+
+<span class="co"># Load program to device.</span>
+usc.loadProgram(program)
+usc.setScriptDone(<span class="dv">0</span>)</code></pre></div>
+<p>Usually, you would have to install a GUI to configure device settings. However, that is no longer necessary. The Usc interface can write device and servo configuration data directly. The most useful feature is that it can automatically load desired servo startup positions based on configuration detailed in the <code>Servo</code> class.</p>
 <h3 id="synchronization">Synchronization</h3>
+<p>A leg contains multiple servos. When it has to target a point in space, all servos should end together in a given amount of time. This is a synchronization problem. To solve it, we go through the following steps.</p>
+<ol style="list-style-type: decimal">
+<li>Update all servo positions for the leg.</li>
+<li>Find how much each servo has to move.</li>
+<li>Use the desired time and change in distance to compute speed.</li>
+<li>Update speed for all servos.</li>
+<li>Update all servo positions.</li>
+</ol>
+<p>It is important to note that the Maestro measures all things in 0.25 μs rather than 1 μs. One speed unit is defined by the Maestro to be 0.25 μs / (10 ms). This means that if given the current position's PWM (<span class="math inline">\(p_c\)</span>) in μs and the target position's PWM (<span class="math inline">\(p_t\)</span>) in μs, the speed (<span class="math inline">\(v\)</span>) can be computed using the equation below. Let <span class="math inline">\(t\)</span> be the desired transition time in ms.</p>
+<p><span class="math display">\[v = \left\lfloor 40 \frac{\left|p_t - p_c\right|}{t} \right\rceil\]</span></p>
+<p>The nearest integer function obviously creates some error. However, when considering small movements, this error can be negligible.</p>
 <h3 id="code-2">Code</h3>
+<p>Multiple classes are related to the Maestro controller. The <code>Usc</code> class has been tested but should be used with caution as it can possibly corruput the device.</p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Concept</th>
+<th>Implementation(s)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Communication</td>
+<td><code>agility.maestro.Maestro</code></td>
+</tr>
+<tr class="even">
+<td align="left">Usc</td>
+<td><code>agility.pololu.usc.Usc</code>, <code>agility.main.Agility.configure</code></td>
+</tr>
+<tr class="odd">
+<td align="left">Synchronization</td>
+<td><code>agility.maestro.Maestro.end_in</code>, <code>agility.maestro.Maestro.end_together</code></td>
+</tr>
+</tbody>
+</table>
 <h1 id="movement">Movement</h1>
 <p>We want to translate user inputs of rotational motion (<span class="math inline">\(rad / sec\)</span>) and forward motion (<span class="math inline">\(cm / sec\)</span>) to physical robot motion. The first challenge is to use <span class="math inline">\(d\theta\)</span>, the amount of rotation per cycle, and <span class="math inline">\(dv\)</span>, the amount of forward motion per cycle, to generate proper gaits. The second challenge is to perform various gait optimizations to ensure that the robot walks smoothly. Note: this section is very math heavy.</p>
 <h3 id="vectors">Vectors</h3>
@@ -377,7 +476,7 @@ x_{3} &amp; y_{3} &amp; z_{3}
 <h3 id="synthesis">Synthesis</h3>
 <h3 id="decision-making">Decision Making</h3>
 <h3 id="code-6">Code</h3>
-<h1 id="communication">Communication</h1>
+<h1 id="communication-1">Communication</h1>
 <h3 id="workers">Workers</h3>
 <h3 id="networking">Networking</h3>
 <h3 id="code-7">Code</h3>

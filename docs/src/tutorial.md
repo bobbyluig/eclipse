@@ -132,13 +132,71 @@ Stepper | `agility.main.Stepper`
 
 # Mini Maestro
 
-### Protocol
+The Pololu Maestro is perhaps the best servo controller in the world. I was not paid to advertise their product but honestly this project would not be possible without it. That is not to say that you cannot use an Arduino to complete this project. I'm just saying you should [buy](https://www.pololu.com/category/102/maestro-usb-servo-controllers) a Mini Maestro if you want to make your life easier.
 
-### USC
+### Communication
+
+The Maestro communicates using USB or TTL. It is very easy to use the virtual command port with the `pyserial` library. I have already written a fully functional Python library for this, so you don't have to write your own. Additional information on command protocols can be seen in the [documentation](https://www.pololu.com/docs/pdf/0J40/maestro.pdf).
+
+### Usc
+
+Pololu has a low-level development library for controlling things such as script writing and device configuration. These cannot be accessed from `pyserial`. Pololu provides an SDK written in C#. This is particularly frustrating for Mac and Linux users. I woke up one Saturday morning and decided to rewrite the entire library in Python. I even managed to make a functional script complier. However, the default driver that comes with the Maestro on Windows is not compatible with `pyusb`. I recommend that you get [zadig](http://zadig.akeo.ie/) and install `libusb-win32` over the default driver. Make sure that you're not installing it over the virtual Command or TTL port!
+
+The Usc interface works exactly like the examples written in C#. You can take a look at them by downloading the [SDK](https://www.pololu.com/docs/0J41). Scripting is also fully functional. It can be used like the example shown below.
+
+```python
+from agility.pololu.usc import Usc
+from agility.pololu.reader import BytecodeReader
+
+# Initialize.
+usc = Usc()
+reader = BytecodeReader()
+
+# Clear errors.
+usc.clearErrors()
+
+# Load script.
+with open('script.txt') as f:
+	data = f.read()
+
+# Compile
+program = reader.read(data, False)
+
+# Write output to file.
+reader.writeListing(program, 'output.txt')
+
+# Load program to device.
+usc.loadProgram(program)
+usc.setScriptDone(0)
+```
+
+Usually, you would have to install a GUI to configure device settings. However, that is no longer necessary. The Usc interface can write device and servo configuration data directly. The most useful feature is that it can automatically load desired servo startup positions based on configuration detailed in the `Servo` class. 
 
 ### Synchronization
 
+A leg contains multiple servos. When it has to target a point in space, all servos should end together in a given amount of time. This is a synchronization problem. To solve it, we go through the following steps.
+
+1. Update all servo positions for the leg.
+2. Find how much each servo has to move.
+3. Use the desired time and change in distance to compute speed.
+4. Update speed for all servos.
+5. Update all servo positions.
+
+It is important to note that the Maestro measures all things in 0.25 μs rather than 1 μs. One speed unit is defined by the Maestro to be 0.25 μs / (10 ms). This means that if given the current position's PWM ($p_c$) in μs and the target position's PWM ($p_t$) in μs, the speed ($v$) can be computed using the equation below. Let $t$ be the desired transition time in ms.
+
+$$v = \left\lfloor 40 \frac{\left|p_t - p_c\right|}{t} \right\rceil$$
+
+The nearest integer function obviously creates some error. However, when considering small movements, this error can be negligible.
+
 ### Code
+
+Multiple classes are related to the Maestro controller. The `Usc` class has been tested but should be used with caution as it can possibly corruput the device.
+
+Concept|Implementation(s)
+:---|---
+Communication | `agility.maestro.Maestro`
+Usc | `agility.pololu.usc.Usc`, `agility.main.Agility.configure`
+Synchronization | `agility.maestro.Maestro.end_in`, `agility.maestro.Maestro.end_together`
 
 # Movement
 
