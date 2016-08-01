@@ -33,6 +33,7 @@
         <li><a href="#introduction">Introduction</a><ul>
         <li><a href="#warnings">Warnings</a></li>
         <li><a href="#read-me">Read Me</a></li>
+        <li><a href="#corrections">Corrections</a></li>
         <li><a href="#prerequisites">Prerequisites</a></li>
         </ul></li>
         <li><a href="#definitions">Definitions</a><ul>
@@ -46,7 +47,7 @@
         <li><a href="#kinematics">Kinematics</a><ul>
         <li><a href="#forward-kinematics">Forward Kinematics</a></li>
         <li><a href="#inverse-kinematics">Inverse Kinematics</a></li>
-        <li><a href="#finesse-class">Finesse (class)</a></li>
+        <li><a href="#code">Code</a></li>
         </ul></li>
         <li><a href="#servos">Servos</a><ul>
         <li><a href="#configuration">Configuration</a></li>
@@ -57,7 +58,7 @@
         <li><a href="#protocol">Protocol</a></li>
         <li><a href="#usc">USC</a></li>
         <li><a href="#synchronization">Synchronization</a></li>
-        <li><a href="#maestro-class">Maestro (class)</a></li>
+        <li><a href="#code-1">Code</a></li>
         </ul></li>
         <li><a href="#movement">Movement</a><ul>
         <li><a href="#vectors">Vectors</a></li>
@@ -67,16 +68,14 @@
         <li><a href="#center-of-mass">Center of Mass</a></li>
         <li><a href="#static-optimization">Static Optimization</a></li>
         <li><a href="#dynamic-optimization">Dynamic Optimization</a></li>
-        <li><a href="#dynamic-class">Dynamic (class)</a></li>
-        <li><a href="#agility-class">Agility (class)</a></li>
+        <li><a href="#code-2">Code</a></li>
         </ul></li>
         <li><a href="#vision">Vision</a><ul>
         <li><a href="#tracking">Tracking</a></li>
         <li><a href="#detection">Detection</a></li>
         <li><a href="#slam">SLAM</a></li>
         <li><a href="#optimization">Optimization</a></li>
-        <li><a href="#oculus-class">Oculus (class)</a></li>
-        <li><a href="#theia-class">Theia (class)</a></li>
+        <li><a href="#code-3">Code</a></li>
         </ul></li>
         <li><a href="#audio">Audio</a><ul>
         <li><a href="#concepts">Concepts</a></li>
@@ -85,7 +84,7 @@
         <li><a href="#automation">Automation</a><ul>
         <li><a href="#synthesis">Synthesis</a></li>
         <li><a href="#decision-making">Decision Making</a></li>
-        <li><a href="#ares-class">Ares (class)</a></li>
+        <li><a href="#code-4">Code</a></li>
         </ul></li>
         <li><a href="#communication">Communication</a><ul>
         <li><a href="#workers">Workers</a></li>
@@ -94,7 +93,7 @@
         </ul></li>
         <li><a href="#control">Control</a><ul>
         <li><a href="#considerations-1">Considerations</a></li>
-        <li><a href="#phi-class">Phi (class)</a></li>
+        <li><a href="#code-5">Code</a></li>
         </ul></li>
         <li><a href="#material-selection">Material Selection</a><ul>
         <li><a href="#body">Body</a></li>
@@ -123,8 +122,15 @@
 <p>&quot;Premature optimization is the root of all evil.&quot; Test and measure. Don't guess.</p>
 <h3 id="read-me">Read Me</h3>
 <p>While researching, I chanced upon the <em>Springer Handbook of Robotics</em>. Before proceeding, read section 16.5 of the book found <a href="http://home.deib.polimi.it/gini/robot/docs/legged.pdf">here</a>. If you are serious about robotics, I recommend that you find this book in the library or get an eBook. This book basically covers everything you need to know about advanced robotics and even provides historical background. You probably won't understand everything in this literature. That is completely okay. This is just an introduction.</p>
+<p>You should also read through the <a href="https://github.com/bobbyluig/Eclipse/raw/master/docs/cdr/SPS.pdf">SPS</a> and <a href="https://github.com/bobbyluig/Eclipse/raw/master/docs/cdr/POC.pdf">POC</a> documents. They provide comprehensive details on our robots. This tutorial goes in depth on what is not already covered by those documents.</p>
+<h3 id="corrections">Corrections</h3>
+<p>I will put errors in the documents here as I find them.</p>
+<ul>
+<li>Pg. 88-91: All references to dot products should be changed to matrix multiplcation. All <span class="math inline">\(\bullet\)</span> should be removed from the equations.</li>
+</ul>
 <h3 id="prerequisites">Prerequisites</h3>
 <p>Trying to accomplish this project requires that you are not scared of math and physics. You will need a strong foundation in geometry, trigonometry, algebra, classical mechanics, and prelimiary linear algebra. You will also need a deep understanding of calculus, although you might not ever need to take a derivative in this project. It would help that you also understand some practical electricity and magnetism.</p>
+<p>This tutorial is written assuming you have limited understanding of linear algebra. Concepts clarifications are linked to external resources as they appear. You're welcome.</p>
 <h1 id="definitions">Definitions</h1>
 <p>It is important to define everything before starting this project. It will save you a lot of time. Don't invent your own coordinate system like me and waste 2 weeks :p.</p>
 <h3 id="coordinate-system">Coordinate System</h3>
@@ -150,7 +156,7 @@
 <p>This is perhaps the most math intensive and important portion of the project.</p>
 <h3 id="forward-kinematics">Forward Kinematics</h3>
 <h3 id="inverse-kinematics">Inverse Kinematics</h3>
-<h3 id="finesse-class">Finesse (class)</h3>
+<h3 id="code">Code</h3>
 <h1 id="servos">Servos</h1>
 <h3 id="configuration">Configuration</h3>
 <h3 id="information">Information</h3>
@@ -159,9 +165,9 @@
 <h3 id="protocol">Protocol</h3>
 <h3 id="usc">USC</h3>
 <h3 id="synchronization">Synchronization</h3>
-<h3 id="maestro-class">Maestro (class)</h3>
+<h3 id="code-1">Code</h3>
 <h1 id="movement">Movement</h1>
-<p>We want to translate user inputs of rotational motion (<span class="math inline">\(rad / sec\)</span>) and forward motion (<span class="math inline">\(cm / sec\)</span>) to physical robot motion. The first challenge is to use <span class="math inline">\(d\theta\)</span>, the amount of rotation per cycle, and <span class="math inline">\(dv\)</span>, the amount of forward motion per cycle, to generate proper gaits. The second challenge is to perform various gait optimizations to ensure that the robot walks smoothly.</p>
+<p>We want to translate user inputs of rotational motion (<span class="math inline">\(rad / sec\)</span>) and forward motion (<span class="math inline">\(cm / sec\)</span>) to physical robot motion. The first challenge is to use <span class="math inline">\(d\theta\)</span>, the amount of rotation per cycle, and <span class="math inline">\(dv\)</span>, the amount of forward motion per cycle, to generate proper gaits. The second challenge is to perform various gait optimizations to ensure that the robot walks smoothly. Note: this section is very math heavy.</p>
 <h3 id="vectors">Vectors</h3>
 <p>My friend Alastair MacMillan came up with this amazing idea one day that basically made complex motion possible. For a moment, pretend that the robot is just a rectangle.</p>
 <div class="center">
@@ -175,16 +181,18 @@
 
 </div>
 <p>We define the width <span class="math inline">\(w\)</span> to be the distance along y and length <span class="math inline">\(l\)</span> to be the distance along x. Let <span class="math inline">\(u\)</span> be a matrix or width and length. The magnitude of the vector is defined to be <span class="math inline">\(|\Delta|\)</span> and the radius of the circle is <span class="math inline">\(r\)</span>. A few things become immediately evident.</p>
-<p><span class="math display">\[r = \frac{1}{2} \sqrt{w^2 + l^2}\]</span> <span class="math display">\[|\Delta| = \sqrt{x^2 + y^2}\]</span> <span class="math display">\[u = \begin{bmatrix} w \\ l \end{bmatrix}\]</span></p>
+<p><span class="math display">\[r = \frac{1}{2} \sqrt{w^2 + l^2}\]</span> <span class="math display">\[|\Delta| = \sqrt{x^2 + y^2}\]</span> <span class="math display">\[B = \begin{bmatrix} w \\ l \end{bmatrix}\]</span></p>
 <p><span class="math inline">\(\theta\)</span>, how much the robot will turn when the leg moves <span class="math inline">\(\Delta\)</span>, is between <span class="math inline">\(r\)</span> and the hypotenuse. It can be solved using inverse tangent.</p>
 <p><span class="math display">\[\theta = \arctan \left(\frac{|\Delta|}{r}\right)\]</span></p>
-<p>The desired theta input is twice of that. So the input <span class="math inline">\(d\theta = 2 \times \theta\)</span>. We can then solve for <span class="math inline">\(|\Delta|\)</span>.</p>
-<p><span class="math display">\[|\Delta| = r \times \tan \left(\frac{1}{2} d\theta \right)\]</span></p>
-<p>The <span class="math inline">\((x, y)\)</span> contribution from the rotation part is always perpendicular to the line from the center to the vertex. This means that we can use the <a href="https://en.wikipedia.org/wiki/Unit_vector">normalized vector</a> <span class="math inline">\(\hat{u}\)</span> to find the desired values. Finally, add the desired forward contribution value for <span class="math inline">\(dv\)</span>.</p>
-<p><span class="math display">\[\begin{bmatrix} x \\ y \end{bmatrix} = |\Delta| \times \hat{u} + \begin{bmatrix}dv \\ 0 \end{bmatrix}\]</span></p>
+<p>The desired theta input is twice of that. So the input <span class="math inline">\(d\theta = 2 \theta\)</span>. We can then solve for <span class="math inline">\(|\Delta|\)</span>.</p>
+<p><span class="math display">\[|\Delta| = r \tan \left(\frac{1}{2} d\theta \right)\]</span></p>
+<p>The <span class="math inline">\((x, y)\)</span> contribution from the rotation part is always perpendicular to the line from the center to the vertex. This means that we can use the <a href="https://en.wikipedia.org/wiki/Unit_vector">normalized vector</a> of <span class="math inline">\(B\)</span> to find the desired values. Finally, add the desired forward contribution value for <span class="math inline">\(dv\)</span>. Signs for the result is computed using a <a href="https://en.wikipedia.org/wiki/Hadamard_product_(matrices)">Hadamard product</a> and a predefined matrix <span class="math inline">\(N\)</span>. Let <span class="math inline">\(j\)</span> be the index of the leg (0-3).</p>
+<p><span class="math display">\[N = \begin{bmatrix} -1 &amp; 1 &amp; -1 &amp; 1 \\ 1 &amp; 1 &amp; -1 &amp; -1 \end{bmatrix}\]</span> <span class="math display">\[\begin{bmatrix} x \\ y \end{bmatrix}_{j} = \left( |\Delta| \hat{B} + \begin{bmatrix}dv \\ 0 \end{bmatrix} \right) \circ N_{i,j+1}\]</span></p>
+<p>I will expand this equation out for clarity, since it is very important for implementation.</p>
+<p><span class="math display">\[x_{j} = r \tan \left(\frac{1}{2} d\theta \right) \sqrt{w^2 + l^2} \left(N_{1,j+1}\right)\]</span> <span class="math display">\[y_{j} = r \tan \left(\frac{1}{2} d\theta \right) \sqrt{w^2 + l^2} \left(N_{2,j+1}\right)\]</span></p>
 <h3 id="gait-types">Gait Types</h3>
 <p>There are various gait types described in <em>Springer Handbook of Robotics</em>. However, I believe that trot and crawl are the two easier gaits to implement. Obviously, trot is much faster than crawl. However, testing should reveal the optimal transition speed and time. If both are graphed, if can be seen that this is an optimization problem. I did not have sufficient time to test thoroughly. However, if time <span class="math inline">\(t\)</span> can be found, it is easy to convert <span class="math inline">\(rad / sec\)</span> and <span class="math inline">\(cm / sec\)</span> to <span class="math inline">\(d\theta\)</span> and <span class="math inline">\(dv\)</span>.</p>
-<p><span class="math display">\[\begin{bmatrix} d\theta \\ dv \end{bmatrix} = t \times \begin{bmatrix} rad/sec \\ cm/sec \end{bmatrix}\]</span></p>
+<p><span class="math display">\[\begin{bmatrix} d\theta \\ dv \end{bmatrix} = t \begin{bmatrix} rad/sec \\ cm/sec \end{bmatrix}\]</span></p>
 <p>I have not found significant differences between different leg orderings. However, this is because I have not done extensive testing. The robots use 1423 creeping gaits, although the other orderings work as well.</p>
 <h3 id="gait-generation">Gait Generation</h3>
 <p>There are a few additional variables involved in gait generation. The variable <span class="math inline">\(h\)</span> defines how high the leg should lift and the variable <span class="math inline">\(\beta\)</span> determines the percent of time a leg is on the ground. My idea for gait generation was to have one gait per set of <span class="math inline">\((d\theta, dv)\)</span>. There are other ways to approach this of course.</p>
@@ -195,33 +203,71 @@
 <p>By generating <span class="math inline">\(t / dt\)</span> linearly spaced time points, we can then evaluate them in our intepolation equations to obtain points for execution.</p>
 <h3 id="gait-execution">Gait Execution</h3>
 <p>Execution requires interfacing with various other modules. Once points for all four legs are obtained, they can be fed one frame at a time to the inverse kinematics equations, which will provide angles for the servos. Each frame is exactly <span class="math inline">\(dt\)</span> long. There are two possible ways to approach this (that I've thought of). One way is to send the command to move all the servos and wait <span class="math inline">\(dt\)</span> before executing the next one. However, I've found that Python is not very good at keeping accurate time. Instead, I chose to check if all servos have reached their target before executing the next frame. This is actually slowered, as there is latency involved with checking and executing. Thus, one cycle will be slightly longer (probably negligible) than <span class="math inline">\(t\)</span>.</p>
-<p>There are various other layers of complexity that must be performed to ensure that the robot can actually walk smoothly. They are discussed in the next three sections.</p>
+<p>There are various other layers of complexity that must be considered to ensure that the robot can actually walk smoothly. They are discussed in the next three sections.</p>
 <h3 id="center-of-mass">Center of Mass</h3>
+<p>If the gait is execute without any adjustments, the robot will not walk -- it will fall and stumble. This is due to the fact that the center of mass is not being adjusted. As you can see in the image, the center of mass must fall inside of the support triangle made by three legs for crawl gaits.</p>
+<div class="figure">
+<img src="assets/com.png" />
+
+</div>
+<p>First, let's define a few things. Let <span class="math inline">\((c_x, c_y)\)</span> be the center of mass of the robot in its current position. This can be simplified to a static value or computed using the positions of the legs. Let <span class="math inline">\((x_1, y_1)\)</span> and <span class="math inline">\((x_2, y_2)\)</span> be the locations of two support legs across from each other. In the image above, they would be legs 0 and 3.</p>
+<p>The shortest path to the inside of the triangle is the perpendicular to the slope formed by the two support legs. We need to find where on the line is the closest to the center of mass. To do this, Alastair derived this equation, which took me a while to understand. It is basically a lot of <span class="math inline">\(y = mx + b\)</span> manipulations. Let <span class="math inline">\((x_0, y_0)\)</span> be the point on the line we are interested in.</p>
+<p><span class="math display">\[m = \frac{(y_2 - y_1)}{(x_2 - x_1)}\]</span> <span class="math display">\[b = y_1 - m x_1\]</span> <span class="math display">\[x_0 = \frac{x_0 + m y_0 - mk}{m^2 + 1}\]</span> <span class="math display">\[y_0 = m x_0 + b\]</span></p>
+<p>Do the order of the points matter? No. If you look at the code, it may appear that it does. However, the order is for other optimizations. If working with the trot gait, this is enough because the center of mass simply has to be on the line. I use the variable <span class="math inline">\(\delta\)</span> to indicate how much the body must move.</p>
+<p><span class="math display">\[\delta_{x,trot} = x_0 - c_x\]</span> <span class="math display">\[\delta_{y,trot} = y_0 - c_y\]</span></p>
+<p>Optimally, this would work for crawl as well. However, it would be even better to move the center of mass further into the support triangle. I used <span class="math inline">\(\sigma\)</span> to represent the safety margin. Rather than adjusting to a point on the line, the robot will move into the support triangle an aditional <span class="math inline">\(\sigma\)</span>. There is a flaw in this because <span class="math inline">\(\sigma\)</span> is <strong>not</strong> the stability margin. When close to the sides of the triangle, it may be possible that moving <span class="math inline">\(\sigma\)</span> may cause the stability margin to be less than <span class="math inline">\(\sigma\)</span> on another side. It is even possible that the adjustment can throw the center of mass outside of the support triangle. I have not written in any protection for this as it usually is not a problem. However, this is definitely something to think about for improving motion.</p>
+<p>Interestingly, order matters here with <span class="math inline">\(\sigma\)</span>. I believe there is another way but this is just my take on it, since was really short on time. Which point comes first and which comes second depends on which leg is lifted. Testing basically reveals the following.</p>
+<p><span class="math display">\[0: (2,1)\]</span> <span class="math display">\[1: (0,3)\]</span> <span class="math display">\[2: (3,0)\]</span> <span class="math display">\[3: (1,2)\]</span></p>
+<p>The following equations can then be applied to find <span class="math inline">\(\delta\)</span> for crawl gait. It basically uses trigonometric properties of perpendicular lines. Note that you must use the <code>atan2</code> function in your favorite programming language because signs are very important here. Also note that these are implemented <strong>incorrectly</strong> in the actual code (forgot to sutract center of mass). But hey, it still worked alright because I set a huge <span class="math inline">\(\sigma\)</span>.</p>
+<p><span class="math display">\[\DeclareMathOperator{\atantwo}{atan2}\]</span> <span class="math display">\[\theta = \atantwo \left((y_2 - y_1),(x_2 , x_1) \right)\]</span> <span class="math display">\[\delta_{x,crawl} = \sigma \sin \left( \theta \right) + x_0 - c_x\]</span> <span class="math display">\[\delta_{y,crawl} = -\sigma \cos \left( \theta \right) + y_0 - c_y\]</span></p>
+<p>I did static center of mass computations for <span class="math inline">\((c_x, c_y)\)</span>, but you should use the inverse kinematics equations to compute the location of each segement of the leg and use it to produce a more accurate computation. The servos are actually relatively heavy so the leg positions visibly contribute to the center of mass.</p>
 <h3 id="static-optimization">Static Optimization</h3>
+<p>Adjustments to the gait can be made before execution. This is especially true with the center of mass. All operations rely on the use of <code>numpy</code>, which basically vectorizes operations in C. Because gait generation is called frequently, other programming optimizations such as caching should be used as well.</p>
+<p>We'll redefine <span class="math inline">\(\delta\)</span> to be a 4 x 3 matrix rather than individual values of <span class="math inline">\(\delta_x\)</span>, <span class="math inline">\(\delta_y\)</span>, and <span class="math inline">\(\delta_z\)</span> (0). Let <span class="math inline">\(F\)</span> be a 4 x 3 matrix such that each row <span class="math inline">\(i\)</span> contains an <span class="math inline">\((x, y, z)\)</span> which indicates the target position of leg at index <span class="math inline">\(i - 1\)</span>.</p>
+<p><span class="math display">\[\delta = \begin{bmatrix}
+\delta_x &amp; \delta_y &amp; 0 \\
+\delta_x &amp; \delta_y &amp; 0 \\
+\delta_x &amp; \delta_y &amp; 0 \\
+\delta_x &amp; \delta_y &amp; 0
+\end{bmatrix}\]</span> <span class="math display">\[F = \begin{bmatrix}
+x_{0} &amp; y_{0} &amp; z_{0} \\
+x_{1} &amp; y_{1} &amp; z_{1} \\
+x_{2} &amp; y_{2} &amp; z_{2} \\
+x_{3} &amp; y_{3} &amp; z_{3}
+\end{bmatrix}\]</span></p>
+<p>Remember that <span class="math inline">\(\delta\)</span> is how much the body has to move while <span class="math inline">\(F\)</span> is the position of the legs. To translate the body, we can simply apply Newton's third law of motion.</p>
+<p><span class="math display">\[F^\prime = F - \delta\]</span></p>
+<p>The optimized pose for the legs, <span class="math inline">\(F^\prime\)</span>, is obtained by subtracting <span class="math inline">\(\delta\)</span> from every row of <span class="math inline">\(F\)</span>. This is easy in <code>numpy</code>, as it supports automatically broadcasting arrays of different dimensions together. You can simply let <span class="math inline">\(\delta\)</span> be a 1 x 3 matrix instead when programming.</p>
+<p>Initially, I added an additonal optimization to crawl gait which involved rotating the body about the line produced by <span class="math inline">\((x_1, y_1)\)</span> and <span class="math inline">\((x_2, y_2)\)</span> away from the lifted leg. This lowers the center of mass, which improves stability. However, the tilting was causing too much shake to the camera, so I took it out. It may be useful to you, so I'll include some basic information here.</p>
+<p>We can use the <a href="https://en.wikipedia.org/wiki/Euler%E2%80%93Rodrigues_formula">Euler–Rodrigues formula</a> to generate a rotation matrix. I took the code for it off of <a href="http://stackoverflow.com/questions/6802577/python-rotation-of-3d-vector">StackOverflow</a>. The function, when given an axis and angle, will generate a 3 x 3 matrix that I'll call <span class="math inline">\(Q\)</span>. To apply this rotation to the aforementioned 4 x 3 matrix, we use a <a href="https://en.wikipedia.org/wiki/Matrix_multiplication">matrix multiplcation</a> along with a <a href="https://en.wikipedia.org/wiki/Transpose">transpose</a>.</p>
+<p><span class="math display">\[F^{\prime\prime} = F^\prime Q^T\]</span></p>
+<p>Center of mass adjustments don't need to occur when the robot is on four legs. Thus, modifing <span class="math inline">\(F\)</span> is only necessary on three legs. However, this algorithm can be jerky because the robot has to shift the center of mass rapidly in a single <span class="math inline">\(dt\)</span> segment. I've had a servo burn out because of this problem. A better algorithm would preemptively transition the center of mass even when the robot is on four legs so that it does not need to jerk when a leg lifts. Implementation involves looking at when all four legs are on the ground and when they are not. Then, simply run a smoothing algorithm that takes a large adjustment <span class="math inline">\(\delta\)</span> and breaks it up over multiple <span class="math inline">\(dt\)</span> frames.</p>
+<p>Does it get more complicated? Of course! At higher speeds, <span class="math inline">\(\delta\)</span> can actually cause significant acceleration on the body. With acceleration in play, the center of mass is no longer crucial. Instead, the <a href="https://en.wikipedia.org/wiki/Zero_moment_point">zero moment point</a> (ZMP) must fall inside of the support triangle. With no acceleration, the ZMP is equal to the center of mass. However, with acceleration, it gets really fun. See <a href="http://dspace.mit.edu/openaccess-disseminate/1721.1/59530">this paper</a> for more information.</p>
+<p>But wait, if you adjust for the ZMP, doesn't that also create another different acceleration that you have to optimize? You see, it gets very complicated. Using ZMP is necessary for bipedal robots and could improve quadrupedal walking a lot. However, it is way beyond my level of understanding. Feel free to look into it if you have time.</p>
 <h3 id="dynamic-optimization">Dynamic Optimization</h3>
-<h3 id="dynamic-class">Dynamic (class)</h3>
-<h3 id="agility-class">Agility (class)</h3>
+<p>These optimizations are done while the robot is running. However, I did not have time to implement them. Dynamic optimizations require the use of pressure sensors on the feet or at least an intertial measurement unit (IMU). As I have no implementation, I will simply provide some thoughts in this section.</p>
+<p>Foot sensors will allow the robot to determine if it is falling in one direction or if it has a foot hold. It can be used to traverse uneven terrain. For example, if there is decreasing force on one feet when not expected, the robot may be tilting away from the feet.</p>
+<h3 id="code-2">Code</h3>
 <h1 id="vision">Vision</h1>
 <h3 id="tracking">Tracking</h3>
 <h3 id="detection">Detection</h3>
 <h3 id="slam">SLAM</h3>
 <h3 id="optimization">Optimization</h3>
-<h3 id="oculus-class">Oculus (class)</h3>
-<h3 id="theia-class">Theia (class)</h3>
+<h3 id="code-3">Code</h3>
 <h1 id="audio">Audio</h1>
 <h3 id="concepts">Concepts</h3>
 <h3 id="lykos">Lykos</h3>
 <h1 id="automation">Automation</h1>
 <h3 id="synthesis">Synthesis</h3>
 <h3 id="decision-making">Decision Making</h3>
-<h3 id="ares-class">Ares (class)</h3>
+<h3 id="code-4">Code</h3>
 <h1 id="communication">Communication</h1>
 <h3 id="workers">Workers</h3>
 <h3 id="networking">Networking</h3>
 <h3 id="cerebral-class">Cerebral (class)</h3>
 <h1 id="control">Control</h1>
 <h3 id="considerations-1">Considerations</h3>
-<h3 id="phi-class">Phi (class)</h3>
+<h3 id="code-5">Code</h3>
 <h1 id="material-selection">Material Selection</h1>
 <h3 id="body">Body</h3>
 <h3 id="legs">Legs</h3>

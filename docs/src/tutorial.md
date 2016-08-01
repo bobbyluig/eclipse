@@ -16,9 +16,19 @@ This guide is in no way comprehensive. I am not accountable for errors in this d
 
 While researching, I chanced upon the *Springer Handbook of Robotics*. Before proceeding, read section 16.5 of the book found [here](http://home.deib.polimi.it/gini/robot/docs/legged.pdf). If you are serious about robotics, I recommend that you find this book in the library or get an eBook. This book basically covers everything you need to know about advanced robotics and even provides historical background. You probably won't understand everything in this literature. That is completely okay. This is just an introduction.
 
+You should also read through the [SPS](https://github.com/bobbyluig/Eclipse/raw/master/docs/cdr/SPS.pdf) and [POC](https://github.com/bobbyluig/Eclipse/raw/master/docs/cdr/POC.pdf) documents. They provide comprehensive details on our robots. This tutorial goes in depth on what is not already covered by those documents. 
+
+### Corrections
+
+I will put errors in the documents here as I find them.
+
+- Pg. 88-91: All references to dot products should be changed to matrix multiplcation. All $\bullet$ should be removed from the equations.
+
 ### Prerequisites
 
 Trying to accomplish this project requires that you are not scared of math and physics. You will need a strong foundation in geometry, trigonometry, algebra, classical mechanics, and prelimiary linear algebra. You will also need a deep understanding of calculus, although you might not ever need to take a derivative in this project. It would help that you also understand some practical electricity and magnetism.
+
+This tutorial is written assuming you have limited understanding of linear algebra. Concepts clarifications are linked to external resources as they appear. You're welcome.
 
 # Definitions
 
@@ -54,7 +64,7 @@ This is perhaps the most math intensive and important portion of the project.
 
 ### Inverse Kinematics
 
-### Finesse (class)
+### Code
 
 # Servos
 
@@ -72,11 +82,11 @@ This is perhaps the most math intensive and important portion of the project.
 
 ### Synchronization
 
-### Maestro (class)
+### Code
 
 # Movement
 
-We want to translate user inputs of rotational motion ($rad / sec$) and forward motion ($cm / sec$) to physical robot motion. The first challenge is to use $d\theta$, the amount of rotation per cycle, and $dv$, the amount of forward motion per cycle, to generate proper gaits. The second challenge is to perform various gait optimizations to ensure that the robot walks smoothly.
+We want to translate user inputs of rotational motion ($rad / sec$) and forward motion ($cm / sec$) to physical robot motion. The first challenge is to use $d\theta$, the amount of rotation per cycle, and $dv$, the amount of forward motion per cycle, to generate proper gaits. The second challenge is to perform various gait optimizations to ensure that the robot walks smoothly. Note: this section is very math heavy.
 
 ### Vectors
 
@@ -98,25 +108,31 @@ We define the width $w$ to be the distance along y and length $l$ to be the dist
 
 $$r = \frac{1}{2} \sqrt{w^2 + l^2}$$
 $$|\Delta| = \sqrt{x^2 + y^2}$$
-$$u = \begin{bmatrix} w \\ l \end{bmatrix}$$
+$$B = \begin{bmatrix} w \\ l \end{bmatrix}$$
 
 $\theta$, how much the robot will turn when the leg moves $\Delta$, is between $r$ and the hypotenuse. It can be solved using inverse tangent.
 
 $$\theta = \arctan \left(\frac{|\Delta|}{r}\right)$$
 
-The desired theta input is twice of that. So the input $d\theta = 2 \times \theta$. We can then solve for $|\Delta|$.
+The desired theta input is twice of that. So the input $d\theta = 2 \theta$. We can then solve for $|\Delta|$.
 
-$$|\Delta| = r \times \tan \left(\frac{1}{2} d\theta \right)$$
+$$|\Delta| = r \tan \left(\frac{1}{2} d\theta \right)$$
 
-The $(x, y)$ contribution from the rotation part is always perpendicular to the line from the center to the vertex. This means that we can use the [normalized vector](https://en.wikipedia.org/wiki/Unit_vector) $\hat{u}$ to find the desired values. Finally, add the desired forward contribution value for $dv$.
+The $(x, y)$ contribution from the rotation part is always perpendicular to the line from the center to the vertex. This means that we can use the [normalized vector](https://en.wikipedia.org/wiki/Unit_vector) of $B$ to find the desired values. Finally, add the desired forward contribution value for $dv$. Signs for the result is computed using a [Hadamard product](https://en.wikipedia.org/wiki/Hadamard_product_(matrices)) and a predefined matrix $N$. Let $j$ be the index of the leg (0-3).
 
-$$\begin{bmatrix} x \\ y \end{bmatrix} = |\Delta| \times \hat{u} + \begin{bmatrix}dv \\ 0 \end{bmatrix}$$
+$$N = \begin{bmatrix} -1 & 1 & -1 & 1 \\ 1 & 1 & -1 & -1 \end{bmatrix}$$
+$$\begin{bmatrix} x \\ y \end{bmatrix}_{j} = \left( |\Delta| \hat{B} + \begin{bmatrix}dv \\ 0 \end{bmatrix} \right) \circ N_{i,j+1}$$
+
+I will expand this equation out for clarity, since it is very important for implementation.
+
+$$x_{j} = r \tan \left(\frac{1}{2} d\theta \right) \sqrt{w^2 + l^2} \left(N_{1,j+1}\right)$$
+$$y_{j} = r \tan \left(\frac{1}{2} d\theta \right) \sqrt{w^2 + l^2} \left(N_{2,j+1}\right)$$
 
 ### Gait Types
 
 There are various gait types described in *Springer Handbook of Robotics*. However, I believe that trot and crawl are the two easier gaits to implement. Obviously, trot is much faster than crawl. However, testing should reveal the optimal transition speed and time. If both are graphed, if can be seen that this is an optimization problem. I did not have sufficient time to test thoroughly. However, if time $t$ can be found, it is easy to convert $rad / sec$ and $cm / sec$ to $d\theta$ and $dv$.
 
-$$\begin{bmatrix} d\theta \\ dv \end{bmatrix} = t \times \begin{bmatrix} rad/sec \\ cm/sec \end{bmatrix}$$
+$$\begin{bmatrix} d\theta \\ dv \end{bmatrix} = t \begin{bmatrix} rad/sec \\ cm/sec \end{bmatrix}$$
 
 I have not found significant differences between different leg orderings. However, this is because I have not done extensive testing. The robots use 1423 creeping gaits, although the other orderings work as well.
 
@@ -138,17 +154,92 @@ By generating $t / dt$ linearly spaced time points, we can then evaluate them in
 
 Execution requires interfacing with various other modules. Once points for all four legs are obtained, they can be fed one frame at a time to the inverse kinematics equations, which will provide angles for the servos. Each frame is exactly $dt$ long. There are two possible ways to approach this (that I've thought of). One way is to send the command to move all the servos and wait $dt$ before executing the next one. However, I've found that Python is not very good at keeping accurate time. Instead, I chose to check if all servos have reached their target before executing the next frame. This is actually slowered, as there is latency involved with checking and executing. Thus, one cycle will be slightly longer (probably negligible) than $t$.
 
-There are various other layers of complexity that must be performed to ensure that the robot can actually walk smoothly. They are discussed in the next three sections.
+There are various other layers of complexity that must be considered to ensure that the robot can actually walk smoothly. They are discussed in the next three sections.
 
 ### Center of Mass
 
+If the gait is execute without any adjustments, the robot will not walk -- it will fall and stumble. This is due to the fact that the center of mass is not being adjusted. As you can see in the image, the center of mass must fall inside of the support triangle made by three legs for crawl gaits.
+
+![](assets/com.png)
+
+First, let's define a few things. Let $(c_x, c_y)$ be the center of mass of the robot in its current position. This can be simplified to a static value or computed using the positions of the legs. Let $(x_1, y_1)$ and $(x_2, y_2)$ be the locations of two support legs across from each other. In the image above, they would be legs 0 and 3.
+
+The shortest path to the inside of the triangle is the perpendicular to the slope formed by the two support legs. We need to find where on the line is the closest to the center of mass. To do this, Alastair derived this equation, which took me a while to understand. It is basically a lot of $y = mx + b$ manipulations. Let $(x_0, y_0)$ be the point on the line we are interested in.
+
+$$m = \frac{(y_2 - y_1)}{(x_2 - x_1)}$$
+$$b = y_1 - m x_1$$
+$$x_0 = \frac{x_0 + m y_0 - mk}{m^2 + 1}$$
+$$y_0 = m x_0 + b$$
+
+Do the order of the points matter? No. If you look at the code, it may appear that it does. However, the order is for other optimizations. If working with the trot gait, this is enough because the center of mass simply has to be on the line. I use the variable $\delta$ to indicate how much the body must move.
+
+$$\delta_{x,trot} = x_0 - c_x$$
+$$\delta_{y,trot} = y_0 - c_y$$
+
+Optimally, this would work for crawl as well. However, it would be even better to move the center of mass further into the support triangle. I used $\sigma$ to represent the safety margin. Rather than adjusting to a point on the line, the robot will move into the support triangle an aditional $\sigma$. There is a flaw in this because $\sigma$ is **not** the stability margin. When close to the sides of the triangle, it may be possible that moving $\sigma$ may cause the stability margin to be less than $\sigma$ on another side. It is even possible that the adjustment can throw the center of mass outside of the support triangle. I have not written in any protection for this as it usually is not a problem. However, this is definitely something to think about for improving motion.
+
+Interestingly, order matters here with $\sigma$. I believe there is another way but this is just my take on it, since was really short on time. Which point comes first and which comes second depends on which leg is lifted. Testing basically reveals the following.
+
+$$0: (2,1)$$
+$$1: (0,3)$$
+$$2: (3,0)$$
+$$3: (1,2)$$
+
+The following equations can then be applied to find $\delta$ for crawl gait. It basically uses trigonometric properties of perpendicular lines. Note that you must use the `atan2` function in your favorite programming language because signs are very important here. Also note that these are implemented **incorrectly** in the actual code (forgot to sutract center of mass). But hey, it still worked alright because I set a huge $\sigma$.
+
+$$\DeclareMathOperator{\atantwo}{atan2}$$
+$$\theta = \atantwo \left((y_2 - y_1),(x_2 , x_1) \right)$$
+$$\delta_{x,crawl} = \sigma \sin \left( \theta \right) + x_0 - c_x$$
+$$\delta_{y,crawl} = -\sigma \cos \left( \theta \right) + y_0 - c_y$$
+
+I did static center of mass computations for $(c_x, c_y)$, but you should use the inverse kinematics equations to compute the location of each segement of the leg and use it to produce a more accurate computation. The servos are actually relatively heavy so the leg positions visibly contribute to the center of mass.
+
 ### Static Optimization
+
+Adjustments to the gait can be made before execution. This is especially true with the center of mass. All operations rely on the use of `numpy`, which basically vectorizes operations in C. Because gait generation is called frequently, other programming optimizations such as caching should be used as well.
+
+We'll redefine $\delta$ to be a 4 x 3 matrix rather than individual values of $\delta_x$, $\delta_y$, and $\delta_z$ (0). Let $F$ be a 4 x 3 matrix such that each row $i$ contains an $(x, y, z)$ which indicates the target position of leg at index $i - 1$.
+
+$$\delta = \begin{bmatrix}
+\delta_x & \delta_y & 0 \\
+\delta_x & \delta_y & 0 \\
+\delta_x & \delta_y & 0 \\
+\delta_x & \delta_y & 0
+\end{bmatrix}$$
+$$F = \begin{bmatrix}
+x_{0} & y_{0} & z_{0} \\
+x_{1} & y_{1} & z_{1} \\
+x_{2} & y_{2} & z_{2} \\
+x_{3} & y_{3} & z_{3}
+\end{bmatrix}$$
+
+Remember that $\delta$ is how much the body has to move while $F$ is the position of the legs. To translate the body, we can simply apply Newton's third law of motion.
+
+$$F^\prime = F - \delta$$
+
+The optimized pose for the legs, $F^\prime$, is obtained by subtracting $\delta$ from every row of $F$. This is easy in `numpy`, as it supports automatically broadcasting arrays of different dimensions together. You can simply let $\delta$ be a 1 x 3 matrix instead when programming.
+
+Initially, I added an additonal optimization to crawl gait which involved rotating the body about the line produced by $(x_1, y_1)$ and $(x_2, y_2)$ away from the lifted leg. This lowers the center of mass, which improves stability. However, the tilting was causing too much shake to the camera, so I took it out. It may be useful to you, so I'll include some basic information here. 
+
+We can use the [Euler–Rodrigues formula](https://en.wikipedia.org/wiki/Euler%E2%80%93Rodrigues_formula) to generate a rotation matrix. I took the code for it off of [StackOverflow](http://stackoverflow.com/questions/6802577/python-rotation-of-3d-vector). The function, when given an axis and angle, will generate a 3 x 3 matrix that I'll call $Q$. To apply this rotation to the aforementioned 4 x 3 matrix, we use a [matrix multiplcation](https://en.wikipedia.org/wiki/Matrix_multiplication) along with a [transpose](https://en.wikipedia.org/wiki/Transpose).
+
+$$F^{\prime\prime} = F^\prime Q^T$$
+
+Center of mass adjustments don't need to occur when the robot is on four legs. Thus, modifing $F$ is only necessary on three legs. However, this algorithm can be jerky because the robot has to shift the center of mass rapidly in a single $dt$ segment. I've had a servo burn out because of this problem. A better algorithm would preemptively transition the center of mass even when the robot is on four legs so that it does not need to jerk when a leg lifts. Implementation involves looking at when all four legs are on the ground and when they are not. Then, simply run a smoothing algorithm that takes a large adjustment $\delta$ and breaks it up over multiple $dt$ frames.
+
+Does it get more complicated? Of course! At higher speeds, $\delta$ can actually cause significant acceleration on the body. With acceleration in play, the center of mass is no longer crucial. Instead, the [zero moment point](https://en.wikipedia.org/wiki/Zero_moment_point) (ZMP) must fall inside of the support triangle. With no acceleration, the ZMP is equal to the center of mass. However, with acceleration, it gets really fun. See [this paper](http://dspace.mit.edu/openaccess-disseminate/1721.1/59530) for more information.
+
+But wait, if you adjust for the ZMP, doesn't that also create another different acceleration that you have to optimize? You see, it gets very complicated. Using ZMP is necessary for bipedal robots and could improve quadrupedal walking a lot. However, it is way beyond my level of understanding. Feel free to look into it if you have time.
 
 ### Dynamic Optimization
 
-### Dynamic (class)
+These optimizations are done while the robot is running. However, I did not have time to implement them. Dynamic optimizations require the use of pressure sensors on the feet or at least an intertial measurement unit (IMU). As I have no implementation, I will simply provide some thoughts in this section.
 
-### Agility (class)
+Foot sensors will allow the robot to determine if it is falling in one direction or if it has a foot hold. It can be used to traverse uneven terrain. For example, if there is decreasing force on one feet when not expected, the robot may be tilting away from the feet.
+
+
+
+### Code
 
 # Vision
 
@@ -160,9 +251,7 @@ There are various other layers of complexity that must be performed to ensure th
 
 ### Optimization
 
-### Oculus (class)
-
-### Theia (class)
+### Code
 
 # Audio
 
@@ -176,7 +265,7 @@ There are various other layers of complexity that must be performed to ensure th
 
 ### Decision Making
 
-### Ares (class)
+### Code
 
 # Communication
 
@@ -190,7 +279,7 @@ There are various other layers of complexity that must be performed to ensure th
 
 ### Considerations
 
-### Phi (class)
+### Code
 
 # Material Selection
 
