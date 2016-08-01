@@ -158,25 +158,25 @@ There are various other layers of complexity that must be considered to ensure t
 
 ### Center of Mass
 
-If the gait is execute without any adjustments, the robot will not walk -- it will fall and stumble. This is due to the fact that the center of mass is not being adjusted. As you can see in the image, the center of mass must fall inside of the support triangle made by three legs for crawl gaits.
+If the gait is execute without any adjustments, the robot will not walk -- it will fall and stumble. This is due to the fact that the center of mass (COM) is not being adjusted. As you can see in the image, the COM must fall inside of the support triangle made by three legs for crawl gaits.
 
 ![](assets/com.png)
 
-First, let's define a few things. Let $(c_x, c_y)$ be the center of mass of the robot in its current position. This can be simplified to a static value or computed using the positions of the legs. Let $(x_1, y_1)$ and $(x_2, y_2)$ be the locations of two support legs across from each other. In the image above, they would be legs 0 and 3.
+First, let's define a few things. Let $(c_x, c_y)$ be the COM of the robot in its current position. This can be simplified to a static value or computed using the positions of the legs. Let $(x_1, y_1)$ and $(x_2, y_2)$ be the locations of two support legs across from each other. In the image above, they would be legs 0 and 3.
 
-The shortest path to the inside of the triangle is the perpendicular to the slope formed by the two support legs. We need to find where on the line is the closest to the center of mass. To do this, Alastair derived this equation, which took me a while to understand. It is basically a lot of $y = mx + b$ manipulations. Let $(x_0, y_0)$ be the point on the line we are interested in.
+The shortest path to the inside of the triangle is the perpendicular to the slope formed by the two support legs. We need to find where on the line is the closest to the COM. To do this, Alastair derived this equation, which took me a while to understand. It is basically a lot of $y = mx + b$ manipulations. Let $(x_0, y_0)$ be the point on the line we are interested in.
 
 $$m = \frac{(y_2 - y_1)}{(x_2 - x_1)}$$
 $$b = y_1 - m x_1$$
 $$x_0 = \frac{x_0 + m y_0 - mk}{m^2 + 1}$$
 $$y_0 = m x_0 + b$$
 
-Do the order of the points matter? No. If you look at the code, it may appear that it does. However, the order is for other optimizations. If working with the trot gait, this is enough because the center of mass simply has to be on the line. I use the variable $\delta$ to indicate how much the body must move.
+Do the order of the points matter? No. If you look at the code, it may appear that it does. However, the order is for other optimizations. If working with the trot gait, this is enough because the COM simply has to be on the line. I use the variable $\delta$ to indicate how much the body must move.
 
 $$\delta_{x,trot} = x_0 - c_x$$
 $$\delta_{y,trot} = y_0 - c_y$$
 
-Optimally, this would work for crawl as well. However, it would be even better to move the center of mass further into the support triangle. I used $\sigma$ to represent the safety margin. Rather than adjusting to a point on the line, the robot will move into the support triangle an aditional $\sigma$. There is a flaw in this because $\sigma$ is **not** the stability margin. When close to the sides of the triangle, it may be possible that moving $\sigma$ may cause the stability margin to be less than $\sigma$ on another side. It is even possible that the adjustment can throw the center of mass outside of the support triangle. I have not written in any protection for this as it usually is not a problem. However, this is definitely something to think about for improving motion.
+Optimally, this would work for crawl as well. However, it would be even better to move the COM further into the support triangle. I used $\sigma$ to represent the safety margin. Rather than adjusting to a point on the line, the robot will move into the support triangle an aditional $\sigma$. There is a flaw in this because $\sigma$ is **not** the stability margin. When close to the sides of the triangle, it may be possible that moving $\sigma$ may cause the stability margin to be less than $\sigma$ on another side. It is even possible that the adjustment can throw the COM outside of the support triangle. I have not written in any protection for this as it usually is not a problem. However, this is definitely something to think about for improving motion.
 
 Interestingly, order matters here with $\sigma$. I believe there is another way but this is just my take on it, since was really short on time. Which point comes first and which comes second depends on which leg is lifted. Testing basically reveals the following.
 
@@ -185,18 +185,18 @@ $$1: (0,3)$$
 $$2: (3,0)$$
 $$3: (1,2)$$
 
-The following equations can then be applied to find $\delta$ for crawl gait. It basically uses trigonometric properties of perpendicular lines. Note that you must use the `atan2` function in your favorite programming language because signs are very important here. Also note that these are implemented **incorrectly** in the actual code (forgot to sutract center of mass). But hey, it still worked alright because I set a huge $\sigma$.
+The following equations can then be applied to find $\delta$ for crawl gait. It basically uses trigonometric properties of perpendicular lines. Note that you must use the `atan2` function in your favorite programming language because signs are very important here. Also note that these are implemented **incorrectly** in the actual code (forgot to sutract COM). But hey, it still worked alright because I set a huge $\sigma$.
 
 $$\DeclareMathOperator{\atantwo}{atan2}$$
 $$\theta = \atantwo \left((y_2 - y_1),(x_2 , x_1) \right)$$
 $$\delta_{x,crawl} = \sigma \sin \left( \theta \right) + x_0 - c_x$$
 $$\delta_{y,crawl} = -\sigma \cos \left( \theta \right) + y_0 - c_y$$
 
-I did static center of mass computations for $(c_x, c_y)$, but you should use the inverse kinematics equations to compute the location of each segement of the leg and use it to produce a more accurate computation. The servos are actually relatively heavy so the leg positions visibly contribute to the center of mass.
+I did static COM computations for $(c_x, c_y)$, but you should use the inverse kinematics equations to compute the location of each segement of the leg and use it to produce a more accurate computation. The servos are actually relatively heavy so the leg positions visibly contribute to the COM.
 
 ### Static Optimization
 
-Adjustments to the gait can be made before execution. This is especially true with the center of mass. All operations rely on the use of `numpy`, which basically vectorizes operations in C. Because gait generation is called frequently, other programming optimizations such as caching should be used as well.
+Adjustments to the gait can be made before execution. This is especially true with the COM. All operations rely on the use of `numpy`, which basically vectorizes operations in C. Because gait generation is called frequently, other programming optimizations such as caching should be used as well.
 
 We'll redefine $\delta$ to be a 4 x 3 matrix rather than individual values of $\delta_x$, $\delta_y$, and $\delta_z$ (0). Let $F$ be a 4 x 3 matrix such that each row $i$ contains an $(x, y, z)$ which indicates the target position of leg at index $i - 1$.
 
@@ -219,17 +219,23 @@ $$F^\prime = F - \delta$$
 
 The optimized pose for the legs, $F^\prime$, is obtained by subtracting $\delta$ from every row of $F$. This is easy in `numpy`, as it supports automatically broadcasting arrays of different dimensions together. You can simply let $\delta$ be a 1 x 3 matrix instead when programming.
 
-Initially, I added an additonal optimization to crawl gait which involved rotating the body about the line produced by $(x_1, y_1)$ and $(x_2, y_2)$ away from the lifted leg. This lowers the center of mass, which improves stability. However, the tilting was causing too much shake to the camera, so I took it out. It may be useful to you, so I'll include some basic information here. 
+Initially, I added an additional optimization to crawl gait which involved rotating the body about the line produced by $(x_1, y_1)$ and $(x_2, y_2)$ away from the lifted leg. This lowers the COM, which improves stability. However, the tilting was causing too much shake to the camera, so I took it out. It may be useful to you, so I'll include some basic information here. 
 
 We can use the [Euler–Rodrigues formula](https://en.wikipedia.org/wiki/Euler%E2%80%93Rodrigues_formula) to generate a rotation matrix. I took the code for it off of [StackOverflow](http://stackoverflow.com/questions/6802577/python-rotation-of-3d-vector). The function, when given an axis and angle, will generate a 3 x 3 matrix that I'll call $Q$. To apply this rotation to the aforementioned 4 x 3 matrix, we use a [matrix multiplcation](https://en.wikipedia.org/wiki/Matrix_multiplication) along with a [transpose](https://en.wikipedia.org/wiki/Transpose).
 
 $$F^{\prime\prime} = F^\prime Q^T$$
 
-Center of mass adjustments don't need to occur when the robot is on four legs. Thus, modifing $F$ is only necessary on three legs. However, this algorithm can be jerky because the robot has to shift the center of mass rapidly in a single $dt$ segment. I've had a servo burn out because of this problem. A better algorithm would preemptively transition the center of mass even when the robot is on four legs so that it does not need to jerk when a leg lifts. Implementation involves looking at when all four legs are on the ground and when they are not. Then, simply run a smoothing algorithm that takes a large adjustment $\delta$ and breaks it up over multiple $dt$ frames.
+COM adjustments don't need to occur when the robot is on four legs. Thus, modifing $F$ is only necessary on three legs. However, this algorithm can be jerky because the robot has to shift the COM rapidly in a single $dt$ segment. I've had a servo burn out because of this problem. A better algorithm would preemptively transition the COM even when the robot is on four legs so that it does not need to jerk when a leg lifts. Implementation involves looking at when all four legs are on the ground and when they are not. Then, simply run a smoothing algorithm that takes a large adjustment $\delta$ and breaks it up over multiple $dt$ frames.
 
-Does it get more complicated? Of course! At higher speeds, $\delta$ can actually cause significant acceleration on the body. With acceleration in play, the center of mass is no longer crucial. Instead, the [zero moment point](https://en.wikipedia.org/wiki/Zero_moment_point) (ZMP) must fall inside of the support triangle. With no acceleration, the ZMP is equal to the center of mass. However, with acceleration, it gets really fun. See [this paper](http://dspace.mit.edu/openaccess-disseminate/1721.1/59530) for more information.
+Does it get more complicated? Of course! At higher speeds, $\delta$ can actually cause significant acceleration on the body. With acceleration in play, the COM is no longer crucial. Instead, the [zero moment point](https://en.wikipedia.org/wiki/Zero_moment_point) (ZMP) must fall inside of the support triangle. With no acceleration, the ZMP is equal to the COM. However, with acceleration, it gets really fun. See [this paper](http://dspace.mit.edu/openaccess-disseminate/1721.1/59530) for more information.
 
 But wait, if you adjust for the ZMP, doesn't that also create another different acceleration that you have to optimize? You see, it gets very complicated. Using ZMP is necessary for bipedal robots and could improve quadrupedal walking a lot. However, it is way beyond my level of understanding. Feel free to look into it if you have time.
+
+### Pose Optimization
+
+Say you wanted the robot to get from its current pose to another pose. However, you don't want it to fall over of drag its legs on the ground. This is where pose optimization comes. Theoretically, pose optimization should allow the robot to get from any valid pose to any other valid pose.
+
+The first step would be to use forward kinematics equations to determine the current location of all the legs. Then, move the body and lift the legs one at a time until all are in the correct location. Whenever a leg lifts, perform static optimizations. The logic is actually a bit more complex that, but the source code and comments could explain more clearly than words because there is no new math involved.
 
 ### Dynamic Optimization
 
@@ -237,9 +243,25 @@ These optimizations are done while the robot is running. However, I did not have
 
 Foot sensors will allow the robot to determine if it is falling in one direction or if it has a foot hold. It can be used to traverse uneven terrain. For example, if there is decreasing force on one feet when not expected, the robot may be tilting away from the feet.
 
+An IMU can be fused to find the orientation of the robot. Combine this with raw acceleration data and you can find out if the robot is falling or about to fall. Acceleration is more useful in computing the ZMP in real time. If you do manage to get this data, you can use it to compute the ZMP and dynamically adjust the robot during motion. Assuming the COM remains at a constant height, then the ZMP, $z$, can be computed using the COM $(c_x, c_y, c_z)$ and the acceleration of the COM $(a_x, a_y, a_z)$.
 
+$$z_x = \frac{c_x g - c_z a_x}{g}$$
+
+This also applies for $z_y$. Again, this is just math. Actual implementation may require significant tweaking.
 
 ### Code
+
+Multiple classes are involved in motion. They are written in Python. Functions that implement one of the aforementioned concepts are listed here.
+
+Concept|Implementation(s)
+:---|---
+Vectors| `agility.gait.Dynamic.get`
+Gait Types|	`agility.gait.Dynamic.generate`
+Gait Generation| `agility.gait.Linear.interpolate`, `agility.gait.Dynamic.get`
+Gait Execution| `agility.main.Agility.execute_frames`, `agility.main.Agility.execute_long`, `agility.main.Agility.execute_forever`, `agility.main.Agility.execute_angles`, `agility.main.Agility.execute_variable`
+Center of Mass| `agility.main.Body.rotation_matrix`, `agility.main.Body.tilt_body`, `agility.main.Body.closest`, `agility.main.Body.adjust_crawl`, `agility.main.Body.adjust_trot`
+Static Optimization| `agility.main.Agility.prepare_frames`, `agility.main.Agility.prepare_gait`, `agility.main.Agility.prepare_smoothly`
+Pose Optimization| `agility.main.Agility.target_pose`, `agility.main.Agility.get_pose`
 
 # Vision
 

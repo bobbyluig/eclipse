@@ -67,6 +67,7 @@
         <li><a href="#gait-execution">Gait Execution</a></li>
         <li><a href="#center-of-mass">Center of Mass</a></li>
         <li><a href="#static-optimization">Static Optimization</a></li>
+        <li><a href="#pose-optimization">Pose Optimization</a></li>
         <li><a href="#dynamic-optimization">Dynamic Optimization</a></li>
         <li><a href="#code-2">Code</a></li>
         </ul></li>
@@ -205,24 +206,24 @@
 <p>Execution requires interfacing with various other modules. Once points for all four legs are obtained, they can be fed one frame at a time to the inverse kinematics equations, which will provide angles for the servos. Each frame is exactly <span class="math inline">\(dt\)</span> long. There are two possible ways to approach this (that I've thought of). One way is to send the command to move all the servos and wait <span class="math inline">\(dt\)</span> before executing the next one. However, I've found that Python is not very good at keeping accurate time. Instead, I chose to check if all servos have reached their target before executing the next frame. This is actually slowered, as there is latency involved with checking and executing. Thus, one cycle will be slightly longer (probably negligible) than <span class="math inline">\(t\)</span>.</p>
 <p>There are various other layers of complexity that must be considered to ensure that the robot can actually walk smoothly. They are discussed in the next three sections.</p>
 <h3 id="center-of-mass">Center of Mass</h3>
-<p>If the gait is execute without any adjustments, the robot will not walk -- it will fall and stumble. This is due to the fact that the center of mass is not being adjusted. As you can see in the image, the center of mass must fall inside of the support triangle made by three legs for crawl gaits.</p>
+<p>If the gait is execute without any adjustments, the robot will not walk -- it will fall and stumble. This is due to the fact that the center of mass (COM) is not being adjusted. As you can see in the image, the COM must fall inside of the support triangle made by three legs for crawl gaits.</p>
 <div class="figure">
 <img src="assets/com.png" />
 
 </div>
-<p>First, let's define a few things. Let <span class="math inline">\((c_x, c_y)\)</span> be the center of mass of the robot in its current position. This can be simplified to a static value or computed using the positions of the legs. Let <span class="math inline">\((x_1, y_1)\)</span> and <span class="math inline">\((x_2, y_2)\)</span> be the locations of two support legs across from each other. In the image above, they would be legs 0 and 3.</p>
-<p>The shortest path to the inside of the triangle is the perpendicular to the slope formed by the two support legs. We need to find where on the line is the closest to the center of mass. To do this, Alastair derived this equation, which took me a while to understand. It is basically a lot of <span class="math inline">\(y = mx + b\)</span> manipulations. Let <span class="math inline">\((x_0, y_0)\)</span> be the point on the line we are interested in.</p>
+<p>First, let's define a few things. Let <span class="math inline">\((c_x, c_y)\)</span> be the COM of the robot in its current position. This can be simplified to a static value or computed using the positions of the legs. Let <span class="math inline">\((x_1, y_1)\)</span> and <span class="math inline">\((x_2, y_2)\)</span> be the locations of two support legs across from each other. In the image above, they would be legs 0 and 3.</p>
+<p>The shortest path to the inside of the triangle is the perpendicular to the slope formed by the two support legs. We need to find where on the line is the closest to the COM. To do this, Alastair derived this equation, which took me a while to understand. It is basically a lot of <span class="math inline">\(y = mx + b\)</span> manipulations. Let <span class="math inline">\((x_0, y_0)\)</span> be the point on the line we are interested in.</p>
 <p><span class="math display">\[m = \frac{(y_2 - y_1)}{(x_2 - x_1)}\]</span> <span class="math display">\[b = y_1 - m x_1\]</span> <span class="math display">\[x_0 = \frac{x_0 + m y_0 - mk}{m^2 + 1}\]</span> <span class="math display">\[y_0 = m x_0 + b\]</span></p>
-<p>Do the order of the points matter? No. If you look at the code, it may appear that it does. However, the order is for other optimizations. If working with the trot gait, this is enough because the center of mass simply has to be on the line. I use the variable <span class="math inline">\(\delta\)</span> to indicate how much the body must move.</p>
+<p>Do the order of the points matter? No. If you look at the code, it may appear that it does. However, the order is for other optimizations. If working with the trot gait, this is enough because the COM simply has to be on the line. I use the variable <span class="math inline">\(\delta\)</span> to indicate how much the body must move.</p>
 <p><span class="math display">\[\delta_{x,trot} = x_0 - c_x\]</span> <span class="math display">\[\delta_{y,trot} = y_0 - c_y\]</span></p>
-<p>Optimally, this would work for crawl as well. However, it would be even better to move the center of mass further into the support triangle. I used <span class="math inline">\(\sigma\)</span> to represent the safety margin. Rather than adjusting to a point on the line, the robot will move into the support triangle an aditional <span class="math inline">\(\sigma\)</span>. There is a flaw in this because <span class="math inline">\(\sigma\)</span> is <strong>not</strong> the stability margin. When close to the sides of the triangle, it may be possible that moving <span class="math inline">\(\sigma\)</span> may cause the stability margin to be less than <span class="math inline">\(\sigma\)</span> on another side. It is even possible that the adjustment can throw the center of mass outside of the support triangle. I have not written in any protection for this as it usually is not a problem. However, this is definitely something to think about for improving motion.</p>
+<p>Optimally, this would work for crawl as well. However, it would be even better to move the COM further into the support triangle. I used <span class="math inline">\(\sigma\)</span> to represent the safety margin. Rather than adjusting to a point on the line, the robot will move into the support triangle an aditional <span class="math inline">\(\sigma\)</span>. There is a flaw in this because <span class="math inline">\(\sigma\)</span> is <strong>not</strong> the stability margin. When close to the sides of the triangle, it may be possible that moving <span class="math inline">\(\sigma\)</span> may cause the stability margin to be less than <span class="math inline">\(\sigma\)</span> on another side. It is even possible that the adjustment can throw the COM outside of the support triangle. I have not written in any protection for this as it usually is not a problem. However, this is definitely something to think about for improving motion.</p>
 <p>Interestingly, order matters here with <span class="math inline">\(\sigma\)</span>. I believe there is another way but this is just my take on it, since was really short on time. Which point comes first and which comes second depends on which leg is lifted. Testing basically reveals the following.</p>
 <p><span class="math display">\[0: (2,1)\]</span> <span class="math display">\[1: (0,3)\]</span> <span class="math display">\[2: (3,0)\]</span> <span class="math display">\[3: (1,2)\]</span></p>
-<p>The following equations can then be applied to find <span class="math inline">\(\delta\)</span> for crawl gait. It basically uses trigonometric properties of perpendicular lines. Note that you must use the <code>atan2</code> function in your favorite programming language because signs are very important here. Also note that these are implemented <strong>incorrectly</strong> in the actual code (forgot to sutract center of mass). But hey, it still worked alright because I set a huge <span class="math inline">\(\sigma\)</span>.</p>
+<p>The following equations can then be applied to find <span class="math inline">\(\delta\)</span> for crawl gait. It basically uses trigonometric properties of perpendicular lines. Note that you must use the <code>atan2</code> function in your favorite programming language because signs are very important here. Also note that these are implemented <strong>incorrectly</strong> in the actual code (forgot to sutract COM). But hey, it still worked alright because I set a huge <span class="math inline">\(\sigma\)</span>.</p>
 <p><span class="math display">\[\DeclareMathOperator{\atantwo}{atan2}\]</span> <span class="math display">\[\theta = \atantwo \left((y_2 - y_1),(x_2 , x_1) \right)\]</span> <span class="math display">\[\delta_{x,crawl} = \sigma \sin \left( \theta \right) + x_0 - c_x\]</span> <span class="math display">\[\delta_{y,crawl} = -\sigma \cos \left( \theta \right) + y_0 - c_y\]</span></p>
-<p>I did static center of mass computations for <span class="math inline">\((c_x, c_y)\)</span>, but you should use the inverse kinematics equations to compute the location of each segement of the leg and use it to produce a more accurate computation. The servos are actually relatively heavy so the leg positions visibly contribute to the center of mass.</p>
+<p>I did static COM computations for <span class="math inline">\((c_x, c_y)\)</span>, but you should use the inverse kinematics equations to compute the location of each segement of the leg and use it to produce a more accurate computation. The servos are actually relatively heavy so the leg positions visibly contribute to the COM.</p>
 <h3 id="static-optimization">Static Optimization</h3>
-<p>Adjustments to the gait can be made before execution. This is especially true with the center of mass. All operations rely on the use of <code>numpy</code>, which basically vectorizes operations in C. Because gait generation is called frequently, other programming optimizations such as caching should be used as well.</p>
+<p>Adjustments to the gait can be made before execution. This is especially true with the COM. All operations rely on the use of <code>numpy</code>, which basically vectorizes operations in C. Because gait generation is called frequently, other programming optimizations such as caching should be used as well.</p>
 <p>We'll redefine <span class="math inline">\(\delta\)</span> to be a 4 x 3 matrix rather than individual values of <span class="math inline">\(\delta_x\)</span>, <span class="math inline">\(\delta_y\)</span>, and <span class="math inline">\(\delta_z\)</span> (0). Let <span class="math inline">\(F\)</span> be a 4 x 3 matrix such that each row <span class="math inline">\(i\)</span> contains an <span class="math inline">\((x, y, z)\)</span> which indicates the target position of leg at index <span class="math inline">\(i - 1\)</span>.</p>
 <p><span class="math display">\[\delta = \begin{bmatrix}
 \delta_x &amp; \delta_y &amp; 0 \\
@@ -238,16 +239,61 @@ x_{3} &amp; y_{3} &amp; z_{3}
 <p>Remember that <span class="math inline">\(\delta\)</span> is how much the body has to move while <span class="math inline">\(F\)</span> is the position of the legs. To translate the body, we can simply apply Newton's third law of motion.</p>
 <p><span class="math display">\[F^\prime = F - \delta\]</span></p>
 <p>The optimized pose for the legs, <span class="math inline">\(F^\prime\)</span>, is obtained by subtracting <span class="math inline">\(\delta\)</span> from every row of <span class="math inline">\(F\)</span>. This is easy in <code>numpy</code>, as it supports automatically broadcasting arrays of different dimensions together. You can simply let <span class="math inline">\(\delta\)</span> be a 1 x 3 matrix instead when programming.</p>
-<p>Initially, I added an additonal optimization to crawl gait which involved rotating the body about the line produced by <span class="math inline">\((x_1, y_1)\)</span> and <span class="math inline">\((x_2, y_2)\)</span> away from the lifted leg. This lowers the center of mass, which improves stability. However, the tilting was causing too much shake to the camera, so I took it out. It may be useful to you, so I'll include some basic information here.</p>
+<p>Initially, I added an additional optimization to crawl gait which involved rotating the body about the line produced by <span class="math inline">\((x_1, y_1)\)</span> and <span class="math inline">\((x_2, y_2)\)</span> away from the lifted leg. This lowers the COM, which improves stability. However, the tilting was causing too much shake to the camera, so I took it out. It may be useful to you, so I'll include some basic information here.</p>
 <p>We can use the <a href="https://en.wikipedia.org/wiki/Euler%E2%80%93Rodrigues_formula">Euler–Rodrigues formula</a> to generate a rotation matrix. I took the code for it off of <a href="http://stackoverflow.com/questions/6802577/python-rotation-of-3d-vector">StackOverflow</a>. The function, when given an axis and angle, will generate a 3 x 3 matrix that I'll call <span class="math inline">\(Q\)</span>. To apply this rotation to the aforementioned 4 x 3 matrix, we use a <a href="https://en.wikipedia.org/wiki/Matrix_multiplication">matrix multiplcation</a> along with a <a href="https://en.wikipedia.org/wiki/Transpose">transpose</a>.</p>
 <p><span class="math display">\[F^{\prime\prime} = F^\prime Q^T\]</span></p>
-<p>Center of mass adjustments don't need to occur when the robot is on four legs. Thus, modifing <span class="math inline">\(F\)</span> is only necessary on three legs. However, this algorithm can be jerky because the robot has to shift the center of mass rapidly in a single <span class="math inline">\(dt\)</span> segment. I've had a servo burn out because of this problem. A better algorithm would preemptively transition the center of mass even when the robot is on four legs so that it does not need to jerk when a leg lifts. Implementation involves looking at when all four legs are on the ground and when they are not. Then, simply run a smoothing algorithm that takes a large adjustment <span class="math inline">\(\delta\)</span> and breaks it up over multiple <span class="math inline">\(dt\)</span> frames.</p>
-<p>Does it get more complicated? Of course! At higher speeds, <span class="math inline">\(\delta\)</span> can actually cause significant acceleration on the body. With acceleration in play, the center of mass is no longer crucial. Instead, the <a href="https://en.wikipedia.org/wiki/Zero_moment_point">zero moment point</a> (ZMP) must fall inside of the support triangle. With no acceleration, the ZMP is equal to the center of mass. However, with acceleration, it gets really fun. See <a href="http://dspace.mit.edu/openaccess-disseminate/1721.1/59530">this paper</a> for more information.</p>
+<p>COM adjustments don't need to occur when the robot is on four legs. Thus, modifing <span class="math inline">\(F\)</span> is only necessary on three legs. However, this algorithm can be jerky because the robot has to shift the COM rapidly in a single <span class="math inline">\(dt\)</span> segment. I've had a servo burn out because of this problem. A better algorithm would preemptively transition the COM even when the robot is on four legs so that it does not need to jerk when a leg lifts. Implementation involves looking at when all four legs are on the ground and when they are not. Then, simply run a smoothing algorithm that takes a large adjustment <span class="math inline">\(\delta\)</span> and breaks it up over multiple <span class="math inline">\(dt\)</span> frames.</p>
+<p>Does it get more complicated? Of course! At higher speeds, <span class="math inline">\(\delta\)</span> can actually cause significant acceleration on the body. With acceleration in play, the COM is no longer crucial. Instead, the <a href="https://en.wikipedia.org/wiki/Zero_moment_point">zero moment point</a> (ZMP) must fall inside of the support triangle. With no acceleration, the ZMP is equal to the COM. However, with acceleration, it gets really fun. See <a href="http://dspace.mit.edu/openaccess-disseminate/1721.1/59530">this paper</a> for more information.</p>
 <p>But wait, if you adjust for the ZMP, doesn't that also create another different acceleration that you have to optimize? You see, it gets very complicated. Using ZMP is necessary for bipedal robots and could improve quadrupedal walking a lot. However, it is way beyond my level of understanding. Feel free to look into it if you have time.</p>
+<h3 id="pose-optimization">Pose Optimization</h3>
+<p>Say you wanted the robot to get from its current pose to another pose. However, you don't want it to fall over of drag its legs on the ground. This is where pose optimization comes. Theoretically, pose optimization should allow the robot to get from any valid pose to any other valid pose.</p>
+<p>The first step would be to use forward kinematics equations to determine the current location of all the legs. Then, move the body and lift the legs one at a time until all are in the correct location. Whenever a leg lifts, perform static optimizations. The logic is actually a bit more complex that, but the source code and comments could explain more clearly than words because there is no new math involved.</p>
 <h3 id="dynamic-optimization">Dynamic Optimization</h3>
 <p>These optimizations are done while the robot is running. However, I did not have time to implement them. Dynamic optimizations require the use of pressure sensors on the feet or at least an intertial measurement unit (IMU). As I have no implementation, I will simply provide some thoughts in this section.</p>
 <p>Foot sensors will allow the robot to determine if it is falling in one direction or if it has a foot hold. It can be used to traverse uneven terrain. For example, if there is decreasing force on one feet when not expected, the robot may be tilting away from the feet.</p>
+<p>An IMU can be fused to find the orientation of the robot. Combine this with raw acceleration data and you can find out if the robot is falling or about to fall. Acceleration is more useful in computing the ZMP in real time. If you do manage to get this data, you can use it to compute the ZMP and dynamically adjust the robot during motion. Assuming the COM remains at a constant height, then the ZMP, <span class="math inline">\(z\)</span>, can be computed using the COM <span class="math inline">\((c_x, c_y, c_z)\)</span> and the acceleration of the COM <span class="math inline">\((a_x, a_y, a_z)\)</span>.</p>
+<p><span class="math display">\[z_x = \frac{c_x g - c_z a_x}{g}\]</span></p>
+<p>This also applies for <span class="math inline">\(z_y\)</span>. Again, this is just math. Actual implementation may require significant tweaking.</p>
 <h3 id="code-2">Code</h3>
+<p>Multiple classes are involved in motion. They are written in Python. Functions that implement one of the aforementioned concepts are listed here.</p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Concept</th>
+<th>Implementation(s)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Vectors</td>
+<td><code>agility.gait.Dynamic.get</code></td>
+</tr>
+<tr class="even">
+<td align="left">Gait Types</td>
+<td><code>agility.gait.Dynamic.generate</code></td>
+</tr>
+<tr class="odd">
+<td align="left">Gait Generation</td>
+<td><code>agility.gait.Linear.interpolate</code>, <code>agility.gait.Dynamic.get</code></td>
+</tr>
+<tr class="even">
+<td align="left">Gait Execution</td>
+<td><code>agility.main.Agility.execute_frames</code>, <code>agility.main.Agility.execute_long</code>, <code>agility.main.Agility.execute_forever</code>, <code>agility.main.Agility.execute_angles</code>, <code>agility.main.Agility.execute_variable</code></td>
+</tr>
+<tr class="odd">
+<td align="left">Center of Mass</td>
+<td><code>agility.main.Body.rotation_matrix</code>, <code>agility.main.Body.tilt_body</code>, <code>agility.main.Body.closest</code>, <code>agility.main.Body.adjust_crawl</code>, <code>agility.main.Body.adjust_trot</code></td>
+</tr>
+<tr class="even">
+<td align="left">Static Optimization</td>
+<td><code>agility.main.Agility.prepare_frames</code>, <code>agility.main.Agility.prepare_gait</code>, <code>agility.main.Agility.prepare_smoothly</code></td>
+</tr>
+<tr class="odd">
+<td align="left">Pose Optimization</td>
+<td><code>agility.main.Agility.target_pose</code>, <code>agility.main.Agility.get_pose</code></td>
+</tr>
+</tbody>
+</table>
 <h1 id="vision">Vision</h1>
 <h3 id="tracking">Tracking</h3>
 <h3 id="detection">Detection</h3>
@@ -284,5 +330,11 @@ x_{3} &amp; y_{3} &amp; z_{3}
             </div>
     </div>
   </div>
+<script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
+<script>
+$(document).ready(function() {
+	$('table').addClass('table table-striped table-bordered');
+});
+</script>
 </body>
 </html>
