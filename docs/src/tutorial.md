@@ -48,11 +48,14 @@ Pretend the robot is a table. The head points in the positive x direction. The l
 
 ### Vocabulary
 
-End Effector
+End effector
 : In kinematics, the end of a robotic arm or leg. In this case, it is the tip of the feet.
 
 Root
 : In kinematics, the point at which the arm or leg attaches to the body.
+	
+Output spline
+: The part of the servo that is visible and spins. It has teeth to transfer torque.
 	
 # Leg Design
 
@@ -98,11 +101,34 @@ Inverse Kinematics | `finesse.eclipse.Finesse.inverse_pack`, `finesse.paragon.Fi
 
 # Servos
 
+Servos are what permits motion. More sophisticated robots make use of pneumatics. However, hobby servos can perform well with proper design and programming.
+
 ### Configuration
 
-### Information
+Servos generally come with information about their [Pulse Width Modulation](https://en.wikipedia.org/wiki/Pulse-width_modulation) (PWM). These typically range from 1000 μs to 2000 μs, although you need to check the manufacturer's specification sheet as well as perform testing to determine the true PWM range.
+
+I will not cover conversion from PWM to degrees, as I'm sure you can figure this out by either looking at the code or doing some math. The more interesting question is which direction is positive and which direction is negative in regards to the spin of the servos.
+
+![](assets/servo.png)
+
+We need to first define that lowering the PWM corresponds to decreasing the angle of the servo. Given that definition, it is simple to determine spin direction based on servo configuration. Look down the positive axis. In the image above, the eye is looking down the positive y axis. If the output spline is facing you (as in the image), then counterclockwise is positive and clockwise is negative. If the output spline is facing the other way, then the directions are flipped. However, both cases assume that the servo body is not the part rotating. If the output spline is attached and the body spins, everything is reversed.
+
+Of course, there are multiple ways to implement this. In my implementation, if the output spline points towards a positive axis, it has a `direction` of 1. If it points towards a negative axis, it has a `direction` of -1. All other parameters are commented in the source code and should be easy to understand.
+
+### Alternatives
+
+Servos can target a specific location, but often has limited range and requires calibration after mounting. An alternative would be to use stepper motors. These motors run on two inductors. They have hundreds of clicks per rotation and each pulse will move the stepper one click in a specified direction. This allows easier calibration and better synchronization at the cost of torque and speed.
+
+I have actually implemented a class for this. However, my team never managed to get the stepper motors working without burning them out. In addition, we lacked funds to get small steppers with sufficient torque.
 
 ### Code
+
+There are two classes, one for servos and another for steppers. The `Stepper` class has not been tested extensively. Some functions in the `Servo` class are not used. They were written when I was testing different gait generation methods. However, they do work as expected and can be useful.
+
+Concept|Implementation(s)
+:---|---
+Servo | `agility.main.Servo`
+Stepper | `agility.main.Stepper`
 
 # Mini Maestro
 
@@ -281,7 +307,7 @@ This also applies for $z_y$. Again, this is just math. Actual implementation may
 
 ### Code
 
-Multiple classes are involved in motion. They are written in Python. Functions that implement one of the aforementioned concepts are listed here.
+Multiple classes are involved in motion. A few functions in the `Agility` class are outdated and were used for testing. Other functions which relate to the head are discussed later.
 
 Concept|Implementation(s)
 :---|---
@@ -302,6 +328,8 @@ Pose Optimization| `agility.main.Agility.target_pose`, `agility.main.Agility.get
 ### SLAM
 
 ### Optimization
+
+### Head
 
 ### Code
 

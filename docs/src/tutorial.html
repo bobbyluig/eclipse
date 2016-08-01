@@ -52,7 +52,7 @@
         </ul></li>
         <li><a href="#servos">Servos</a><ul>
         <li><a href="#configuration">Configuration</a></li>
-        <li><a href="#information">Information</a></li>
+        <li><a href="#alternatives">Alternatives</a></li>
         <li><a href="#code-1">Code</a></li>
         </ul></li>
         <li><a href="#mini-maestro">Mini Maestro</a><ul>
@@ -77,6 +77,7 @@
         <li><a href="#detection">Detection</a></li>
         <li><a href="#slam">SLAM</a></li>
         <li><a href="#optimization">Optimization</a></li>
+        <li><a href="#head">Head</a></li>
         <li><a href="#code-4">Code</a></li>
         </ul></li>
         <li><a href="#audio">Audio</a><ul>
@@ -146,11 +147,14 @@
 <p>Pretend the robot is a table. The head points in the positive x direction. The left side points in the positive y direction. The top of the table points to the positive z axis. The image is there for clarification.</p>
 <h3 id="vocabulary">Vocabulary</h3>
 <dl>
-<dt>End Effector</dt>
+<dt>End effector</dt>
 <dd>In kinematics, the end of a robotic arm or leg. In this case, it is the tip of the feet.
 </dd>
 <dt>Root</dt>
 <dd>In kinematics, the point at which the arm or leg attaches to the body.
+</dd>
+<dt>Output spline</dt>
+<dd>The part of the servo that is visible and spins. It has teeth to transfer torque.
 </dd>
 </dl>
 <h1 id="leg-design">Leg Design</h1>
@@ -194,9 +198,39 @@
 </tbody>
 </table>
 <h1 id="servos">Servos</h1>
+<p>Servos are what permits motion. More sophisticated robots make use of pneumatics. However, hobby servos can perform well with proper design and programming.</p>
 <h3 id="configuration">Configuration</h3>
-<h3 id="information">Information</h3>
+<p>Servos generally come with information about their <a href="https://en.wikipedia.org/wiki/Pulse-width_modulation">Pulse Width Modulation</a> (PWM). These typically range from 1000 μs to 2000 μs, although you need to check the manufacturer's specification sheet as well as perform testing to determine the true PWM range.</p>
+<p>I will not cover conversion from PWM to degrees, as I'm sure you can figure this out by either looking at the code or doing some math. The more interesting question is which direction is positive and which direction is negative in regards to the spin of the servos.</p>
+<div class="figure">
+<img src="assets/servo.png" />
+
+</div>
+<p>We need to first define that lowering the PWM corresponds to decreasing the angle of the servo. Given that definition, it is simple to determine spin direction based on servo configuration. Look down the positive axis. In the image above, the eye is looking down the positive y axis. If the output spline is facing you (as in the image), then counterclockwise is positive and clockwise is negative. If the output spline is facing the other way, then the directions are flipped. However, both cases assume that the servo body is not the part rotating. If the output spline is attached and the body spins, everything is reversed.</p>
+<p>Of course, there are multiple ways to implement this. In my implementation, if the output spline points towards a positive axis, it has a <code>direction</code> of 1. If it points towards a negative axis, it has a <code>direction</code> of -1. All other parameters are commented in the source code and should be easy to understand.</p>
+<h3 id="alternatives">Alternatives</h3>
+<p>Servos can target a specific location, but often has limited range and requires calibration after mounting. An alternative would be to use stepper motors. These motors run on two inductors. They have hundreds of clicks per rotation and each pulse will move the stepper one click in a specified direction. This allows easier calibration and better synchronization at the cost of torque and speed.</p>
+<p>I have actually implemented a class for this. However, my team never managed to get the stepper motors working without burning them out. In addition, we lacked funds to get small steppers with sufficient torque.</p>
 <h3 id="code-1">Code</h3>
+<p>There are two classes, one for servos and another for steppers. The <code>Stepper</code> class has not been tested extensively. Some functions in the <code>Servo</code> class are not used. They were written when I was testing different gait generation methods. However, they do work as expected and can be useful.</p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Concept</th>
+<th>Implementation(s)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Servo</td>
+<td><code>agility.main.Servo</code></td>
+</tr>
+<tr class="even">
+<td align="left">Stepper</td>
+<td><code>agility.main.Stepper</code></td>
+</tr>
+</tbody>
+</table>
 <h1 id="mini-maestro">Mini Maestro</h1>
 <h3 id="protocol">Protocol</h3>
 <h3 id="usc">USC</h3>
@@ -290,7 +324,7 @@ x_{3} &amp; y_{3} &amp; z_{3}
 <p><span class="math display">\[z_x = \frac{c_x g - c_z a_x}{g}\]</span></p>
 <p>This also applies for <span class="math inline">\(z_y\)</span>. Again, this is just math. Actual implementation may require significant tweaking.</p>
 <h3 id="code-3">Code</h3>
-<p>Multiple classes are involved in motion. They are written in Python. Functions that implement one of the aforementioned concepts are listed here.</p>
+<p>Multiple classes are involved in motion. A few functions in the <code>Agility</code> class are outdated and were used for testing. Other functions which relate to the head are discussed later.</p>
 <table>
 <thead>
 <tr class="header">
@@ -334,6 +368,7 @@ x_{3} &amp; y_{3} &amp; z_{3}
 <h3 id="detection">Detection</h3>
 <h3 id="slam">SLAM</h3>
 <h3 id="optimization">Optimization</h3>
+<h3 id="head">Head</h3>
 <h3 id="code-4">Code</h3>
 <h1 id="audio">Audio</h1>
 <h3 id="concepts">Concepts</h3>
