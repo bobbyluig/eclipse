@@ -31,6 +31,7 @@
         </ul>
         <ul>
         <li><a href="#introduction">Introduction</a><ul>
+        <li><a href="#goal">Goal</a></li>
         <li><a href="#warnings">Warnings</a></li>
         <li><a href="#read-me">Read Me</a></li>
         <li><a href="#corrections">Corrections</a></li>
@@ -52,13 +53,13 @@
         <li><a href="#servos">Servos</a><ul>
         <li><a href="#configuration">Configuration</a></li>
         <li><a href="#information">Information</a></li>
-        <li><a href="#servo-class">Servo (class)</a></li>
+        <li><a href="#code-1">Code</a></li>
         </ul></li>
         <li><a href="#mini-maestro">Mini Maestro</a><ul>
         <li><a href="#protocol">Protocol</a></li>
         <li><a href="#usc">USC</a></li>
         <li><a href="#synchronization">Synchronization</a></li>
-        <li><a href="#code-1">Code</a></li>
+        <li><a href="#code-2">Code</a></li>
         </ul></li>
         <li><a href="#movement">Movement</a><ul>
         <li><a href="#vectors">Vectors</a></li>
@@ -69,32 +70,32 @@
         <li><a href="#static-optimization">Static Optimization</a></li>
         <li><a href="#pose-optimization">Pose Optimization</a></li>
         <li><a href="#dynamic-optimization">Dynamic Optimization</a></li>
-        <li><a href="#code-2">Code</a></li>
+        <li><a href="#code-3">Code</a></li>
         </ul></li>
         <li><a href="#vision">Vision</a><ul>
         <li><a href="#tracking">Tracking</a></li>
         <li><a href="#detection">Detection</a></li>
         <li><a href="#slam">SLAM</a></li>
         <li><a href="#optimization">Optimization</a></li>
-        <li><a href="#code-3">Code</a></li>
+        <li><a href="#code-4">Code</a></li>
         </ul></li>
         <li><a href="#audio">Audio</a><ul>
         <li><a href="#concepts">Concepts</a></li>
-        <li><a href="#lykos">Lykos</a></li>
+        <li><a href="#code-5">Code</a></li>
         </ul></li>
         <li><a href="#automation">Automation</a><ul>
         <li><a href="#synthesis">Synthesis</a></li>
         <li><a href="#decision-making">Decision Making</a></li>
-        <li><a href="#code-4">Code</a></li>
+        <li><a href="#code-6">Code</a></li>
         </ul></li>
         <li><a href="#communication">Communication</a><ul>
         <li><a href="#workers">Workers</a></li>
         <li><a href="#networking">Networking</a></li>
-        <li><a href="#cerebral-class">Cerebral (class)</a></li>
+        <li><a href="#code-7">Code</a></li>
         </ul></li>
         <li><a href="#control">Control</a><ul>
         <li><a href="#considerations-1">Considerations</a></li>
-        <li><a href="#code-5">Code</a></li>
+        <li><a href="#code-8">Code</a></li>
         </ul></li>
         <li><a href="#material-selection">Material Selection</a><ul>
         <li><a href="#body">Body</a></li>
@@ -118,12 +119,14 @@
             <div class="span9">
             <h1 id="introduction">Introduction</h1>
 <p>Are you trying to build a quadruped robot? Are you trying to understand code in this repository? If you answered yes to either question, you are in the right place. This tutorial will provide a comprehensive guide for building a quadruped robot while providing details on how important pieces of code in this repository function and relate to their conceptual counterparts.</p>
+<h3 id="goal">Goal</h3>
+<p>The goal is to design a quadruped robot that looks like a dog. A lot of tutorials explain how to build a spider-looking quadruped. However, the concepts are exactly the same. This tutorial is intended to cover various mathematically and engineering concepts used in constructing the robot. It does not teach you how to build a robot step by step, nor should it be seen as such.</p>
 <h3 id="warnings">Warnings</h3>
 <p>This guide is in no way comprehensive. I am not accountable for errors in this document. Don't let this guide prevent you from thinking of new designs, concepts, and algorithms. Remember that I am no expert on this subject. Your ideas could very well be better than mine. At the same time, don't attempt to reinvent the wheel. If something is efficient and works for your purpose, use it.</p>
 <p>&quot;Premature optimization is the root of all evil.&quot; Test and measure. Don't guess.</p>
 <h3 id="read-me">Read Me</h3>
 <p>While researching, I chanced upon the <em>Springer Handbook of Robotics</em>. Before proceeding, read section 16.5 of the book found <a href="http://home.deib.polimi.it/gini/robot/docs/legged.pdf">here</a>. If you are serious about robotics, I recommend that you find this book in the library or get an eBook. This book basically covers everything you need to know about advanced robotics and even provides historical background. You probably won't understand everything in this literature. That is completely okay. This is just an introduction.</p>
-<p>You should also read through the <a href="https://github.com/bobbyluig/Eclipse/raw/master/docs/cdr/SPS.pdf">SPS</a> and <a href="https://github.com/bobbyluig/Eclipse/raw/master/docs/cdr/POC.pdf">POC</a> documents. They provide comprehensive details on our robots. This tutorial goes in depth on what is not already covered by those documents.</p>
+<p>You should also read through the <a href="https://github.com/bobbyluig/Eclipse/raw/master/docs/cdr/SPS.pdf">SPS</a> and <a href="https://github.com/bobbyluig/Eclipse/raw/master/docs/cdr/POC.pdf">POC</a> documents. They provide comprehensive details on our robots. This tutorial goes in depth on what is not covered by those documents. You will be confused if you do not at least skim through them.</p>
 <h3 id="corrections">Corrections</h3>
 <p>I will put errors in the documents here as I find them.</p>
 <ul>
@@ -154,19 +157,51 @@
 <h3 id="alignment">Alignment</h3>
 <h3 id="considerations">Considerations</h3>
 <h1 id="kinematics">Kinematics</h1>
-<p>This is perhaps the most math intensive and important portion of the project.</p>
+<p>This is perhaps the most math intensive and important portion of the project. The goal is to create two equations. One equation will take angles and output a point. The other will do the reverse. Sounds easy? It's not.</p>
 <h3 id="forward-kinematics">Forward Kinematics</h3>
+<p>Forward kinematics (FK) is kind of like taking a derivative. There can be a lot of steps and it can get messy, but it's always possible. For the purpose of this tutorial, I will assume that each leg has three DOF, which is pretty standard. Each servo will have a <span class="math inline">\(\theta\)</span> value. The forward kinematic function <span class="math inline">\(f(\theta_1, \theta_2, \theta_3)\)</span> should output <span class="math inline">\((x, y, z)\)</span>, where the end effector is given the angles.</p>
+<p>If you are good at trigonometry, FK can be solved starting from the servo closest to the body. An example can be seen <a href="http://www.stagrobotics.com/stag.html">here</a>. However, it does not have to be solved that way. You can also apply <a href="http://inside.mines.edu/fs_home/gmurray/ArbitraryAxisRotation/">rotational matrices</a> when they are convenient to use. I've generalized the use of rotation matrices to be:</p>
+<ol style="list-style-type: decimal">
+<li>Check to see if you can ignore any segments. This can happen when the line formed by the segment is the axis of rotation for a servo attached to that segment.</li>
+<li>Try to reduce the problem to a 2D one and use basic trignometry to consume one or more <span class="math inline">\(\theta\)</span>s.</li>
+<li>Apply rotational matrices via <a href="https://en.wikipedia.org/wiki/Matrix_multiplication">matrix multiplcation</a> for any servos rotating about convenient axes.</li>
+<li>Use trigonometry to solve for any remaining servos.</li>
+</ol>
+<p>Use whichever method you find to be easier. Apply rotation matrices can be confusing. However, you will need to understand 3D trignomoetry to do it the other way. Remember -- draw a diagram, take it slow, and test your solution.</p>
 <h3 id="inverse-kinematics">Inverse Kinematics</h3>
+<p>Inverse kinematics (IK) is kind of like performing an integral. It involves some intuition and might not always be possible. Also, like an indefinite integral, more than one solution can exist. Be sure to solve the FK problem before approaching this one.</p>
+<p>IK should be solved from the servo furthest from the body. The last angle generally involves some form of the law of cosines. Once you solve one angle, see if you can plug it into any of the equations obtained from forward kinematics. The last part is mostly just intuition. You'll need to draw diagrams and model the leg somehow to help you visualize a solution. Take it slow. Solving the IK for my robot took me 2 weeks.</p>
+<p>Remember that multiple solutions generally will exist. Anything involving the law of cosines can vary by <span class="math inline">\(\pi\)</span>. Other trignometric expressions can involve solutions with different signs. Be aware of this. Try to design the program to find all possible solutoins. Write good tests that chain the working FK equations with the IK equations to rigorously test correctness.</p>
+<p>There are software which you can use. If you do manage to obtain a non-manual solution, be sure that it can be evaulated very quickly.</p>
 <h3 id="code">Code</h3>
+<p>Only one class controls the kinematics modules. The evaluation speed must be very fast or else real time performance will not be achieved.</p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Concept</th>
+<th>Implementation(s)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Forward Kinematics</td>
+<td><code>finesse.eclipse.Finesse.forward_pack</code>, <code>finesse.paragon.Finesse.forward_pack</code></td>
+</tr>
+<tr class="even">
+<td align="left">Inverse Kinematics</td>
+<td><code>finesse.eclipse.Finesse.inverse_pack</code>, <code>finesse.paragon.Finesse.inverse_pack</code></td>
+</tr>
+</tbody>
+</table>
 <h1 id="servos">Servos</h1>
 <h3 id="configuration">Configuration</h3>
 <h3 id="information">Information</h3>
-<h3 id="servo-class">Servo (class)</h3>
+<h3 id="code-1">Code</h3>
 <h1 id="mini-maestro">Mini Maestro</h1>
 <h3 id="protocol">Protocol</h3>
 <h3 id="usc">USC</h3>
 <h3 id="synchronization">Synchronization</h3>
-<h3 id="code-1">Code</h3>
+<h3 id="code-2">Code</h3>
 <h1 id="movement">Movement</h1>
 <p>We want to translate user inputs of rotational motion (<span class="math inline">\(rad / sec\)</span>) and forward motion (<span class="math inline">\(cm / sec\)</span>) to physical robot motion. The first challenge is to use <span class="math inline">\(d\theta\)</span>, the amount of rotation per cycle, and <span class="math inline">\(dv\)</span>, the amount of forward motion per cycle, to generate proper gaits. The second challenge is to perform various gait optimizations to ensure that the robot walks smoothly. Note: this section is very math heavy.</p>
 <h3 id="vectors">Vectors</h3>
@@ -213,7 +248,7 @@
 </div>
 <p>First, let's define a few things. Let <span class="math inline">\((c_x, c_y)\)</span> be the COM of the robot in its current position. This can be simplified to a static value or computed using the positions of the legs. Let <span class="math inline">\((x_1, y_1)\)</span> and <span class="math inline">\((x_2, y_2)\)</span> be the locations of two support legs across from each other. In the image above, they would be legs 0 and 3.</p>
 <p>The shortest path to the inside of the triangle is the perpendicular to the slope formed by the two support legs. We need to find where on the line is the closest to the COM. To do this, Alastair derived this equation, which took me a while to understand. It is basically a lot of <span class="math inline">\(y = mx + b\)</span> manipulations. Let <span class="math inline">\((x_0, y_0)\)</span> be the point on the line we are interested in.</p>
-<p><span class="math display">\[m = \frac{(y_2 - y_1)}{(x_2 - x_1)}\]</span> <span class="math display">\[b = y_1 - m x_1\]</span> <span class="math display">\[x_0 = \frac{x_0 + m y_0 - mk}{m^2 + 1}\]</span> <span class="math display">\[y_0 = m x_0 + b\]</span></p>
+<p><span class="math display">\[m = \frac{(y_2 - y_1)}{(x_2 - x_1)}\]</span> <span class="math display">\[b = y_1 - m x_1\]</span> <span class="math display">\[x_0 = \frac{x_0 + m y_0 - mb}{m^2 + 1}\]</span> <span class="math display">\[y_0 = m x_0 + b\]</span></p>
 <p>Do the order of the points matter? No. If you look at the code, it may appear that it does. However, the order is for other optimizations. If working with the trot gait, this is enough because the COM simply has to be on the line. I use the variable <span class="math inline">\(\delta\)</span> to indicate how much the body must move.</p>
 <p><span class="math display">\[\delta_{x,trot} = x_0 - c_x\]</span> <span class="math display">\[\delta_{y,trot} = y_0 - c_y\]</span></p>
 <p>Optimally, this would work for crawl as well. However, it would be even better to move the COM further into the support triangle. I used <span class="math inline">\(\sigma\)</span> to represent the safety margin. Rather than adjusting to a point on the line, the robot will move into the support triangle an aditional <span class="math inline">\(\sigma\)</span>. There is a flaw in this because <span class="math inline">\(\sigma\)</span> is <strong>not</strong> the stability margin. When close to the sides of the triangle, it may be possible that moving <span class="math inline">\(\sigma\)</span> may cause the stability margin to be less than <span class="math inline">\(\sigma\)</span> on another side. It is even possible that the adjustment can throw the COM outside of the support triangle. I have not written in any protection for this as it usually is not a problem. However, this is definitely something to think about for improving motion.</p>
@@ -254,7 +289,7 @@ x_{3} &amp; y_{3} &amp; z_{3}
 <p>An IMU can be fused to find the orientation of the robot. Combine this with raw acceleration data and you can find out if the robot is falling or about to fall. Acceleration is more useful in computing the ZMP in real time. If you do manage to get this data, you can use it to compute the ZMP and dynamically adjust the robot during motion. Assuming the COM remains at a constant height, then the ZMP, <span class="math inline">\(z\)</span>, can be computed using the COM <span class="math inline">\((c_x, c_y, c_z)\)</span> and the acceleration of the COM <span class="math inline">\((a_x, a_y, a_z)\)</span>.</p>
 <p><span class="math display">\[z_x = \frac{c_x g - c_z a_x}{g}\]</span></p>
 <p>This also applies for <span class="math inline">\(z_y\)</span>. Again, this is just math. Actual implementation may require significant tweaking.</p>
-<h3 id="code-2">Code</h3>
+<h3 id="code-3">Code</h3>
 <p>Multiple classes are involved in motion. They are written in Python. Functions that implement one of the aforementioned concepts are listed here.</p>
 <table>
 <thead>
@@ -299,21 +334,21 @@ x_{3} &amp; y_{3} &amp; z_{3}
 <h3 id="detection">Detection</h3>
 <h3 id="slam">SLAM</h3>
 <h3 id="optimization">Optimization</h3>
-<h3 id="code-3">Code</h3>
+<h3 id="code-4">Code</h3>
 <h1 id="audio">Audio</h1>
 <h3 id="concepts">Concepts</h3>
-<h3 id="lykos">Lykos</h3>
+<h3 id="code-5">Code</h3>
 <h1 id="automation">Automation</h1>
 <h3 id="synthesis">Synthesis</h3>
 <h3 id="decision-making">Decision Making</h3>
-<h3 id="code-4">Code</h3>
+<h3 id="code-6">Code</h3>
 <h1 id="communication">Communication</h1>
 <h3 id="workers">Workers</h3>
 <h3 id="networking">Networking</h3>
-<h3 id="cerebral-class">Cerebral (class)</h3>
+<h3 id="code-7">Code</h3>
 <h1 id="control">Control</h1>
 <h3 id="considerations-1">Considerations</h3>
-<h3 id="code-5">Code</h3>
+<h3 id="code-8">Code</h3>
 <h1 id="material-selection">Material Selection</h1>
 <h3 id="body">Body</h3>
 <h3 id="legs">Legs</h3>

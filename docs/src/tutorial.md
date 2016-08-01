@@ -6,6 +6,10 @@
 
 Are you trying to build a quadruped robot? Are you trying to understand code in this repository? If you answered yes to either question, you are in the right place. This tutorial will provide a comprehensive guide for building a quadruped robot while providing details on how important pieces of code in this repository function and relate to their conceptual counterparts.
 
+### Goal
+
+The goal is to design a quadruped robot that looks like a dog. A lot of tutorials explain how to build a spider-looking quadruped. However, the concepts are exactly the same. This tutorial is intended to cover various mathematically and engineering concepts used in constructing the robot. It does not teach you how to build a robot step by step, nor should it be seen as such.
+
 ### Warnings
 
 This guide is in no way comprehensive. I am not accountable for errors in this document. Don't let this guide prevent you from thinking of new designs, concepts, and algorithms. Remember that I am no expert on this subject. Your ideas could very well be better than mine. At the same time, don't attempt to reinvent the wheel. If something is efficient and works for your purpose, use it.
@@ -16,7 +20,7 @@ This guide is in no way comprehensive. I am not accountable for errors in this d
 
 While researching, I chanced upon the *Springer Handbook of Robotics*. Before proceeding, read section 16.5 of the book found [here](http://home.deib.polimi.it/gini/robot/docs/legged.pdf). If you are serious about robotics, I recommend that you find this book in the library or get an eBook. This book basically covers everything you need to know about advanced robotics and even provides historical background. You probably won't understand everything in this literature. That is completely okay. This is just an introduction.
 
-You should also read through the [SPS](https://github.com/bobbyluig/Eclipse/raw/master/docs/cdr/SPS.pdf) and [POC](https://github.com/bobbyluig/Eclipse/raw/master/docs/cdr/POC.pdf) documents. They provide comprehensive details on our robots. This tutorial goes in depth on what is not already covered by those documents. 
+You should also read through the [SPS](https://github.com/bobbyluig/Eclipse/raw/master/docs/cdr/SPS.pdf) and [POC](https://github.com/bobbyluig/Eclipse/raw/master/docs/cdr/POC.pdf) documents. They provide comprehensive details on our robots. This tutorial goes in depth on what is not covered by those documents. You will be confused if you do not at least skim through them.
 
 ### Corrections
 
@@ -58,13 +62,39 @@ Root
 
 # Kinematics
 
-This is perhaps the most math intensive and important portion of the project.
+This is perhaps the most math intensive and important portion of the project. The goal is to create two equations. One equation will take angles and output a point. The other will do the reverse. Sounds easy? It's not.
 
 ### Forward Kinematics
 
+Forward kinematics (FK) is kind of like taking a derivative. There can be a lot of steps and it can get messy, but it's always possible. For the purpose of this tutorial, I will assume that each leg has three DOF, which is pretty standard. Each servo will have a $\theta$ value. The forward kinematic function $f(\theta_1, \theta_2, \theta_3)$ should output $(x, y, z)$, where the end effector is given the angles.
+
+If you are good at trigonometry, FK can be solved starting from the servo closest to the body. An example can be seen [here](http://www.stagrobotics.com/stag.html). However, it does not have to be solved that way. You can also apply [rotational matrices](http://inside.mines.edu/fs_home/gmurray/ArbitraryAxisRotation/) when they are convenient to use. I've generalized the use of rotation matrices to be:
+
+1. Check to see if you can ignore any segments. This can happen when the line formed by the segment is the axis of rotation for a servo attached to that segment.
+2. Try to reduce the problem to a 2D one and use basic trignometry to consume one or more $\theta$s.
+3. Apply rotational matrices via [matrix multiplcation](https://en.wikipedia.org/wiki/Matrix_multiplication) for any servos rotating about convenient axes.
+4. Use trigonometry to solve for any remaining servos.
+
+Use whichever method you find to be easier. Apply rotation matrices can be confusing. However, you will need to understand 3D trignomoetry to do it the other way. Remember -- draw a diagram, take it slow, and test your solution.
+
 ### Inverse Kinematics
 
+Inverse kinematics (IK) is kind of like performing an integral. It involves some intuition and might not always be possible. Also, like an indefinite integral, more than one solution can exist. Be sure to solve the FK problem before approaching this one. 
+
+IK should be solved from the servo furthest from the body. The last angle generally involves some form of the law of cosines. Once you solve one angle, see if you can plug it into any of the equations obtained from forward kinematics. The last part is mostly just intuition. You'll need to draw diagrams and model the leg somehow to help you visualize a solution. Take it slow. Solving the IK for my robot took me 2 weeks.
+
+Remember that multiple solutions generally will exist. Anything involving the law of cosines can vary by $\pi$. Other trignometric expressions can involve solutions with different signs. Be aware of this. Try to design the program to find all possible solutoins. Write good tests that chain the working FK equations with the IK equations to rigorously test correctness.
+
+There are software which you can use. If you do manage to obtain a non-manual solution, be sure that it can be evaulated very quickly.
+
 ### Code
+
+Only one class controls the kinematics modules. The evaluation speed must be very fast or else real time performance will not be achieved.
+
+Concept|Implementation(s)
+:---|---
+Forward Kinematics | `finesse.eclipse.Finesse.forward_pack`, `finesse.paragon.Finesse.forward_pack`
+Inverse Kinematics | `finesse.eclipse.Finesse.inverse_pack`, `finesse.paragon.Finesse.inverse_pack`
 
 # Servos
 
@@ -72,7 +102,7 @@ This is perhaps the most math intensive and important portion of the project.
 
 ### Information
 
-### Servo (class)
+### Code
 
 # Mini Maestro
 
@@ -168,7 +198,7 @@ The shortest path to the inside of the triangle is the perpendicular to the slop
 
 $$m = \frac{(y_2 - y_1)}{(x_2 - x_1)}$$
 $$b = y_1 - m x_1$$
-$$x_0 = \frac{x_0 + m y_0 - mk}{m^2 + 1}$$
+$$x_0 = \frac{x_0 + m y_0 - mb}{m^2 + 1}$$
 $$y_0 = m x_0 + b$$
 
 Do the order of the points matter? No. If you look at the code, it may appear that it does. However, the order is for other optimizations. If working with the trot gait, this is enough because the COM simply has to be on the line. I use the variable $\delta$ to indicate how much the body must move.
@@ -260,7 +290,7 @@ Gait Types|	`agility.gait.Dynamic.generate`
 Gait Generation| `agility.gait.Linear.interpolate`, `agility.gait.Dynamic.get`
 Gait Execution| `agility.main.Agility.execute_frames`, `agility.main.Agility.execute_long`, `agility.main.Agility.execute_forever`, `agility.main.Agility.execute_angles`, `agility.main.Agility.execute_variable`
 Center of Mass| `agility.main.Body.rotation_matrix`, `agility.main.Body.tilt_body`, `agility.main.Body.closest`, `agility.main.Body.adjust_crawl`, `agility.main.Body.adjust_trot`
-Static Optimization| `agility.main.Agility.prepare_frames`, `agility.main.Agility.prepare_gait`, `agility.main.Agility.prepare_smoothly`
+Static Optimization | `agility.main.Agility.prepare_frames`, `agility.main.Agility.prepare_gait`, `agility.main.Agility.prepare_smoothly`
 Pose Optimization| `agility.main.Agility.target_pose`, `agility.main.Agility.get_pose`
 
 # Vision
@@ -279,7 +309,7 @@ Pose Optimization| `agility.main.Agility.target_pose`, `agility.main.Agility.get
 
 ### Concepts
 
-### Lykos
+### Code
 
 # Automation
 
@@ -295,7 +325,7 @@ Pose Optimization| `agility.main.Agility.target_pose`, `agility.main.Agility.get
 
 ### Networking
 
-### Cerebral (class)
+### Code
 
 # Control
 
