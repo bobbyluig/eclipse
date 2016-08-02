@@ -379,68 +379,171 @@ Pose Optimization| `agility.main.Agility.target_pose`, `agility.main.Agility.get
 
 # Vision
 
+I worked on the vision system for nearly a semester before beginning on walking. To be honest, I don't understand a lot the algorithms used to make everything work. I just know that it works. A lot more details can be seen in the SPS and POC documents.
+
 ### Tracking
+
+The mission specified tracking of randomly moving prey. I looked at various tracking algorithms and found that most of them were not open source. I found implementation of two correlation-based trackers that were fast and worked well. In the end, I chose to use the [Discriminative Scale Space Tracker](http://www.cvl.isy.liu.se/en/research/objrec/visualtracking/scalvistrack/index.html) (DSST). Near mission day however, it did not work due to excessive shaking during walking. This is not very difficult to fix but we lacked the time to redesign the head. Thus, I just gave up on it.
+
+During testing, the tracker worked very well. I also implemented recovery mechanisms so that the tracker can automatically determine if an object is obstructed or out of view. Tracking is also learning-based. It basically took some template images and stored them. If an object is lost, it would apply detection (described below) to propose object locations to DSST.
 
 ### Detection
 
+I used a template-based detection because it assisted with tracking and learning. The implementation was based on the [LINE2D](http://far.in.tum.de/pub/hinterstoisser2011pami/hinterstoisser2011pami.pdf) algorithm and OpenCV's code for a 3D version of the algorithm. The algorithm could match over 2,000 templates in real time, which is at least an order of magnitude faster than OpenCV's conventional fourier-based template matching. It could also detect multiple objects with one template. 
+
+By itself, it is not particularly useful. However, when combined with tracking and learning, it can be used to increase the robot's awareness of its surroundings.
+
 ### SLAM
+
+We lacked funds to buy sophisticated SLAM equipment. I used [ORB-SLAM2](https://github.com/raulmur/ORB_SLAM2), an accurate single camera SLAM system that worked very well. However, it required a lot of RAM and processing power to run in real time. Thus, it had to be done on the command center. SLAM never made it to mission day, since I lacked testing time. 
+
+However, I did manage to make functional Python bindings. There is a memory leak issue with the vocabulary system but it shouldn't affect actual performance as the vocabulary is only loaded once. ORB-SLAM was designed to work with one camera. I tried to tweak the algorithm to allow multiple robots to simultaneous contribute to the global map -- it did not really work. If you have time, definitely look into this SLAM system. I believe it has a lot of potential.
 
 ### Optimization
 
+Getting vision to run in real time on a computer like a Raspberry Pi is not easy in any way. All of the vision is written in C++ and a lot of it is optimized using SSE and NEON intrinsics. I took the pains to do that already. This means that tracking and detection can work in real time on the Raspberry Pi 3 or ODROID-C2!
+
+I'm sure a lot of other optimizations are possible. However, be warned that you're going to basically be writing assembly at this point. It might not be nice like Python.
+
 ### Head
 
+This is one portion of the robot that I actually worked out pretty nicely, so I have more to say about it. The goal was to get the head to turn appropriately and follow objects. Be warned, I am no expert on optics.
+
+![](assets/head.png)
+
+As you can see in the image, a camera has some field of view (FOV). The angle is what we're interested in. You can measure this angle manually. Do not read the FOV off the specification sheet. It can be inaccurate. The idea is that given an object center on an image of a certain size, to determine how many degrees to turn the camera so that the object is a the center.
+
+The math is easily understandable in the code, so I do not need to explain it here. However, you have to notice a very important feature. The FOV is a triangle. Pretend that the object of interest lies somewhere on the blue line. Regardless of how far it is from the camera, it's position would not be different on the screen. The center of the object would be at the same location whether you are interested in the red line or the black line. Thus, a good angle approximation would simply involve a ratio of the center of the object to the width of the image captured with the measured FOV.
+
+Obviously, this is only an approxmation. Since obtaining new images is relatively cheap, this algorithm can be fed through a [PID](https://en.wikipedia.org/wiki/PID_controller) loop to obtain good results.
+
 ### Code
+
+A lot of the vision modules are written in C++ and forked from other projects. I have developed Python bindings for all of them using Boost Python.
+
+Concept|Implementation(s)
+:---|---
+Tracking| `theia.main.Oculus`, `theia.tracker.DSST`
+Detection|	`theia.matcher.LineMatcher`
+SLAM | `theia.slam.python.test`, `pyslam`
+Camera | `theia.eye.Eye`
+Head | `agility.main.Agility.look_at`, `agility.main.Agility.scan`, ``agility.main.Agility.move_head`
 
 # Audio
 
+Originally, the mission specified that a two legged walker needed to detect the howl in "Werewolves of London". I wrote the code for it, eventhough it was taken out of the final mission.
+
 ### Concepts
 
-### Code
-
-# Automation
-
-### Synthesis
-
-### Decision Making
+Most of the math is detailed in the SPS document. Implementation can be done using `pyaudio`. Some webcams come with integrated microphones, which work well in detecting the frequency of music. The rest is pretty self-explanatory.
 
 ### Code
+
+All of the code is hosted in one class.
+
+Concept|Implementation(s)
+:---|---
+Audio| `lykos.apollo.Apollo`
 
 # Communication
 
+Communication is crucial as there are many components in the robot that must work together. In addition, the robots must be aware of each other and the person in command.
+
 ### Workers
+
+Python is not very memory efficient. It is also not a good idea to bunch everything into one process, because a single error can cause the entire system to crash. In addition, it gets difficult to synchronize everything. I worked around this by spawning multiple worker processes. Each process was thread-safe, and accepted remote calls. Any process can call functions from any other process and get return values. This type of remove proxy can be implemented very easily using `Pyro4`.
 
 ### Networking
 
-### Code
-
-# Control
-
-### Considerations
-
-### Code
-
-# Material Selection
-
-### Body
-
-### Legs
-
-# Component Selection
-
-### Servos
-
-### Steppers
-
-### Microcontroller
-
-### Battery
+Python 3.5 comes with the `asyncio` module. The same concept of remote calls can be applied by using asynchronous processing with `Crossbar` and `autobahn`. One main networking process is spawned. This process can call remote functions on any one of the worker processes and recieve calls made from the command center. Due to the versatility of `Crossbar`, the command center does not have to be in Python. It can written natively in JavaScript. This type of remote procedure call and publish / subscribe model is detailed in the SPS and POC.
 
 ### Camera
 
-# Electrical
+The camera should be running on a stream server. The reason is so that multiple resources, including external systems, can access the stream without blocking each other. OpenCV supports reading MJPEG streams and I've written a simple threaded camera server in Python.
 
-### Amperage Draw
+### Code
 
-### Safety
+A lot of the code involved in communication embed a lot other modules. These are basically the top layer of the framework.
+
+Concept|Implementation(s)
+:---|---
+Workers | `cerebral.pack*.worker1`, `cerebral.pack*.worker3`
+Networking | `cerebral.pack*.main`
+Camera | `cerebral.pack*.worker2`
+
+# Automation
+
+The original intention was for the robot to be fully autonomous. However, this could not happen because the vision system failed and I lacked testing time. However, I will provide some thoughts here on what I've tried.
+
+### Synthesis
+
+In order to automate, motion and vision must be linked together. The basic idea is to obtain some vision data, decide the desired motion, and repeat. It works well, but I have not been able to optimize the algorithm to function fully on the actual robot. In addition, there must be away to accept external overrides efficiently. Think about what functions are blocking and whether it will prevent other functions from being executed at the same time.
+
+### Decision Making
+
+The most basic decision is where to move the robot. In particular, what forward and rotational speeds are desired. This type of decision making can be done by using vision data in a PID loop. Other types of decision making literally involve a bunch of if statements. I have personally not gone any further than the basic motion decision making, although obtaining the required data to make the decision is the harder part. A lot of testing and tweaking of parmeters may be required.
+
+### Code
+
+Much of the implementation is relatively incomplete. Feel free to improve them if you have time.
+
+Concept|Implementation(s)
+:---|---
+Synthesis | `cerebral.tests.worker3._follow`
+Decision Making | `ares.main.Ares.compute_vector`
+
+# Control
+
+How to design a control interface for the robot is really open ended. However, the easiest method is probably to go with a web-based control system. It looks nice and can be developed quickly.
+
+### Considerations
+
+When developing the control system, be sure to ensure emergency shutoff systems in case something goes wrong. Try to find a library that is natively supported by the communication scheme you choose. If using `Crossbar`, I would recomend using the `autobahn` JavaScript package. It works very well. Everything else can be seen in the code.
+
+### Code
+
+In order to use the front end interfaces `phi`, you first need to install [Node.js](https://nodejs.org/en/) and use it get all dependencies.
+
+```bash
+cd src/zeus/phi
+npm install
+
+gulp build
+gulp watch
+```
+
+After building, opening up `index.html` in a browser should show the command interface. However, note that the system was only tested in Chrome and voice recognition and speech synthesis are exculsive to Chrome at the moment.
+
+# Material Selection
+
+I was not in charge of material selection. However, I have a few observations to note.
+
+### Body
+
+The body material is not too important. Just make sure its cheap and you can easily drill holes into it. However, the material should be strong enough that it does not bend or twist. If the body bends, it can mess up kinematics computations for the legs and throw off the COM.
+
+### Legs
+
+Surprisingly, 3D-printed material works well for legs! The only problem is the screws. We ended up just using nuts. Trying to screw directly into plastic is not a good idea. We also tried using sheet metal. However, the bends must be accurate or else the legs will be very tilted and inaccurate.
+
+# Component Selection
+
+There are a lot of different components that can be used for the robot. However, some are better than others.
+
+### Servos
+
+We used the [DSS-M15S](http://www.dfrobot.com/index.php?route=product/product&path=156_51_108&product_id=1177#.V5_uaTsrKUk) servos. They provide 270 degrees of rotation and provide a lot of torque. We were really bad at computing torque. However, definitely look for a servo with more than 10 kg*cm of torque. The 270 degree freedom was originally intended to allow the robot to flip itself over when it got on its back. In addition, we were supposed to build another transforming robot, which would definitely more than 180 degrees of freedom. Generally, 180 degrees servos are fine if you are only working with quadrupeds. Be sure to look carefully at the specification sheets for amperage draw and speed. 
+
+### Microcontroller
+
+We used the [Mini Maestro 18](https://www.pololu.com/product/1354) servo controller and the [ODROID-C2](http://www.hardkernel.com/main/products/prdt_info.php?g_code=G145457216438). Make sure that the computing device has a fast processor that supports NEON intrinsics if you want to use vision. Most ARM-A processor should work fine. The ODROID-C2 is great because it has 2 GB of RAM.
 
 ### Battery
+
+Servos drain a lot of amps. This is a problem if the computer is hooked up to the same battery. We had a problem where the network would randomly cut off and the robot would turn into a zombie. This is not surprising, because the wireless dongle actually draws some amperage. Measure and test to ensure that this does not happen to you. Optimally, have a separate battery for the onboard computer.
+
+Try to choose a rechargeable batter that can supply the necessary amperage and compute the runtime to ensure tha the robot does not die in 5 minutes. Also, monitor the battery voltage. Smart battery chargers will not charge over-discharged Li-Po batteries because it is dangerous. Never go below 3.0 volts per cell!
+
+### Camera
+
+Any USB webcam should work for most purposes. You don't need a high resolution camera because the computer cannot even process HD frames in real time. It is best if the camera can encode MJPEG using hardware as it will stress the CPU less. In addition, it should support [UVC](https://en.wikipedia.org/wiki/USB_video_device_class) if easy Linux compatibility is desired.

@@ -121,14 +121,15 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
         <li><a href="#concepts">Concepts</a></li>
         <li><a href="#code-5">Code</a></li>
         </ul></li>
-        <li><a href="#automation">Automation</a><ul>
-        <li><a href="#synthesis">Synthesis</a></li>
-        <li><a href="#decision-making">Decision Making</a></li>
-        <li><a href="#code-6">Code</a></li>
-        </ul></li>
         <li><a href="#communication-1">Communication</a><ul>
         <li><a href="#workers">Workers</a></li>
         <li><a href="#networking">Networking</a></li>
+        <li><a href="#camera">Camera</a></li>
+        <li><a href="#code-6">Code</a></li>
+        </ul></li>
+        <li><a href="#automation">Automation</a><ul>
+        <li><a href="#synthesis">Synthesis</a></li>
+        <li><a href="#decision-making">Decision Making</a></li>
         <li><a href="#code-7">Code</a></li>
         </ul></li>
         <li><a href="#control">Control</a><ul>
@@ -141,15 +142,9 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
         </ul></li>
         <li><a href="#component-selection">Component Selection</a><ul>
         <li><a href="#servos-1">Servos</a></li>
-        <li><a href="#steppers">Steppers</a></li>
         <li><a href="#microcontroller">Microcontroller</a></li>
         <li><a href="#battery">Battery</a></li>
-        <li><a href="#camera">Camera</a></li>
-        </ul></li>
-        <li><a href="#electrical">Electrical</a><ul>
-        <li><a href="#amperage-draw">Amperage Draw</a></li>
-        <li><a href="#safety">Safety</a></li>
-        <li><a href="#battery-1">Battery</a></li>
+        <li><a href="#camera-1">Camera</a></li>
         </ul></li>
         </ul>
         </div>
@@ -463,39 +458,167 @@ x_{3} &amp; y_{3} &amp; z_{3}
 </tbody>
 </table>
 <h1 id="vision">Vision</h1>
+<p>I worked on the vision system for nearly a semester before beginning on walking. To be honest, I don't understand a lot the algorithms used to make everything work. I just know that it works. A lot more details can be seen in the SPS and POC documents.</p>
 <h3 id="tracking">Tracking</h3>
+<p>The mission specified tracking of randomly moving prey. I looked at various tracking algorithms and found that most of them were not open source. I found implementation of two correlation-based trackers that were fast and worked well. In the end, I chose to use the <a href="http://www.cvl.isy.liu.se/en/research/objrec/visualtracking/scalvistrack/index.html">Discriminative Scale Space Tracker</a> (DSST). Near mission day however, it did not work due to excessive shaking during walking. This is not very difficult to fix but we lacked the time to redesign the head. Thus, I just gave up on it.</p>
+<p>During testing, the tracker worked very well. I also implemented recovery mechanisms so that the tracker can automatically determine if an object is obstructed or out of view. Tracking is also learning-based. It basically took some template images and stored them. If an object is lost, it would apply detection (described below) to propose object locations to DSST.</p>
 <h3 id="detection">Detection</h3>
+<p>I used a template-based detection because it assisted with tracking and learning. The implementation was based on the <a href="http://far.in.tum.de/pub/hinterstoisser2011pami/hinterstoisser2011pami.pdf">LINE2D</a> algorithm and OpenCV's code for a 3D version of the algorithm. The algorithm could match over 2,000 templates in real time, which is at least an order of magnitude faster than OpenCV's conventional fourier-based template matching. It could also detect multiple objects with one template.</p>
+<p>By itself, it is not particularly useful. However, when combined with tracking and learning, it can be used to increase the robot's awareness of its surroundings.</p>
 <h3 id="slam">SLAM</h3>
+<p>We lacked funds to buy sophisticated SLAM equipment. I used <a href="https://github.com/raulmur/ORB_SLAM2">ORB-SLAM2</a>, an accurate single camera SLAM system that worked very well. However, it required a lot of RAM and processing power to run in real time. Thus, it had to be done on the command center. SLAM never made it to mission day, since I lacked testing time.</p>
+<p>However, I did manage to make functional Python bindings. There is a memory leak issue with the vocabulary system but it shouldn't affect actual performance as the vocabulary is only loaded once. ORB-SLAM was designed to work with one camera. I tried to tweak the algorithm to allow multiple robots to simultaneous contribute to the global map -- it did not really work. If you have time, definitely look into this SLAM system. I believe it has a lot of potential.</p>
 <h3 id="optimization">Optimization</h3>
+<p>Getting vision to run in real time on a computer like a Raspberry Pi is not easy in any way. All of the vision is written in C++ and a lot of it is optimized using SSE and NEON intrinsics. I took the pains to do that already. This means that tracking and detection can work in real time on the Raspberry Pi 3 or ODROID-C2!</p>
+<p>I'm sure a lot of other optimizations are possible. However, be warned that you're going to basically be writing assembly at this point. It might not be nice like Python.</p>
 <h3 id="head">Head</h3>
+<p>This is one portion of the robot that I actually worked out pretty nicely, so I have more to say about it. The goal was to get the head to turn appropriately and follow objects. Be warned, I am no expert on optics.</p>
+<div class="figure">
+<img src="assets/head.png" />
+
+</div>
+<p>As you can see in the image, a camera has some field of view (FOV). The angle is what we're interested in. You can measure this angle manually. Do not read the FOV off the specification sheet. It can be inaccurate. The idea is that given an object center on an image of a certain size, to determine how many degrees to turn the camera so that the object is a the center.</p>
+<p>The math is easily understandable in the code, so I do not need to explain it here. However, you have to notice a very important feature. The FOV is a triangle. Pretend that the object of interest lies somewhere on the blue line. Regardless of how far it is from the camera, it's position would not be different on the screen. The center of the object would be at the same location whether you are interested in the red line or the black line. Thus, a good angle approximation would simply involve a ratio of the center of the object to the width of the image captured with the measured FOV.</p>
+<p>Obviously, this is only an approxmation. Since obtaining new images is relatively cheap, this algorithm can be fed through a <a href="https://en.wikipedia.org/wiki/PID_controller">PID</a> loop to obtain good results.</p>
 <h3 id="code-4">Code</h3>
+<p>A lot of the vision modules are written in C++ and forked from other projects. I have developed Python bindings for all of them using Boost Python.</p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Concept</th>
+<th>Implementation(s)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Tracking</td>
+<td><code>theia.main.Oculus</code>, <code>theia.tracker.DSST</code></td>
+</tr>
+<tr class="even">
+<td align="left">Detection</td>
+<td><code>theia.matcher.LineMatcher</code></td>
+</tr>
+<tr class="odd">
+<td align="left">SLAM</td>
+<td><code>theia.slam.python.test</code>, <code>pyslam</code></td>
+</tr>
+<tr class="even">
+<td align="left">Camera</td>
+<td><code>theia.eye.Eye</code></td>
+</tr>
+<tr class="odd">
+<td align="left">Head</td>
+<td><code>agility.main.Agility.look_at</code>, <code>agility.main.Agility.scan</code>, `<code>agility.main.Agility.move_head</code></td>
+</tr>
+</tbody>
+</table>
 <h1 id="audio">Audio</h1>
+<p>Originally, the mission specified that a two legged walker needed to detect the howl in &quot;Werewolves of London&quot;. I wrote the code for it, eventhough it was taken out of the final mission.</p>
 <h3 id="concepts">Concepts</h3>
+<p>Most of the math is detailed in the SPS document. Implementation can be done using <code>pyaudio</code>. Some webcams come with integrated microphones, which work well in detecting the frequency of music. The rest is pretty self-explanatory.</p>
 <h3 id="code-5">Code</h3>
-<h1 id="automation">Automation</h1>
-<h3 id="synthesis">Synthesis</h3>
-<h3 id="decision-making">Decision Making</h3>
-<h3 id="code-6">Code</h3>
+<p>All of the code is hosted in one class.</p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Concept</th>
+<th>Implementation(s)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Audio</td>
+<td><code>lykos.apollo.Apollo</code></td>
+</tr>
+</tbody>
+</table>
 <h1 id="communication-1">Communication</h1>
+<p>Communication is crucial as there are many components in the robot that must work together. In addition, the robots must be aware of each other and the person in command.</p>
 <h3 id="workers">Workers</h3>
+<p>Python is not very memory efficient. It is also not a good idea to bunch everything into one process, because a single error can cause the entire system to crash. In addition, it gets difficult to synchronize everything. I worked around this by spawning multiple worker processes. Each process was thread-safe, and accepted remote calls. Any process can call functions from any other process and get return values. This type of remove proxy can be implemented very easily using <code>Pyro4</code>.</p>
 <h3 id="networking">Networking</h3>
-<h3 id="code-7">Code</h3>
-<h1 id="control">Control</h1>
-<h3 id="considerations-1">Considerations</h3>
-<h3 id="code-8">Code</h3>
-<h1 id="material-selection">Material Selection</h1>
-<h3 id="body">Body</h3>
-<h3 id="legs">Legs</h3>
-<h1 id="component-selection">Component Selection</h1>
-<h3 id="servos-1">Servos</h3>
-<h3 id="steppers">Steppers</h3>
-<h3 id="microcontroller">Microcontroller</h3>
-<h3 id="battery">Battery</h3>
+<p>Python 3.5 comes with the <code>asyncio</code> module. The same concept of remote calls can be applied by using asynchronous processing with <code>Crossbar</code> and <code>autobahn</code>. One main networking process is spawned. This process can call remote functions on any one of the worker processes and recieve calls made from the command center. Due to the versatility of <code>Crossbar</code>, the command center does not have to be in Python. It can written natively in JavaScript. This type of remote procedure call and publish / subscribe model is detailed in the SPS and POC.</p>
 <h3 id="camera">Camera</h3>
-<h1 id="electrical">Electrical</h1>
-<h3 id="amperage-draw">Amperage Draw</h3>
-<h3 id="safety">Safety</h3>
-<h3 id="battery-1">Battery</h3>
+<p>The camera should be running on a stream server. The reason is so that multiple resources, including external systems, can access the stream without blocking each other. OpenCV supports reading MJPEG streams and I've written a simple threaded camera server in Python.</p>
+<h3 id="code-6">Code</h3>
+<p>A lot of the code involved in communication embed a lot other modules. These are basically the top layer of the framework.</p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Concept</th>
+<th>Implementation(s)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Workers</td>
+<td><code>cerebral.pack*.worker1</code>, <code>cerebral.pack*.worker3</code></td>
+</tr>
+<tr class="even">
+<td align="left">Networking</td>
+<td><code>cerebral.pack*.main</code></td>
+</tr>
+<tr class="odd">
+<td align="left">Camera</td>
+<td><code>cerebral.pack*.worker2</code></td>
+</tr>
+</tbody>
+</table>
+<h1 id="automation">Automation</h1>
+<p>The original intention was for the robot to be fully autonomous. However, this could not happen because the vision system failed and I lacked testing time. However, I will provide some thoughts here on what I've tried.</p>
+<h3 id="synthesis">Synthesis</h3>
+<p>In order to automate, motion and vision must be linked together. The basic idea is to obtain some vision data, decide the desired motion, and repeat. It works well, but I have not been able to optimize the algorithm to function fully on the actual robot. In addition, there must be away to accept external overrides efficiently. Think about what functions are blocking and whether it will prevent other functions from being executed at the same time.</p>
+<h3 id="decision-making">Decision Making</h3>
+<p>The most basic decision is where to move the robot. In particular, what forward and rotational speeds are desired. This type of decision making can be done by using vision data in a PID loop. Other types of decision making literally involve a bunch of if statements. I have personally not gone any further than the basic motion decision making, although obtaining the required data to make the decision is the harder part. A lot of testing and tweaking of parmeters may be required.</p>
+<h3 id="code-7">Code</h3>
+<p>Much of the implementation is relatively incomplete. Feel free to improve them if you have time.</p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Concept</th>
+<th>Implementation(s)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Synthesis</td>
+<td><code>cerebral.tests.worker3._follow</code></td>
+</tr>
+<tr class="even">
+<td align="left">Decision Making</td>
+<td><code>ares.main.Ares.compute_vector</code></td>
+</tr>
+</tbody>
+</table>
+<h1 id="control">Control</h1>
+<p>How to design a control interface for the robot is really open ended. However, the easiest method is probably to go with a web-based control system. It looks nice and can be developed quickly.</p>
+<h3 id="considerations-1">Considerations</h3>
+<p>When developing the control system, be sure to ensure emergency shutoff systems in case something goes wrong. Try to find a library that is natively supported by the communication scheme you choose. If using <code>Crossbar</code>, I would recomend using the <code>autobahn</code> JavaScript package. It works very well. Everything else can be seen in the code.</p>
+<h3 id="code-8">Code</h3>
+<p>In order to use the front end interfaces <code>phi</code>, you first need to install <a href="https://nodejs.org/en/">Node.js</a> and use it get all dependencies.</p>
+<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">cd</span> src/zeus/phi
+<span class="kw">npm</span> install
+
+<span class="kw">gulp</span> build
+<span class="kw">gulp</span> watch</code></pre></div>
+<p>After building, opening up <code>index.html</code> in a browser should show the command interface. However, note that the system was only tested in Chrome and voice recognition and speech synthesis are exculsive to Chrome at the moment.</p>
+<h1 id="material-selection">Material Selection</h1>
+<p>I was not in charge of material selection. However, I have a few observations to note.</p>
+<h3 id="body">Body</h3>
+<p>The body material is not too important. Just make sure its cheap and you can easily drill holes into it. However, the material should be strong enough that it does not bend or twist. If the body bends, it can mess up kinematics computations for the legs and throw off the COM.</p>
+<h3 id="legs">Legs</h3>
+<p>Surprisingly, 3D-printed material works well for legs! The only problem is the screws. We ended up just using nuts. Trying to screw directly into plastic is not a good idea. We also tried using sheet metal. However, the bends must be accurate or else the legs will be very tilted and inaccurate.</p>
+<h1 id="component-selection">Component Selection</h1>
+<p>There are a lot of different components that can be used for the robot. However, some are better than others.</p>
+<h3 id="servos-1">Servos</h3>
+<p>We used the <a href="http://www.dfrobot.com/index.php?route=product/product&amp;path=156_51_108&amp;product_id=1177#.V5_uaTsrKUk">DSS-M15S</a> servos. They provide 270 degrees of rotation and provide a lot of torque. We were really bad at computing torque. However, definitely look for a servo with more than 10 kg*cm of torque. The 270 degree freedom was originally intended to allow the robot to flip itself over when it got on its back. In addition, we were supposed to build another transforming robot, which would definitely more than 180 degrees of freedom. Generally, 180 degrees servos are fine if you are only working with quadrupeds. Be sure to look carefully at the specification sheets for amperage draw and speed.</p>
+<h3 id="microcontroller">Microcontroller</h3>
+<p>We used the <a href="https://www.pololu.com/product/1354">Mini Maestro 18</a> servo controller and the <a href="http://www.hardkernel.com/main/products/prdt_info.php?g_code=G145457216438">ODROID-C2</a>. Make sure that the computing device has a fast processor that supports NEON intrinsics if you want to use vision. Most ARM-A processor should work fine. The ODROID-C2 is great because it has 2 GB of RAM.</p>
+<h3 id="battery">Battery</h3>
+<p>Servos drain a lot of amps. This is a problem if the computer is hooked up to the same battery. We had a problem where the network would randomly cut off and the robot would turn into a zombie. This is not surprising, because the wireless dongle actually draws some amperage. Measure and test to ensure that this does not happen to you. Optimally, have a separate battery for the onboard computer.</p>
+<p>Try to choose a rechargeable batter that can supply the necessary amperage and compute the runtime to ensure tha the robot does not die in 5 minutes. Also, monitor the battery voltage. Smart battery chargers will not charge over-discharged Li-Po batteries because it is dangerous. Never go below 3.0 volts per cell!</p>
+<h3 id="camera-1">Camera</h3>
+<p>Any USB webcam should work for most purposes. You don't need a high resolution camera because the computer cannot even process HD frames in real time. It is best if the camera can encode MJPEG using hardware as it will stress the CPU less. In addition, it should support <a href="https://en.wikipedia.org/wiki/USB_video_device_class">UVC</a> if easy Linux compatibility is desired.</p>
             </div>
     </div>
   </div>
