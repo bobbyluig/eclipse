@@ -34,10 +34,16 @@ Most detailed information about the robot and its design can be found in the `do
 
 ### The Code
 
-Lots of tears with lots code. I did not manage to get autonomous mode fully functional. However, I did make a cool command interface. For all programming related documentation, look no further than `docs/src`.
+Lots of tears with lots code. I did not manage to get autonomous mode fully functional. However, I did make a cool command interface. For all programming related documentation, look no further than `docs/src`. How good is the code? The GIF below tells you all.
+
+![](presentation/life.gif)
 
 ### The Result
 
 The mission was a success, although some requirements were dropped last minute. The condensed version of the final mission can be seen on YouTube.
 
 [https://www.youtube.com/watch?v=wLcxDFeVisM](https://www.youtube.com/watch?v=wLcxDFeVisM)
+
+We also made a team documentary. It is also on YouTube.
+
+[https://www.youtube.com/watch?v=LzQ_4Fg-2XM](https://www.youtube.com/watch?v=LzQ_4Fg-2XM)
