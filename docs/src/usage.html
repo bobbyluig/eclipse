@@ -53,7 +53,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
         <span class="doc-title">Usage and Documentation</span>
         <ul class="nav pull-right doc-info">
                     <li><p class="navbar-text">Lujing Cen</p></li>
-                              <li><p class="navbar-text">7/30/2016</p></li>
+                              <li><p class="navbar-text">8/9/2016</p></li>
                   </ul>
       </div>
     </div>
@@ -125,11 +125,11 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <h3 id="root-directory">Root Directory</h3>
 <p>The root directory for the Python code is the <code>src</code> folder. Ensure that your IDE (like PyCharm) knows that it is the root directory. Otherwise, make sure that the absolute path of <code>src</code> is in <code>PYTHONPATH</code>.</p>
 <h3 id="maestro-usb-configuration">Maestro USB Configuration</h3>
-<p>USB is quite interesting. Pololu's configuation software is written in C# and uses an outdated version of WinUSB. However, pyusb requires libusb-win32 (or equivalent). First, configure the Mini Maestro using the Pololu software. Ensure that CRC check is disabled and that the serial mode is set to &quot;USB Dual Port.&quot; Other modes should work as well but this is the most stable and well-tested mode. You may modify other parameters to your liking but be prepared to change code parameters if things like period and timeout are changed from their default value.</p>
+<p>USB is quite interesting. Pololu's configuration software is written in C# and uses an outdated version of WinUSB. However, pyusb requires libusb-win32 (or equivalent). First, configure the Mini Maestro using the Pololu software. Ensure that CRC check is disabled and that the serial mode is set to &quot;USB Dual Port.&quot; Other modes should work as well but this is the most stable and well-tested mode. You may modify other parameters to your liking but be prepared to change code parameters if things like period and timeout are changed from their default value.</p>
 <p>For Windows, it is necessary after initial configuration to install a driver compatible with pyusb. This can be done using <a href="http://zadig.akeo.ie/">zadig</a>. Ensure that you replace the driver (which should be WinUSB) for the actual device and not its two virtual COM ports. To reuse the Pololu controller interface, open device manager and uninstall the device. After a refresh, the original driver should reappear.</p>
 <h3 id="oculus-and-slam">Oculus and SLAM</h3>
-<p>If installing manually on Windows, you will need to compile <code>oculus</code>, which implements DSST and KCF corelation-based trackers and exposes them to Python 3. Check the README in <code>src/theia/oculus</code> for more information. You will also need to compile <code>slam</code>, which implements monocular location and mapping. Check <code>src/theia/slam</code> for more information. Basically, point CMake to the directory with <code>CMakeLists.txt</code> and create a new folder named <code>build</code> in the directory. Generate the correct configuration for MSVC. Make sure you use the right MSVC version that corresponds to the current Python version. Also, compile everything in 64-bit Release format. I tried to ensure that required modules are automatically found. However, you may have to manually compile and install things like Eigen and OpenCV 3. Have fun resolving the dependencies!</p>
-<p>ORB-SLAM requires a training file, which is not included in the repository. The vocabulary can be donwload from the <a href="https://github.com/raulmur/ORB_SLAM2/tree/master/Vocabulary">original repository</a>.</p>
+<p>If installing manually on Windows, you will need to compile <code>oculus</code>, which implements DSST and KCF correlation-based trackers and exposes them to Python 3. Check the README in <code>src/theia/oculus</code> for more information. You will also need to compile <code>slam</code>, which implements monocular location and mapping. Check <code>src/theia/slam</code> for more information. Basically, point CMake to the directory with <code>CMakeLists.txt</code> and create a new folder named <code>build</code> in the directory. Generate the correct configuration for MSVC. Make sure you use the right MSVC version that corresponds to the current Python version. Also, compile everything in 64-bit Release format. I tried to ensure that required modules are automatically found. However, you may have to manually compile and install things like Eigen and OpenCV 3. Have fun resolving the dependencies!</p>
+<p>ORB-SLAM requires a training file, which is not included in the repository. The vocabulary can be download from the <a href="https://github.com/raulmur/ORB_SLAM2/tree/master/Vocabulary">original repository</a>.</p>
 <h3 id="zeus">Zeus</h3>
 <p>To develop the front-end command interface, first install the required packages.</p>
 <div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">cd</span> src/zeus/phi
@@ -137,7 +137,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <p>The gulp configuration has been set to watch for updates automatically.</p>
 <div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">gulp</span> build
 <span class="kw">gulp</span> watch</code></pre></div>
-<p>Now, editing any project files will cause gulp to automatically update the webpage. Open <code>index.html</code> to view the command interface.</p>
+<p>Now, editing any project files will cause gulp to automatically update the web page. Open <code>index.html</code> to view the command interface.</p>
 <h3 id="crossbar">Crossbar</h3>
 <p>No communication between devices can occur without <a href="http://crossbar.io/">Crossbar</a>. Follow the installation instructions on the site and then run the script below.</p>
 <div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">cd</span> crossbar
@@ -164,5 +164,11 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
             </div>
     </div>
   </div>
+<script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
+<script>
+$(document).ready(function() {
+	$('table').addClass('table table-striped table-bordered');
+});
+</script>
 </body>
 </html>

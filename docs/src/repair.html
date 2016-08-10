@@ -53,7 +53,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
         <span class="doc-title">Repair and Troubleshooting</span>
         <ul class="nav pull-right doc-info">
                     <li><p class="navbar-text">Lujing Cen</p></li>
-                              <li><p class="navbar-text">7/30/2016</p></li>
+                              <li><p class="navbar-text">8/9/2016</p></li>
                   </ul>
       </div>
     </div>
@@ -91,8 +91,8 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 </ol>
 <p>If this does not happen in the way it should, or the sequence fails, find the issue below and follow the instructions.</p>
 <h3 id="odroid-does-not-power-on.">ODROID does not power on.</h3>
-<p>There are multiple possibilties here. First, check if there is a solid red light. If there is none, this indicates that there is no power flowing to the ODROID. To resolve this, first check the voltage of the battery to ensure that it is functional and charged. Then, verify that there is indeed 5 volts running to the ODROID. If there is voltage running but the computer still does not turn on, it may be broken.</p>
-<p>Proper boot up is indicated by the blue light. It should have a constant flash when the kernel is running. If this does not happen, then the SD card is either corrupt or damaged (this happend to us).</p>
+<p>There are multiple possibilities here. First, check if there is a solid red light. If there is none, this indicates that there is no power flowing to the ODROID. To resolve this, first check the voltage of the battery to ensure that it is functional and charged. Then, verify that there is indeed 5 volts running to the ODROID. If there is voltage running but the computer still does not turn on, it may be broken.</p>
+<p>Proper boot up is indicated by the blue light. It should have a constant flash when the kernel is running. If this does not happen, then the SD card is either corrupt or damaged (this happened to us).</p>
 <h3 id="odroid-powers-on-but-legs-do-not-move.">ODROID powers on, but legs do not move.</h3>
 <p>Again, check the voltage. Verify that the Mini Maestro has power. To perform a servo test, move all the legs slightly out of zero position. When the Mini Maestro powers on, they should all move to uncalibrated zero. If one does not, a servo is probably damaged.</p>
 <h3 id="legs-move-but-sequence-does-not-start.">Legs move, but sequence does not start.</h3>
@@ -125,5 +125,11 @@ agility.zero()</code></pre></div>
             </div>
     </div>
   </div>
+<script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
+<script>
+$(document).ready(function() {
+	$('table').addClass('table table-striped table-bordered');
+});
+</script>
 </body>
 </html>
