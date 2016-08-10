@@ -1,6 +1,6 @@
 % Usage and Documentation
 % Lujing Cen
-% 7/30/2016
+% 8/9/2016
 
 # Introduction
 
@@ -44,15 +44,15 @@ The root directory for the Python code is the `src` folder. Ensure that your IDE
 
 ### Maestro USB Configuration
 
-USB is quite interesting. Pololu's configuation software is written in C# and uses an outdated version of WinUSB. However, pyusb requires libusb-win32 (or equivalent). First, configure the Mini Maestro using the Pololu software. Ensure that CRC check is disabled and that the serial mode is set to "USB Dual Port." Other modes should work as well but this is the most stable and well-tested mode. You may modify other parameters to your liking but be prepared to change code parameters if things like period and timeout are changed from their default value.
+USB is quite interesting. Pololu's configuration software is written in C# and uses an outdated version of WinUSB. However, pyusb requires libusb-win32 (or equivalent). First, configure the Mini Maestro using the Pololu software. Ensure that CRC check is disabled and that the serial mode is set to "USB Dual Port." Other modes should work as well but this is the most stable and well-tested mode. You may modify other parameters to your liking but be prepared to change code parameters if things like period and timeout are changed from their default value.
 
 For Windows, it is necessary after initial configuration to install a driver compatible with pyusb. This can be done using [zadig](http://zadig.akeo.ie/). Ensure that you replace the driver (which should be WinUSB) for the actual device and not its two virtual COM ports. To reuse the Pololu controller interface, open device manager and uninstall the device. After a refresh, the original driver should reappear. 
 
 ### Oculus and SLAM
 
-If installing manually on Windows, you will need to compile `oculus`, which implements DSST and KCF corelation-based trackers and exposes them to Python 3. Check the README in `src/theia/oculus` for more information. You will also need to compile `slam`, which implements monocular location and mapping. Check `src/theia/slam` for more information. Basically, point CMake to the directory with `CMakeLists.txt` and create a new folder named `build` in the directory. Generate the correct configuration for MSVC. Make sure you use the right MSVC version that corresponds to the current Python version. Also, compile everything in 64-bit Release format. I tried to ensure that required modules are automatically found. However, you may have to manually compile and install things like Eigen and OpenCV 3. Have fun resolving the dependencies!
+If installing manually on Windows, you will need to compile `oculus`, which implements DSST and KCF correlation-based trackers and exposes them to Python 3. Check the README in `src/theia/oculus` for more information. You will also need to compile `slam`, which implements monocular location and mapping. Check `src/theia/slam` for more information. Basically, point CMake to the directory with `CMakeLists.txt` and create a new folder named `build` in the directory. Generate the correct configuration for MSVC. Make sure you use the right MSVC version that corresponds to the current Python version. Also, compile everything in 64-bit Release format. I tried to ensure that required modules are automatically found. However, you may have to manually compile and install things like Eigen and OpenCV 3. Have fun resolving the dependencies!
 
-ORB-SLAM requires a training file, which is not included in the repository. The vocabulary can be donwload from the [original repository](https://github.com/raulmur/ORB_SLAM2/tree/master/Vocabulary).
+ORB-SLAM requires a training file, which is not included in the repository. The vocabulary can be download from the [original repository](https://github.com/raulmur/ORB_SLAM2/tree/master/Vocabulary).
 
 ### Zeus
 
@@ -70,7 +70,7 @@ gulp build
 gulp watch
 ```
 
-Now, editing any project files will cause gulp to automatically update the webpage. Open `index.html` to view the command interface.
+Now, editing any project files will cause gulp to automatically update the web page. Open `index.html` to view the command interface.
 
 ### Crossbar
 

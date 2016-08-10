@@ -1,6 +1,6 @@
 % Tutorial
 % Lujing Cen
-% 7/30/2016
+% 8/9/2016
 
 # Introduction
 
@@ -205,7 +205,7 @@ The nearest integer function obviously creates some error. However, when conside
 
 ### Code
 
-Multiple classes are related to the Maestro controller. The `Usc` class has been tested but should be used with caution as it can possibly corruput the device.
+Multiple classes are related to the Maestro controller. The `Usc` class has been tested but should be used with caution as it can possibly corrupt the device.
 
 Concept|Implementation(s)
 :---|---
@@ -281,7 +281,7 @@ By generating $t / dt$ linearly spaced time points, we can then evaluate them in
 
 ### Gait Execution
 
-Execution requires interfacing with various other modules. Once points for all four legs are obtained, they can be fed one frame at a time to the inverse kinematics equations, which will provide angles for the servos. Each frame is exactly $dt$ long. There are two possible ways to approach this (that I've thought of). One way is to send the command to move all the servos and wait $dt$ before executing the next one. However, I've found that Python is not very good at keeping accurate time. Instead, I chose to check if all servos have reached their target before executing the next frame. This is actually slowered, as there is latency involved with checking and executing. Thus, one cycle will be slightly longer (probably negligible) than $t$.
+Execution requires interfacing with various other modules. Once points for all four legs are obtained, they can be fed one frame at a time to the inverse kinematics equations, which will provide angles for the servos. Each frame is exactly $dt$ long. There are two possible ways to approach this (that I've thought of). One way is to send the command to move all the servos and wait $dt$ before executing the next one. However, I've found that Python is not very good at keeping accurate time. Instead, I chose to check if all servos have reached their target before executing the next frame. This is actually slower, as there is latency involved with checking and executing. Thus, one cycle will be slightly longer (probably negligible) than $t$.
 
 There are various other layers of complexity that must be considered to ensure that the robot can actually walk smoothly. They are discussed in the next three sections.
 

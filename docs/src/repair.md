@@ -1,6 +1,6 @@
 % Repair and Troubleshooting
 % Lujing Cen
-% 7/30/2016
+% 8/9/2016
 
 # Introduction
 
@@ -17,9 +17,9 @@ If this does not happen in the way it should, or the sequence fails, find the is
 
 ### ODROID does not power on.
 
-There are multiple possibilties here. First, check if there is a solid red light. If there is none, this indicates that there is no power flowing to the ODROID. To resolve this, first check the voltage of the battery to ensure that it is functional and charged. Then, verify that there is indeed 5 volts running to the ODROID. If there is voltage running but the computer still does not turn on, it may be broken.
+There are multiple possibilities here. First, check if there is a solid red light. If there is none, this indicates that there is no power flowing to the ODROID. To resolve this, first check the voltage of the battery to ensure that it is functional and charged. Then, verify that there is indeed 5 volts running to the ODROID. If there is voltage running but the computer still does not turn on, it may be broken.
 
-Proper boot up is indicated by the blue light. It should have a constant flash when the kernel is running. If this does not happen, then the SD card is either corrupt or damaged (this happend to us).
+Proper boot up is indicated by the blue light. It should have a constant flash when the kernel is running. If this does not happen, then the SD card is either corrupt or damaged (this happened to us).
 
 ### ODROID powers on, but legs do not move.
 
