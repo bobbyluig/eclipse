@@ -4,7 +4,7 @@ This repository contains all code used by Eclipse Technologies in the 2016 CARPA
 
 ### The Mission
 
-One transforming walker with two quadruped robots that can autonomously seek out and capture a randomly moving prey on the field using RFID. Sounds hard? It was. Find out more information about the mission in the `docs` folder. 
+One transforming walker with two quadruped robots that can autonomously seek out and capture a randomly moving prey on the field using RFID. Sounds hard? It was. Find out more information about the mission in the `docs/mission` folder. 
 
 ### The Robot
 
@@ -29,3 +29,15 @@ The final product featured:
 - Fine leg motion (pushing buttons)
 - Basic "follow" capacity (not well-tested)
 - A price tag under $300
+
+Most detailed information about the robot and its design can be found in the `docs/cdr` folder. Errors in these documents are corrected in `docs/src/tutorial.html`.
+
+### The Code
+
+Lots of tears with lots code. I did not manage to get autonomous mode fully functional. However, I did make a cool command interface. For all programming related documentation, look no further than `docs/src`.
+
+### The Result
+
+The mission was a success, although some requirements were dropped last minute. The condensed version of the final mission can be seen on YouTube.
+
+[https://www.youtube.com/watch?v=wLcxDFeVisM](https://www.youtube.com/watch?v=wLcxDFeVisM)
