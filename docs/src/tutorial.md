@@ -26,11 +26,11 @@ You should also read through the [SPS](https://github.com/bobbyluig/Eclipse/raw/
 
 I will put errors in the documents here as I find them.
 
-- Pg. 88-91: All references to dot products should be changed to matrix multiplcation. All $\bullet$ should be removed from the equations.
+- Pg. 88-91: All references to dot products should be changed to matrix multiplication. All $\bullet$ should be removed from the equations.
 
 ### Prerequisites
 
-Trying to accomplish this project requires that you are not scared of math and physics. You will need a strong foundation in geometry, trigonometry, algebra, classical mechanics, and prelimiary linear algebra. You will also need a deep understanding of calculus, although you might not ever need to take a derivative in this project. It would help that you also understand some practical electricity and magnetism.
+Trying to accomplish this project requires that you are not scared of math and physics. You will need a strong foundation in geometry, trigonometry, algebra, classical mechanics, and preliminary linear algebra. You will also need a deep understanding of calculus, although you might not ever need to take a derivative in this project. It would help that you also understand some practical electricity and magnetism.
 
 This tutorial is written assuming you have limited understanding of linear algebra. Concepts clarifications are linked to external resources as they appear. You're welcome.
 
@@ -40,7 +40,7 @@ It is important to define everything before starting this project. It will save 
 
 ### Coordinate System
 
-The world runs on the right-handed coordinate system. Being left-handed, I accidentally used the left-handed coordinate system, which ended up causing me a lot of confusion. Don't be like me. Clearly define the coordinate system before beginning. This is not to say you can't use the left-handed system. Just make sure you know what you're doing, because pretty much everything on the internet uses the right-handed system.
+The world runs on the right-handed coordinate system. Being left-handed, I accidentally used the left-handed coordinate system, which ended up causing me a lot of confusion. Don't be like me. Clearly define the coordinate system before beginning. This is not to say you can't use the left-handed system. Just make sure you know what you're doing, because pretty much everything on the Internet uses the right-handed system.
 
 ![](assets/table.jpg)
 
@@ -51,17 +51,32 @@ Pretend the robot is a table. The head points in the positive x direction. The l
 End effector
 : In kinematics, the end of a robotic arm or leg. In this case, it is the tip of the feet.
 
+Output spline
+: The part of the servo that is visible and spins. It has teeth to transfer torque.
+
 Root
 : In kinematics, the point at which the arm or leg attaches to the body.
 	
-Output spline
-: The part of the servo that is visible and spins. It has teeth to transfer torque.
+Zero position
+: Referring to legs, the position when all servos are targeting zero degrees as defined by their kinematic equations.
 	
 # Leg Design
 
+Speaking of walking robots, the legs are probably important. 
+
 ### Alignment
 
+While working on leg designs for the robot, I noticed that various things simply work well if rotational axes are aligned. As you can see in the images below, the end effector is aligned with the rotational axes of the top two servos. The rotational axes of the top two servos also intersect each other. Both images show the leg in zero position.
+
+<div class="center">
+![](assets/leg1.png)\ ![](assets/leg2.png)
+</div>
+
+Theoretically, having aligned legs not only helps simplify kinematics and torque computations, but also allows for more efficiency in motion.
+
 ### Considerations
+
+Of course, it is not strictly necessary to design an aligned leg. The most important aspect of leg design is purpose. For example, the original intentional of our servo layout was to allow the robot to flip itself over. However, this functionality was not needed. In that case, the locations of the top two servos can actually be switched. 
 
 # Kinematics
 
@@ -74,11 +89,11 @@ Forward kinematics (FK) is kind of like taking a derivative. There can be a lot 
 If you are good at trigonometry, FK can be solved starting from the servo closest to the body. An example can be seen [here](http://www.stagrobotics.com/stag.html). However, it does not have to be solved that way. You can also apply [rotational matrices](http://inside.mines.edu/fs_home/gmurray/ArbitraryAxisRotation/) when they are convenient to use. I've generalized the use of rotation matrices to be:
 
 1. Check to see if you can ignore any segments. This can happen when the line formed by the segment is the axis of rotation for a servo attached to that segment.
-2. Try to reduce the problem to a 2D one and use basic trignometry to consume one or more $\theta$s.
-3. Apply rotational matrices via [matrix multiplcation](https://en.wikipedia.org/wiki/Matrix_multiplication) for any servos rotating about convenient axes.
+2. Try to reduce the problem to a 2D one and use basic trigonometry to consume one or more $\theta$s.
+3. Apply rotational matrices via [matrix multiplication](https://en.wikipedia.org/wiki/Matrix_multiplication) for any servos rotating about convenient axes.
 4. Use trigonometry to solve for any remaining servos.
 
-Use whichever method you find to be easier. Apply rotation matrices can be confusing. However, you will need to understand 3D trignomoetry to do it the other way. Remember -- draw a diagram, take it slow, and test your solution.
+Use whichever method you find to be easier. Apply rotation matrices can be confusing. However, you will need to understand 3D trigonometry to do it the other way. Remember -- draw a diagram, take it slow, and test your solution.
 
 ### Inverse Kinematics
 
@@ -86,9 +101,9 @@ Inverse kinematics (IK) is kind of like performing an integral. It involves some
 
 IK should be solved from the servo furthest from the body. The last angle generally involves some form of the law of cosines. Once you solve one angle, see if you can plug it into any of the equations obtained from forward kinematics. The last part is mostly just intuition. You'll need to draw diagrams and model the leg somehow to help you visualize a solution. Take it slow. Solving the IK for my robot took me 2 weeks.
 
-Remember that multiple solutions generally will exist. Anything involving the law of cosines can vary by $\pi$. Other trignometric expressions can involve solutions with different signs. Be aware of this. Try to design the program to find all possible solutoins. Write good tests that chain the working FK equations with the IK equations to rigorously test correctness.
+Remember that multiple solutions generally will exist. Anything involving the law of cosines can vary by $\pi$. Other trigonometric expressions can involve solutions with different signs. Be aware of this. Try to design the program to find all possible solutions. Write good tests that chain the working FK equations with the IK equations to rigorously test correctness.
 
-There are software which you can use. If you do manage to obtain a non-manual solution, be sure that it can be evaulated very quickly.
+There are software which you can use. If you do manage to obtain a non-manual solution, be sure that it can be evaluated very quickly.
 
 ### Code
 
@@ -210,7 +225,7 @@ My friend Alastair MacMillan came up with this amazing idea one day that basical
 ![](assets/vector.png)\ ![](assets/vector1.png)
 </div>
 
-The verticies or legs are number 0-3 accordingly. To rotate the rectangle, we can simply apply a vector tangent to a circumscribed circle at each vertex. The cool thing about vectors is that they can be view as separate components. To add forward or backward movement, simply add to the x component.
+The vertexes or legs are number 0-3 accordingly. To rotate the rectangle, we can simply apply a vector tangent to a circumscribed circle at each vertex. The cool thing about vectors is that they can be view as separate components. To add forward or backward movement, simply add to the x component.
 
 The easiest method to physically reproduce the vector is to compute $(x, y)$ and generate a line between $(x, y)$ and $(-x, -y)$. Moving one cycle along the line will be twice the desired vector. 
 
@@ -262,7 +277,7 @@ The interpolation should be defined for all time values. To do this, you can use
 
 The next step is to apply the concepts of calculus and separate this gait into tiny $dt$ segments. Note that $t$ in this case would be the time for one complete cycle of the gait. This $dt$ value is really dependent on the speed of the servo controller and the servos themselves. Servos generally run at a 50 Hz loop, implying that $dt$ should be at least 20 ms. I have found that 20 ms - 100 ms work well.
 
-By generating $t / dt$ linearly spaced time points, we can then evaluate them in our intepolation equations to obtain points for execution.
+By generating $t / dt$ linearly spaced time points, we can then evaluate them in our interpolation equations to obtain points for execution.
 
 ### Gait Execution
 
@@ -290,7 +305,7 @@ Do the order of the points matter? No. If you look at the code, it may appear th
 $$\delta_{x,trot} = x_0 - c_x$$
 $$\delta_{y,trot} = y_0 - c_y$$
 
-Optimally, this would work for crawl as well. However, it would be even better to move the COM further into the support triangle. I used $\sigma$ to represent the safety margin. Rather than adjusting to a point on the line, the robot will move into the support triangle an aditional $\sigma$. There is a flaw in this because $\sigma$ is **not** the stability margin. When close to the sides of the triangle, it may be possible that moving $\sigma$ may cause the stability margin to be less than $\sigma$ on another side. It is even possible that the adjustment can throw the COM outside of the support triangle. I have not written in any protection for this as it usually is not a problem. However, this is definitely something to think about for improving motion.
+Optimally, this would work for crawl as well. However, it would be even better to move the COM further into the support triangle. I used $\sigma$ to represent the safety margin. Rather than adjusting to a point on the line, the robot will move into the support triangle an additional $\sigma$. There is a flaw in this because $\sigma$ is **not** the stability margin. When close to the sides of the triangle, it may be possible that moving $\sigma$ may cause the stability margin to be less than $\sigma$ on another side. It is even possible that the adjustment can throw the COM outside of the support triangle. I have not written in any protection for this as it usually is not a problem. However, this is definitely something to think about for improving motion.
 
 Interestingly, order matters here with $\sigma$. I believe there is another way but this is just my take on it, since was really short on time. Which point comes first and which comes second depends on which leg is lifted. Testing basically reveals the following.
 
@@ -299,18 +314,18 @@ $$1: (0,3)$$
 $$2: (3,0)$$
 $$3: (1,2)$$
 
-The following equations can then be applied to find $\delta$ for crawl gait. It basically uses trigonometric properties of perpendicular lines. Note that you must use the `atan2` function in your favorite programming language because signs are very important here. Also note that these are implemented **incorrectly** in the actual code (forgot to sutract COM). But hey, it still worked alright because I set a huge $\sigma$.
+The following equations can then be applied to find $\delta$ for crawl gait. It basically uses trigonometric properties of perpendicular lines. Note that you must use the `atan2` function in your favorite programming language because signs are very important here. Also note that these are implemented **incorrectly** in the actual code (forgot to subtract COM). But hey, it still worked alright because I set a huge $\sigma$.
 
 $$\DeclareMathOperator{\atantwo}{atan2}$$
 $$\theta = \atantwo \left((y_2 - y_1),(x_2 , x_1) \right)$$
 $$\delta_{x,crawl} = \sigma \sin \left( \theta \right) + x_0 - c_x$$
 $$\delta_{y,crawl} = -\sigma \cos \left( \theta \right) + y_0 - c_y$$
 
-I did static COM computations for $(c_x, c_y)$, but you should use the inverse kinematics equations to compute the location of each segement of the leg and use it to produce a more accurate computation. The servos are actually relatively heavy so the leg positions visibly contribute to the COM.
+I did static COM computations for $(c_x, c_y)$, but you should use the inverse kinematics equations to compute the location of each segment of the leg and use it to produce a more accurate computation. The servos are actually relatively heavy so the leg positions visibly contribute to the COM.
 
 ### Static Optimization
 
-Adjustments to the gait can be made before execution. This is especially true with the COM. All operations rely on the use of `numpy`, which basically vectorizes operations in C. Because gait generation is called frequently, other programming optimizations such as caching should be used as well.
+Adjustments to the gait can be made before execution. This is especially true with the COM. All operations rely on the use of `numpy`, which basically uses vectorized operations in C. Because gait generation is called frequently, other programming optimizations such as caching should be used as well.
 
 We'll redefine $\delta$ to be a 4 x 3 matrix rather than individual values of $\delta_x$, $\delta_y$, and $\delta_z$ (0). Let $F$ be a 4 x 3 matrix such that each row $i$ contains an $(x, y, z)$ which indicates the target position of leg at index $i - 1$.
 
@@ -335,11 +350,11 @@ The optimized pose for the legs, $F^\prime$, is obtained by subtracting $\delta$
 
 Initially, I added an additional optimization to crawl gait which involved rotating the body about the line produced by $(x_1, y_1)$ and $(x_2, y_2)$ away from the lifted leg. This lowers the COM, which improves stability. However, the tilting was causing too much shake to the camera, so I took it out. It may be useful to you, so I'll include some basic information here. 
 
-We can use the [Euler–Rodrigues formula](https://en.wikipedia.org/wiki/Euler%E2%80%93Rodrigues_formula) to generate a rotation matrix. I took the code for it off of [StackOverflow](http://stackoverflow.com/questions/6802577/python-rotation-of-3d-vector). The function, when given an axis and angle, will generate a 3 x 3 matrix that I'll call $Q$. To apply this rotation to the aforementioned 4 x 3 matrix, we use a [matrix multiplcation](https://en.wikipedia.org/wiki/Matrix_multiplication) along with a [transpose](https://en.wikipedia.org/wiki/Transpose).
+We can use the [Euler–Rodrigues formula](https://en.wikipedia.org/wiki/Euler%E2%80%93Rodrigues_formula) to generate a rotation matrix. I took the code for it off of [StackOverflow](http://stackoverflow.com/questions/6802577/python-rotation-of-3d-vector). The function, when given an axis and angle, will generate a 3 x 3 matrix that I'll call $Q$. To apply this rotation to the aforementioned 4 x 3 matrix, we use a [matrix multiplication](https://en.wikipedia.org/wiki/Matrix_multiplication) along with a [transpose](https://en.wikipedia.org/wiki/Transpose).
 
 $$F^{\prime\prime} = F^\prime Q^T$$
 
-COM adjustments don't need to occur when the robot is on four legs. Thus, modifing $F$ is only necessary on three legs. However, this algorithm can be jerky because the robot has to shift the COM rapidly in a single $dt$ segment. I've had a servo burn out because of this problem. A better algorithm would preemptively transition the COM even when the robot is on four legs so that it does not need to jerk when a leg lifts. Implementation involves looking at when all four legs are on the ground and when they are not. Then, simply run a smoothing algorithm that takes a large adjustment $\delta$ and breaks it up over multiple $dt$ frames.
+COM adjustments don't need to occur when the robot is on four legs. Thus, modifying $F$ is only necessary on three legs. However, this algorithm can be jerky because the robot has to shift the COM rapidly in a single $dt$ segment. I've had a servo burn out because of this problem. A better algorithm would preemptively transition the COM even when the robot is on four legs so that it does not need to jerk when a leg lifts. Implementation involves looking at when all four legs are on the ground and when they are not. Then, simply run a smoothing algorithm that takes a large adjustment $\delta$ and breaks it up over multiple $dt$ frames.
 
 Does it get more complicated? Of course! At higher speeds, $\delta$ can actually cause significant acceleration on the body. With acceleration in play, the COM is no longer crucial. Instead, the [zero moment point](https://en.wikipedia.org/wiki/Zero_moment_point) (ZMP) must fall inside of the support triangle. With no acceleration, the ZMP is equal to the COM. However, with acceleration, it gets really fun. See [this paper](http://dspace.mit.edu/openaccess-disseminate/1721.1/59530) for more information.
 
@@ -353,7 +368,7 @@ The first step would be to use forward kinematics equations to determine the cur
 
 ### Dynamic Optimization
 
-These optimizations are done while the robot is running. However, I did not have time to implement them. Dynamic optimizations require the use of pressure sensors on the feet or at least an intertial measurement unit (IMU). As I have no implementation, I will simply provide some thoughts in this section.
+These optimizations are done while the robot is running. However, I did not have time to implement them. Dynamic optimizations require the use of pressure sensors on the feet or at least an inertial measurement unit (IMU). As I have no implementation, I will simply provide some thoughts in this section.
 
 Foot sensors will allow the robot to determine if it is falling in one direction or if it has a foot hold. It can be used to traverse uneven terrain. For example, if there is decreasing force on one feet when not expected, the robot may be tilting away from the feet.
 
@@ -389,7 +404,7 @@ During testing, the tracker worked very well. I also implemented recovery mechan
 
 ### Detection
 
-I used a template-based detection because it assisted with tracking and learning. The implementation was based on the [LINE2D](http://far.in.tum.de/pub/hinterstoisser2011pami/hinterstoisser2011pami.pdf) algorithm and OpenCV's code for a 3D version of the algorithm. The algorithm could match over 2,000 templates in real time, which is at least an order of magnitude faster than OpenCV's conventional fourier-based template matching. It could also detect multiple objects with one template. 
+I used a template-based detection because it assisted with tracking and learning. The implementation was based on the [LINE2D](http://far.in.tum.de/pub/hinterstoisser2011pami/hinterstoisser2011pami.pdf) algorithm and OpenCV's code for a 3D version of the algorithm. The algorithm could match over 2,000 templates in real time, which is at least an order of magnitude faster than OpenCV's conventional Fourier-based template matching. It could also detect multiple objects with one template. 
 
 By itself, it is not particularly useful. However, when combined with tracking and learning, it can be used to increase the robot's awareness of its surroundings.
 
@@ -415,7 +430,7 @@ As you can see in the image, a camera has some field of view (FOV). The angle is
 
 The math is easily understandable in the code, so I do not need to explain it here. However, you have to notice a very important feature. The FOV is a triangle. Pretend that the object of interest lies somewhere on the blue line. Regardless of how far it is from the camera, it's position would not be different on the screen. The center of the object would be at the same location whether you are interested in the red line or the black line. Thus, a good angle approximation would simply involve a ratio of the center of the object to the width of the image captured with the measured FOV.
 
-Obviously, this is only an approxmation. Since obtaining new images is relatively cheap, this algorithm can be fed through a [PID](https://en.wikipedia.org/wiki/PID_controller) loop to obtain good results.
+Obviously, this is only an approximation. Since obtaining new images is relatively cheap, this algorithm can be fed through a [PID](https://en.wikipedia.org/wiki/PID_controller) loop to obtain good results.
 
 ### Code
 
@@ -431,7 +446,7 @@ Head | `agility.main.Agility.look_at`, `agility.main.Agility.scan`, ``agility.ma
 
 # Audio
 
-Originally, the mission specified that a two legged walker needed to detect the howl in "Werewolves of London". I wrote the code for it, eventhough it was taken out of the final mission.
+Originally, the mission specified that a two legged walker needed to detect the howl in "Werewolves of London". I wrote the code for it, even though it was taken out of the final mission.
 
 ### Concepts
 
@@ -455,7 +470,7 @@ Python is not very memory efficient. It is also not a good idea to bunch everyth
 
 ### Networking
 
-Python 3.5 comes with the `asyncio` module. The same concept of remote calls can be applied by using asynchronous processing with `Crossbar` and `autobahn`. One main networking process is spawned. This process can call remote functions on any one of the worker processes and recieve calls made from the command center. Due to the versatility of `Crossbar`, the command center does not have to be in Python. It can written natively in JavaScript. This type of remote procedure call and publish / subscribe model is detailed in the SPS and POC.
+Python 3.5 comes with the `asyncio` module. The same concept of remote calls can be applied by using asynchronous processing with `Crossbar` and `autobahn`. One main networking process is spawned. This process can call remote functions on any one of the worker processes and receive calls made from the command center. Due to the versatility of `Crossbar`, the command center does not have to be in Python. It can written natively in JavaScript. This type of remote procedure call and publish / subscribe model is detailed in the SPS and POC.
 
 ### Camera
 
@@ -481,7 +496,7 @@ In order to automate, motion and vision must be linked together. The basic idea 
 
 ### Decision Making
 
-The most basic decision is where to move the robot. In particular, what forward and rotational speeds are desired. This type of decision making can be done by using vision data in a PID loop. Other types of decision making literally involve a bunch of if statements. I have personally not gone any further than the basic motion decision making, although obtaining the required data to make the decision is the harder part. A lot of testing and tweaking of parmeters may be required.
+The most basic decision is where to move the robot. In particular, what forward and rotational speeds are desired. This type of decision making can be done by using vision data in a PID loop. Other types of decision making literally involve a bunch of if statements. I have personally not gone any further than the basic motion decision making, although obtaining the required data to make the decision is the harder part. A lot of testing and tweaking of parameters may be required.
 
 ### Code
 
@@ -498,7 +513,7 @@ How to design a control interface for the robot is really open ended. However, t
 
 ### Considerations
 
-When developing the control system, be sure to ensure emergency shutoff systems in case something goes wrong. Try to find a library that is natively supported by the communication scheme you choose. If using `Crossbar`, I would recomend using the `autobahn` JavaScript package. It works very well. Everything else can be seen in the code.
+When developing the control system, be sure to ensure emergency shutoff systems in case something goes wrong. Try to find a library that is natively supported by the communication scheme you choose. If using `Crossbar`, I would recommend using the `autobahn` JavaScript package. It works very well. Everything else can be seen in the code.
 
 ### Code
 
@@ -512,7 +527,7 @@ gulp build
 gulp watch
 ```
 
-After building, opening up `index.html` in a browser should show the command interface. However, note that the system was only tested in Chrome and voice recognition and speech synthesis are exculsive to Chrome at the moment.
+After building, opening up `index.html` in a browser should show the command interface. However, note that the system was only tested in Chrome and voice recognition and speech synthesis are exclusive to Chrome at the moment.
 
 # Material Selection
 
@@ -540,9 +555,9 @@ We used the [Mini Maestro 18](https://www.pololu.com/product/1354) servo control
 
 ### Battery
 
-Servos drain a lot of amps. This is a problem if the computer is hooked up to the same battery. We had a problem where the network would randomly cut off and the robot would turn into a zombie. This is not surprising, because the wireless dongle actually draws some amperage. Measure and test to ensure that this does not happen to you. Optimally, have a separate battery for the onboard computer.
+Servos drain a lot of amps. This is a problem if the computer is hooked up to the same battery. We had a problem where the network would randomly cut off and the robot would turn into a zombie. This is not surprising, because the wireless dongle actually draws some amperage. Measure and test to ensure that this does not happen to you. Optimally, have a separate battery for the on-board computer.
 
-Try to choose a rechargeable batter that can supply the necessary amperage and compute the runtime to ensure tha the robot does not die in 5 minutes. Also, monitor the battery voltage. Smart battery chargers will not charge over-discharged Li-Po batteries because it is dangerous. Never go below 3.0 volts per cell!
+Try to choose a rechargeable batter that can supply the necessary amperage and compute the runtime to ensure that the robot does not die in 5 minutes. Also, monitor the battery voltage. Smart battery chargers will not charge over-discharged Li-Po batteries because it is dangerous. Never go below 3.0 volts per cell!
 
 ### Camera
 
