@@ -30,13 +30,6 @@ bld/
 # Custom pid
 *.pid
 
-# Other
-*.tar
-*.gz
-*.7z
-*.zip
-*.rar
-
 # Large file
 voc.txt
 
