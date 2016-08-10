@@ -28,7 +28,7 @@ The final product featured:
 - RFID scanning
 - Fine leg motion (pushing buttons)
 - Basic "follow" capacity (not well-tested)
-- A price tag under $300
+- A price tag under $500
 
 Most detailed information about the robot and its design can be found in the `docs/cdr` folder. Errors in these documents are corrected in `docs/src/tutorial.html`.
 
