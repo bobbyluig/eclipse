@@ -8,7 +8,9 @@ Are you trying to build a quadruped robot? Are you trying to understand code in 
 
 ### Goal
 
-The goal is to design a quadruped robot that looks like a dog. A lot of tutorials explain how to build a spider-looking quadruped. However, the concepts are exactly the same. This tutorial is intended to cover various mathematically and engineering concepts used in constructing the robot. It does not teach you how to build a robot step by step, nor should it be seen as such.
+The goal is to design a quadruped robot that looks like a dog (image below). A lot of tutorials explain how to build a spider-looking quadruped. However, the concepts are exactly the same. This tutorial is intended to cover various mathematically and engineering concepts used in constructing the robot. It does not teach you how to build a robot step by step, nor should it be seen as such.
+
+![](assets/robot.png)
 
 ### Warnings
 

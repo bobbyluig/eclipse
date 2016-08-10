@@ -54,7 +54,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
         <span class="doc-title">Tutorial</span>
         <ul class="nav pull-right doc-info">
                     <li><p class="navbar-text">Lujing Cen</p></li>
-                              <li><p class="navbar-text">7/30/2016</p></li>
+                              <li><p class="navbar-text">8/9/2016</p></li>
                   </ul>
       </div>
     </div>
@@ -153,7 +153,11 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
             <h1 id="introduction">Introduction</h1>
 <p>Are you trying to build a quadruped robot? Are you trying to understand code in this repository? If you answered yes to either question, you are in the right place. This tutorial will provide a comprehensive guide for building a quadruped robot while providing details on how important pieces of code in this repository function and relate to their conceptual counterparts.</p>
 <h3 id="goal">Goal</h3>
-<p>The goal is to design a quadruped robot that looks like a dog. A lot of tutorials explain how to build a spider-looking quadruped. However, the concepts are exactly the same. This tutorial is intended to cover various mathematically and engineering concepts used in constructing the robot. It does not teach you how to build a robot step by step, nor should it be seen as such.</p>
+<p>The goal is to design a quadruped robot that looks like a dog (image below). A lot of tutorials explain how to build a spider-looking quadruped. However, the concepts are exactly the same. This tutorial is intended to cover various mathematically and engineering concepts used in constructing the robot. It does not teach you how to build a robot step by step, nor should it be seen as such.</p>
+<div class="figure">
+<img src="assets/robot.png" />
+
+</div>
 <h3 id="warnings">Warnings</h3>
 <p>This guide is in no way comprehensive. I am not accountable for errors in this document. Don't let this guide prevent you from thinking of new designs, concepts, and algorithms. Remember that I am no expert on this subject. Your ideas could very well be better than mine. At the same time, don't attempt to reinvent the wheel. If something is efficient and works for your purpose, use it.</p>
 <p>&quot;Premature optimization is the root of all evil.&quot; Test and measure. Don't guess.</p>
@@ -317,7 +321,7 @@ usc.setScriptDone(<span class="dv">0</span>)</code></pre></div>
 <p><span class="math display">\[v = \left\lfloor 40 \frac{\left|p_t - p_c\right|}{t} \right\rceil\]</span></p>
 <p>The nearest integer function obviously creates some error. However, when considering small movements, this error can be negligible.</p>
 <h3 id="code-2">Code</h3>
-<p>Multiple classes are related to the Maestro controller. The <code>Usc</code> class has been tested but should be used with caution as it can possibly corruput the device.</p>
+<p>Multiple classes are related to the Maestro controller. The <code>Usc</code> class has been tested but should be used with caution as it can possibly corrupt the device.</p>
 <table>
 <thead>
 <tr class="header">
@@ -376,7 +380,7 @@ usc.setScriptDone(<span class="dv">0</span>)</code></pre></div>
 <p>The next step is to apply the concepts of calculus and separate this gait into tiny <span class="math inline">\(dt\)</span> segments. Note that <span class="math inline">\(t\)</span> in this case would be the time for one complete cycle of the gait. This <span class="math inline">\(dt\)</span> value is really dependent on the speed of the servo controller and the servos themselves. Servos generally run at a 50 Hz loop, implying that <span class="math inline">\(dt\)</span> should be at least 20 ms. I have found that 20 ms - 100 ms work well.</p>
 <p>By generating <span class="math inline">\(t / dt\)</span> linearly spaced time points, we can then evaluate them in our interpolation equations to obtain points for execution.</p>
 <h3 id="gait-execution">Gait Execution</h3>
-<p>Execution requires interfacing with various other modules. Once points for all four legs are obtained, they can be fed one frame at a time to the inverse kinematics equations, which will provide angles for the servos. Each frame is exactly <span class="math inline">\(dt\)</span> long. There are two possible ways to approach this (that I've thought of). One way is to send the command to move all the servos and wait <span class="math inline">\(dt\)</span> before executing the next one. However, I've found that Python is not very good at keeping accurate time. Instead, I chose to check if all servos have reached their target before executing the next frame. This is actually slowered, as there is latency involved with checking and executing. Thus, one cycle will be slightly longer (probably negligible) than <span class="math inline">\(t\)</span>.</p>
+<p>Execution requires interfacing with various other modules. Once points for all four legs are obtained, they can be fed one frame at a time to the inverse kinematics equations, which will provide angles for the servos. Each frame is exactly <span class="math inline">\(dt\)</span> long. There are two possible ways to approach this (that I've thought of). One way is to send the command to move all the servos and wait <span class="math inline">\(dt\)</span> before executing the next one. However, I've found that Python is not very good at keeping accurate time. Instead, I chose to check if all servos have reached their target before executing the next frame. This is actually slower, as there is latency involved with checking and executing. Thus, one cycle will be slightly longer (probably negligible) than <span class="math inline">\(t\)</span>.</p>
 <p>There are various other layers of complexity that must be considered to ensure that the robot can actually walk smoothly. They are discussed in the next three sections.</p>
 <h3 id="center-of-mass">Center of Mass</h3>
 <p>If the gait is execute without any adjustments, the robot will not walk -- it will fall and stumble. This is due to the fact that the center of mass (COM) is not being adjusted. As you can see in the image, the COM must fall inside of the support triangle made by three legs for crawl gaits.</p>
