@@ -8,7 +8,7 @@ One transforming walker with two quadruped robots that can autonomously seek out
 
 ### The Robot
 
-Although the final iteration of CAD files for the robot were lost, I managed to reconstruct and redesign the robot with more reasonable alignment and features. The CAD is very similar to the robot used on mission day, but is not identical. Materials are correctly defined but I probably made some parts too glossy. Various attachments and wires are not shown. The image is the result of 2,000 rendering iterations.
+Although the final iteration of CAD files for the robot was lost, I managed to reconstruct and redesign the robot with more reasonable alignment and features. The CAD is very similar to the robot used on mission day, but is not identical. Materials are correctly defined but I probably made some parts too glossy. Various attachments and wires are not shown. The image is the result of 2,000 rendering iterations.
 
 ![](docs/src/assets/robot.png)
 
