@@ -22,7 +22,7 @@ The final product featured:
 - Object tracking and motion detection
 - Object learning and recognition
 - Single camera SLAM (external processing)
-- Audio feed and pitch recogintion
+- Audio feed and pitch recognition
 - Voice control
 - Fully rotatable head
 - RFID scanning
